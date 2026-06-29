@@ -1,6 +1,6 @@
-package com.harry.clio.domain.user;
+package com.harry.clio.user;
 
-public enum UserRole {
+enum UserRole {
     READER,
     PUBLISHER,
     ADMIN

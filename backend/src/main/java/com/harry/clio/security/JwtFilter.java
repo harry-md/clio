@@ -1,6 +1,5 @@
-package com.harry.clio.security.jwt;
+package com.harry.clio.security;
 
-import com.harry.clio.security.CustomUser;
 import com.nimbusds.jwt.JWTClaimsSet;
 
 import jakarta.servlet.*;

@@ -1,4 +1,4 @@
-package com.harry.clio.domain.user;
+package com.harry.clio.user;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
