@@ -1,10 +1,9 @@
-package com.harry.clio.domain.user;
+package com.harry.clio.user;
 
 import java.time.Instant;
 
-public record UserResponse(
+record UserResponse(
         String username,
-        String password,
         String firstName,
         String lastName,
         String email,

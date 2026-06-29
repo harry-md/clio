@@ -1,3 +1,3 @@
-package com.harry.clio.domain.user;
+package com.harry.clio.user;
 
 class PublisherServiceImpl {}

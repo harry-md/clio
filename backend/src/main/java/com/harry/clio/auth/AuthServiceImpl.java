@@ -1,7 +1,7 @@
 package com.harry.clio.auth;
 
 import com.harry.clio.security.CustomUser;
-import com.harry.clio.security.jwt.JwtUtil;
+import com.harry.clio.security.JwtUtil;
 import com.harry.clio.shared.exception.AuthenticationFailedException;
 import com.nimbusds.jose.JOSEException;
 
@@ -37,7 +37,7 @@ class AuthServiceImpl implements AuthService {
             return new LoginResult(token, authResponse);
 
         } catch (JOSEException ex) {
-            log.warn("Lỗi tạo JWT token: {}", ex);
+            log.error("Lỗi tạo JWT token: {}", ex);
             throw new AuthenticationFailedException("Lỗi đăng nhập");
         }
     }
