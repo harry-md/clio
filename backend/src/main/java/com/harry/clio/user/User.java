@@ -27,22 +27,22 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(unique = true, nullable = false, length = 255)
+    @Column(unique = true, nullable = false)
     private String username;
 
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false)
     private String firstName;
 
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false)
     private String lastName;
 
-    @Column(unique = true, nullable = false, length = 255)
+    @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false)
     @ColumnDefault(
             "'https://res.cloudinary.com/dswxedhsf/image/upload/v1782626276/avatar_qoprdc.png'")
     private String avatar =

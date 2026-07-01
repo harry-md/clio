@@ -8,6 +8,9 @@ spring:
     url: jdbc:postgresql://localhost:5432/cliodb
     username: root
     password: root
+  sql:
+    init:
+      mode: always
   jpa:
     hibernate:
       ddl-auto: update
