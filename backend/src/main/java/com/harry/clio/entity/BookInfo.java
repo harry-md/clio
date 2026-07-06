@@ -43,4 +43,13 @@ public class BookInfo {
     @Column(nullable = false, length = 2)
     @Enumerated(EnumType.STRING)
     private Language language = Language.EN;
+
+    @Column(nullable = false)
+    private Long fileSizeBytes;
+
+    @Column(nullable = false)
+    private Long pageCount;
+
+    @Column(nullable = true)
+    private String isbn;
 }

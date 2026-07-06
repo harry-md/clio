@@ -28,7 +28,7 @@ import java.time.Instant;
         name = "book_recommendations",
         uniqueConstraints = {
             @UniqueConstraint(
-                    name = "uk_book_recommendations_source_book_target_book",
+                    name = "uq_book_recommendations_source_book_target_book",
                     columnNames = {"source_book_id", "target_book_id"})
         })
 public class BookRecommendation {
@@ -36,11 +36,11 @@ public class BookRecommendation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "source_book_id", nullable = false)
     private Book sourceBook;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "target_book_id", nullable = false)
     private Book targetBook;
 

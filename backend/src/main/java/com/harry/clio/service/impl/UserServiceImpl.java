@@ -1,5 +1,6 @@
 package com.harry.clio.service.impl;
 
+import com.harry.clio.dto.CustomUser;
 import com.harry.clio.dto.UserCreateRequest;
 import com.harry.clio.dto.UserResponse;
 import com.harry.clio.entity.User;
@@ -8,7 +9,6 @@ import com.harry.clio.exception.DuplicateResourceException;
 import com.harry.clio.exception.ResourceNotFoundException;
 import com.harry.clio.mapper.UserMapper;
 import com.harry.clio.repository.UserRepository;
-import com.harry.clio.security.CustomUser;
 import com.harry.clio.service.CloudinaryService;
 import com.harry.clio.service.UserService;
 

@@ -25,7 +25,7 @@ import lombok.Setter;
         name = "book_authors",
         uniqueConstraints = {
             @UniqueConstraint(
-                    name = "uk_book_author_role",
+                    name = "uq_book_author_role",
                     columnNames = {"book_id", "author_id", "role"})
         })
 public class BookAuthor {
@@ -33,11 +33,11 @@ public class BookAuthor {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "author_id", nullable = false)
     private Author author;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "book_id", nullable = false)
     private Book book;
 

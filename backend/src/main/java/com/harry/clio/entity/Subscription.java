@@ -16,6 +16,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.Instant;
 import java.time.LocalDate;
 
 @Getter
@@ -41,4 +45,12 @@ public class Subscription {
     @Column(nullable = false, length = 10)
     @Enumerated(EnumType.STRING)
     private SubscriptionStatus status = SubscriptionStatus.ACTIVE;
+
+    @Column(nullable = false, updatable = false)
+    @CreationTimestamp
+    private Instant createdAt;
+
+    @Column(nullable = false, updatable = true)
+    @UpdateTimestamp
+    private Instant updatedAt;
 }

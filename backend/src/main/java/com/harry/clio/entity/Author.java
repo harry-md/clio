@@ -35,6 +35,6 @@ public class Author {
     private String avatar =
             "https://res.cloudinary.com/dswxedhsf/image/upload/v1782626276/avatar_qoprdc.png";
 
-    @Column(nullable = false)
+    @Column(name = "is_verified", nullable = false)
     private boolean verified = false;
 }

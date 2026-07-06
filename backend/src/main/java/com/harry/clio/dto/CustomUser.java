@@ -1,4 +1,4 @@
-package com.harry.clio.security;
+package com.harry.clio.dto;
 
 import lombok.Getter;
 

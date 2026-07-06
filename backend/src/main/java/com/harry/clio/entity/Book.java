@@ -42,8 +42,8 @@ public class Book {
     @Column(nullable = false)
     private String title;
 
-    @Column(nullable = false)
-    private BigDecimal price;
+    @Column(nullable = false, precision = 15, scale = 2)
+    private BigDecimal price = BigDecimal.ZERO;
 
     @Column(nullable = false)
     @ColumnDefault(
@@ -61,6 +61,7 @@ public class Book {
     @Column(nullable = true)
     private Double rating;
 
+    @Column(nullable = false)
     @ColumnDefault("0")
     private Integer ratingCount = 0;
 
@@ -75,13 +76,16 @@ public class Book {
             inverseJoinColumns = @JoinColumn(name = "category_id"))
     private Set<Category> categories;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "publisher_id", nullable = true)
     private Publisher publisher;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "uploader_id", nullable = true)
     private User uploader;
+
+    @Column(name = "is_active", nullable = false)
+    private boolean active = true;
 
     @Column(nullable = false, updatable = false)
     @CreationTimestamp

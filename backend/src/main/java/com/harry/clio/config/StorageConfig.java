@@ -3,12 +3,13 @@ package com.harry.clio.config;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 
+import org.apache.tika.Tika;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class CloudinaryConfig {
+public class StorageConfig {
     @Value("${cloudinary.cloud_name}")
     private String cloudName;
 
@@ -29,5 +30,10 @@ public class CloudinaryConfig {
                 apiSecret,
                 "secure",
                 true));
+    }
+
+    @Bean
+    public Tika tika() {
+        return new Tika();
     }
 }

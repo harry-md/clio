@@ -1,5 +1,6 @@
-package com.harry.clio.security;
+package com.harry.clio.util;
 
+import com.harry.clio.dto.CustomUser;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;

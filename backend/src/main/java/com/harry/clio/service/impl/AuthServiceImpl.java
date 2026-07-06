@@ -1,12 +1,12 @@
 package com.harry.clio.service.impl;
 
 import com.harry.clio.dto.AuthResponse;
+import com.harry.clio.dto.CustomUser;
 import com.harry.clio.dto.LoginRequest;
 import com.harry.clio.dto.LoginResult;
 import com.harry.clio.exception.AuthenticationFailedException;
-import com.harry.clio.security.CustomUser;
-import com.harry.clio.security.JwtUtil;
 import com.harry.clio.service.AuthService;
+import com.harry.clio.util.JwtUtil;
 import com.nimbusds.jose.JOSEException;
 
 import lombok.RequiredArgsConstructor;
