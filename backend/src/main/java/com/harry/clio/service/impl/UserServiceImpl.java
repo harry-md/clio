@@ -1,7 +1,7 @@
 package com.harry.clio.service.impl;
 
+import com.harry.clio.dto.CreateUserRequest;
 import com.harry.clio.dto.CustomUser;
-import com.harry.clio.dto.UserCreateRequest;
 import com.harry.clio.dto.UserResponse;
 import com.harry.clio.entity.User;
 import com.harry.clio.entity.UserRole;
@@ -60,7 +60,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Override
-    public UserResponse register(UserCreateRequest request) {
+    public UserResponse register(CreateUserRequest request) {
         String avatarUrl = null;
         if (request.avatar() != null && !request.avatar().isEmpty()) {
             avatarUrl = cloudinaryService.upload(request.avatar());

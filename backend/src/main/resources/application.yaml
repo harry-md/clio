@@ -37,6 +37,11 @@ cloudinary:
   cloud_name: ${CLOUDINARY_CLOUD_NAME}
   api_key: ${CLOUDINARY_API_KEY}
   api_secret: ${CLOUDINARY_API_SECRET}
+r2:
+  bucket_name: ${R2_BUCKET_NAME}
+  account_id: ${R2_ACCOUNT_ID}
+  access_key: ${R2_ACCESS_KEY}
+  secret_key: ${R2_SECRET_KEY}
 logging:
   level:
     org:

@@ -58,12 +58,18 @@ public class Book {
     @Column(nullable = false)
     private String fileUrl;
 
+    @Column(nullable = false)
+    private String encryptedFileUrl;
+
+    @Column(nullable = false)
+    private String encryptedContentKey;
+
     @Column(nullable = true)
     private Double rating;
 
     @Column(nullable = false)
     @ColumnDefault("0")
-    private Integer ratingCount = 0;
+    private Long ratingCount = 0L;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(nullable = true, columnDefinition = "JSONB")
