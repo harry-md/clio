@@ -1,4 +1,4 @@
-package com.harry.clio.dto;
+package com.harry.clio.dto.book;
 
 import com.harry.clio.entity.BookAuthorJson;
 import com.harry.clio.entity.BookType;

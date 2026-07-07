@@ -1,7 +1,7 @@
 package com.harry.clio.mapper;
 
-import com.harry.clio.dto.CreateUserRequest;
-import com.harry.clio.dto.UserResponse;
+import com.harry.clio.dto.user.CreateUserRequest;
+import com.harry.clio.dto.user.UserResponse;
 import com.harry.clio.entity.User;
 
 import org.mapstruct.Mapper;

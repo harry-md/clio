@@ -1,8 +1,8 @@
 package com.harry.clio.controller;
 
-import com.harry.clio.dto.CreateUserRequest;
 import com.harry.clio.dto.CustomUser;
-import com.harry.clio.dto.UserResponse;
+import com.harry.clio.dto.user.CreateUserRequest;
+import com.harry.clio.dto.user.UserResponse;
 import com.harry.clio.service.UserService;
 
 import jakarta.validation.Valid;

@@ -1,8 +1,8 @@
 package com.harry.clio.controller;
 
-import com.harry.clio.dto.AuthResponse;
-import com.harry.clio.dto.LoginRequest;
-import com.harry.clio.dto.LoginResult;
+import com.harry.clio.dto.login.AuthResponse;
+import com.harry.clio.dto.login.LoginRequest;
+import com.harry.clio.dto.login.LoginResult;
 import com.harry.clio.service.AuthService;
 
 import jakarta.validation.Valid;

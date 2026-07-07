@@ -1,4 +1,4 @@
-package com.harry.clio.dto;
+package com.harry.clio.dto.user;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
