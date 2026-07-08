@@ -26,6 +26,6 @@ public class Publisher {
     @Column(nullable = false)
     private String bankAccountNumber;
 
-    @Column(nullable = false, scale = 15, precision = 2)
+    @Column(nullable = false, scale = 2, precision = 15)
     private BigDecimal balance = BigDecimal.ZERO;
 }

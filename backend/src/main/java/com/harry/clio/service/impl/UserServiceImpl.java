@@ -13,7 +13,6 @@ import com.harry.clio.service.CloudinaryService;
 import com.harry.clio.service.UserService;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 import org.jspecify.annotations.NonNull;
 import org.springframework.security.core.GrantedAuthority;
@@ -29,7 +28,6 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.util.Set;
 
 @RequiredArgsConstructor
-@Slf4j
 @Service
 public class UserServiceImpl implements UserService, UserDetailsService {
     private final UserRepository userRepository;
@@ -97,8 +95,6 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Transactional(readOnly = true)
     @Override
     public UserResponse getUserById(int id) {
-        return userMapper.toDto(userRepository
-                .findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy user")));
+        return userMapper.toDto(getUserOrThrow(id));
     }
 }

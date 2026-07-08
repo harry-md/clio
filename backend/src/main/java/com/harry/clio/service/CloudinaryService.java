@@ -5,7 +5,6 @@ import com.cloudinary.utils.ObjectUtils;
 import com.harry.clio.exception.CloudinaryException;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 import org.apache.tika.Tika;
 import org.springframework.stereotype.Service;
@@ -16,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 
 @RequiredArgsConstructor
-@Slf4j
 @Service
 public class CloudinaryService {
     private final Cloudinary cloudinary;
@@ -36,7 +34,6 @@ public class CloudinaryService {
                 throw new CloudinaryException("Định dạng file không hợp lệ");
             }
         } catch (IOException ex) {
-            log.error("Lỗi khi đọc file {}", ex);
             throw new CloudinaryException("Lỗi khi đọc file");
         }
     }
@@ -49,7 +46,6 @@ public class CloudinaryService {
                     .upload(file.getBytes(), ObjectUtils.asMap("resource_type", "auto"));
             return res.get("secure_url").toString();
         } catch (IOException ex) {
-            log.error("Lỗi khi upload ảnh {}", ex);
             throw new CloudinaryException("Lỗi khi upload ảnh");
         }
     }
@@ -69,7 +65,6 @@ public class CloudinaryService {
         try {
             cloudinary.uploader().destroy(publicId, ObjectUtils.asMap("resource_type", "auto"));
         } catch (IOException ex) {
-            log.error("Lỗi khi xóa ảnh: {}", ex);
             throw new CloudinaryException("Lỗi khi xóa ảnh");
         }
     }

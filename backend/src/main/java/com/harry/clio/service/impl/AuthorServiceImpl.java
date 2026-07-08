@@ -11,14 +11,12 @@ import com.harry.clio.service.AuthorService;
 import com.harry.clio.service.CloudinaryService;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @RequiredArgsConstructor
-@Slf4j
 @Service
 public class AuthorServiceImpl implements AuthorService {
     private final AuthorRepository authorRepository;
@@ -38,7 +36,6 @@ public class AuthorServiceImpl implements AuthorService {
         try {
             cloudinaryService.delete(avatarUrl);
         } catch (RuntimeException ex) {
-            log.error("Lỗi khi xóa avatar tác giả {}", ex.getMessage());
         }
     }
 
