@@ -8,6 +8,4 @@ import org.mapstruct.Mapper;
 @Mapper(componentModel = "spring")
 public interface PublisherMapper {
     PublisherDto toDto(Publisher entity);
-
-    Publisher toEntity(PublisherDto dto);
 }

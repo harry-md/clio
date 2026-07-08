@@ -10,7 +10,6 @@ import com.harry.clio.util.JwtUtil;
 import com.nimbusds.jose.JOSEException;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,7 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
-@Slf4j
 @Transactional
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -43,7 +41,6 @@ public class AuthServiceImpl implements AuthService {
             return new LoginResult(token, authResponse);
 
         } catch (JOSEException ex) {
-            log.error("Lỗi tạo JWT token: {}", ex);
             throw new AuthenticationFailedException("Lỗi đăng nhập");
         }
     }

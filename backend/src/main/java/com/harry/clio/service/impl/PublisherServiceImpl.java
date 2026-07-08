@@ -4,8 +4,6 @@ import com.harry.clio.dto.publisher.PublisherDto;
 import com.harry.clio.entity.Publisher;
 import com.harry.clio.entity.User;
 import com.harry.clio.entity.UserRole;
-import com.harry.clio.exception.BadRequestException;
-import com.harry.clio.exception.DuplicateResourceException;
 import com.harry.clio.exception.ResourceNotFoundException;
 import com.harry.clio.mapper.PublisherMapper;
 import com.harry.clio.repository.PublisherRepository;
@@ -48,21 +46,18 @@ public class PublisherServiceImpl implements PublisherService {
 
     @Override
     public PublisherDto createPublisher(PublisherDto publisherDto) {
+        if (publisherRepository.existsById(publisherDto.userId())) {
+            throw new ResourceNotFoundException("Nhà xuất bản đã tồn tại");
+        }
+
         User user = userRepository
                 .findById(publisherDto.userId())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
-
-        if (publisherRepository.existsById(publisherDto.userId())) {
-            throw new DuplicateResourceException("Nhà xuất bản đã tồn tại");
-        }
-
-        if (user.getRole() == UserRole.ADMIN) {
-            throw new BadRequestException("User đang là ADMIN");
-        }
         user.setRole(UserRole.PUBLISHER);
 
-        Publisher publisher = publisherMapper.toEntity(publisherDto);
+        Publisher publisher = new Publisher();
         publisher.setUser(user);
+        publisher.setBankAccountNumber(publisherDto.bankAccountNumber());
         return publisherMapper.toDto(publisherRepository.save(publisher));
     }
 

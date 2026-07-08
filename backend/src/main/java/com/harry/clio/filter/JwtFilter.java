@@ -10,7 +10,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -22,7 +21,6 @@ import java.io.IOException;
 import java.util.List;
 
 @RequiredArgsConstructor
-@Slf4j
 @Component
 public class JwtFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
@@ -67,7 +65,6 @@ public class JwtFilter extends OncePerRequestFilter {
                 }
             } catch (Exception ex) {
                 SecurityContextHolder.clearContext();
-                logger.debug("Lỗi khi giải mã  {}", ex);
             }
         }
         filterChain.doFilter(request, response);

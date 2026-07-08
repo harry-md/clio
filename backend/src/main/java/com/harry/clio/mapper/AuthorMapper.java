@@ -17,5 +17,5 @@ public interface AuthorMapper {
 
     @Mapping(target = "avatar", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    Author updateEntity(UpdateAuthorRequest dto, @MappingTarget Author entity);
+    void updateEntity(UpdateAuthorRequest dto, @MappingTarget Author entity);
 }

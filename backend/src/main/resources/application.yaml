@@ -42,13 +42,13 @@ r2:
   account_id: ${R2_ACCOUNT_ID}
   access_key: ${R2_ACCESS_KEY}
   secret_key: ${R2_SECRET_KEY}
-logging:
-  level:
-    org:
-      hibernate:
-        SQL: DEBUG
-        orm:
-          jdbc:
-            bind: TRACE
-  file:
-    name: app.log
+#logging:
+#  level:
+#    org:
+#      hibernate:
+#        SQL: DEBUG
+#        orm:
+#          jdbc:
+#            bind: TRACE
+#  file:
+#    name: app.log
