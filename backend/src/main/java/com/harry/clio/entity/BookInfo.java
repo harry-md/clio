@@ -15,9 +15,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
-
 @Getter
 @Setter
 @NoArgsConstructor
@@ -36,10 +33,6 @@ public class BookInfo {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(columnDefinition = "JSONB")
-    private MetadataJson metadata;
-
     @Column(nullable = false, length = 2)
     @Enumerated(EnumType.STRING)
     private Language language = Language.EN;
@@ -48,7 +41,7 @@ public class BookInfo {
     private Long fileSizeBytes;
 
     @Column(nullable = false)
-    private Long pageCount;
+    private Long wordCount;
 
     @Column(nullable = true)
     private String isbn;

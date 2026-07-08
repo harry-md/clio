@@ -4,6 +4,8 @@ import com.harry.clio.entity.BookType;
 
 import jakarta.validation.constraints.*;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import java.math.BigDecimal;
 
 public record CreateBookRequest(
@@ -15,4 +17,5 @@ public record CreateBookRequest(
         @Digits(integer = 15, fraction = 2, message = "Giá tiền sách không hợp lệ")
         BigDecimal price,
 
-        BookType type) {}
+        BookType type,
+        MultipartFile file) {}

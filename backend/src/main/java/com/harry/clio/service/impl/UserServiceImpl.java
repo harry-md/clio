@@ -38,6 +38,12 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     private final BCryptPasswordEncoder passwordEncoder;
     private final TransactionTemplate transactionTemplate;
 
+    private User getUserOrThrow(int id) {
+        return userRepository
+                .findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy user"));
+    }
+
     @Transactional(readOnly = true)
     @Override
     public UserDetails loadUserByUsername(@NonNull String username)
@@ -75,7 +81,9 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                 User user = userMapper.toEntity(request);
                 user.setPassword(passwordEncoder.encode(request.password()));
                 user.setRole(UserRole.READER);
-                user.setAvatar(finalAvatarUrl);
+                if (finalAvatarUrl != null) {
+                    user.setAvatar(finalAvatarUrl);
+                }
                 return userMapper.toDto(userRepository.save(user));
             });
         } catch (Exception ex) {
@@ -87,13 +95,6 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Transactional(readOnly = true)
-    @Override
-    public UserResponse getCurrentUser(int id) {
-        return userMapper.toDto(userRepository
-                .findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy user")));
-    }
-
     @Override
     public UserResponse getUserById(int id) {
         return userMapper.toDto(userRepository

@@ -18,7 +18,7 @@ import java.util.List;
 public class CategoryController {
     private final CategoryService categoryService;
 
-    @GetMapping("")
+    @GetMapping
     public ResponseEntity<List<CategoryResponse>> list() {
         return ResponseEntity.ok().body(categoryService.getCategories());
     }
@@ -29,7 +29,7 @@ public class CategoryController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("")
+    @PostMapping
     public ResponseEntity<CategoryResponse> create(@RequestBody CreateCategoryRequest request) {
         return ResponseEntity.ok().body(categoryService.createCategory(request));
     }

@@ -33,13 +33,13 @@ public class PublisherController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("")
+    @GetMapping
     public ResponseEntity<List<PublisherDto>> list() {
         return ResponseEntity.ok(publisherService.getAllPublishers());
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("")
+    @PostMapping
     public ResponseEntity<PublisherDto> create(@RequestBody PublisherDto publisherDto) {
         return new ResponseEntity<>(
                 publisherService.createPublisher(publisherDto), HttpStatus.CREATED);
