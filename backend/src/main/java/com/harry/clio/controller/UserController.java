@@ -30,7 +30,8 @@ public class UserController {
     }
 
     @GetMapping("/current-user")
-    public ResponseEntity<UserResponse> getCurrentUser(@AuthenticationPrincipal CustomUser user) {
-        return new ResponseEntity<>(userService.getCurrentUser(user.getId()), HttpStatus.OK);
+    public ResponseEntity<UserResponse> getCurrentUser(
+            @AuthenticationPrincipal CustomUser principal) {
+        return new ResponseEntity<>(userService.getUserById(principal.getId()), HttpStatus.OK);
     }
 }
