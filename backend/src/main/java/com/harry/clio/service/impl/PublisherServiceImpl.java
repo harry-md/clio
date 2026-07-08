@@ -19,7 +19,6 @@ import java.util.List;
 
 @RequiredArgsConstructor
 @Service
-@Transactional
 public class PublisherServiceImpl implements PublisherService {
     private final PublisherRepository publisherRepository;
     private final PublisherMapper publisherMapper;
@@ -32,7 +31,6 @@ public class PublisherServiceImpl implements PublisherService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public PublisherDto getPublisherByUserId(int userId) {
         return publisherMapper.toDto(getPublisherOrThrow(userId));
     }
@@ -45,6 +43,7 @@ public class PublisherServiceImpl implements PublisherService {
     }
 
     @Override
+    @Transactional
     public PublisherDto createPublisher(PublisherDto publisherDto) {
         if (publisherRepository.existsById(publisherDto.userId())) {
             throw new ResourceNotFoundException("Nhà xuất bản đã tồn tại");

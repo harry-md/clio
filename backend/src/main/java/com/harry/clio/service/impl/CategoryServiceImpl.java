@@ -11,13 +11,11 @@ import com.harry.clio.service.CategoryService;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @RequiredArgsConstructor
 @Service
-@Transactional
 public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
@@ -32,7 +30,6 @@ public class CategoryServiceImpl implements CategoryService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy danh mục"));
     }
 
-    @Transactional(readOnly = true)
     @Override
     public CategoryResponse getCategoryById(int categoryId) {
         return categoryMapper.toDto(getCategoryOrThrow(categoryId));

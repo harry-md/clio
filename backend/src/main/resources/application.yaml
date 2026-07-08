@@ -6,6 +6,11 @@ spring:
     import: optional:file:.env.properties
   application:
     name: clio
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
   datasource:
     hikari:
       auto-commit: false

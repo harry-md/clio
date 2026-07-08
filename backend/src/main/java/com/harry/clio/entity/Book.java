@@ -55,13 +55,13 @@ public class Book {
     @Enumerated(EnumType.STRING)
     private BookType type = BookType.SYSTEM;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String fileUrl;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String encryptedFileUrl;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String encryptedContentKey;
 
     @Column(nullable = true)
@@ -74,6 +74,10 @@ public class Book {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(nullable = true, columnDefinition = "JSONB")
     private List<BookAuthorJson> authors;
+
+    @Column(nullable = false, length = 20)
+    @Enumerated(EnumType.STRING)
+    private BookStatus status = BookStatus.PROCESSING;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(

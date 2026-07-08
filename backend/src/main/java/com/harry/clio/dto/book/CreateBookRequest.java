@@ -1,12 +1,15 @@
 package com.harry.clio.dto.book;
 
-import com.harry.clio.entity.BookType;
+import com.harry.clio.entity.BookAuthorJson;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.Set;
 
 public record CreateBookRequest(
         @NotBlank(message = "Tên sách không được để trống")
@@ -14,8 +17,20 @@ public record CreateBookRequest(
         String title,
 
         @NotNull(message = "Giá tiền sách không được để trống")
-        @Digits(integer = 15, fraction = 2, message = "Giá tiền sách không hợp lệ")
+        @DecimalMin(value = "0.0", inclusive = true, message = "Giá tiền sách không được âm")
+        @Digits(integer = 13, fraction = 2, message = "Giá tiền sách không hợp lệ")
         BigDecimal price,
 
-        BookType type,
-        MultipartFile file) {}
+        @Valid @NotEmpty(message = "Tác giả không được để trống")
+        List<BookAuthorJson> authors,
+
+        @NotEmpty(message = "Danh mục sách không được để trống")
+        Set<Integer> categoryIds,
+
+        @Size(max = 20000, message = "Mô tả sách vượt quá độ dài cho phép")
+        String description,
+
+        @Size(max = 20, message = "ISBN vượt quá độ dài cho phép")
+        String isbn,
+
+        @NotNull(message = "File sách không được để trống") MultipartFile file) {}
