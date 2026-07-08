@@ -1,8 +1,8 @@
 package com.harry.clio.service.impl;
 
 import com.harry.clio.dto.CustomUser;
-import com.harry.clio.dto.UserCreateRequest;
-import com.harry.clio.dto.UserResponse;
+import com.harry.clio.dto.user.CreateUserRequest;
+import com.harry.clio.dto.user.UserResponse;
 import com.harry.clio.entity.User;
 import com.harry.clio.entity.UserRole;
 import com.harry.clio.exception.DuplicateResourceException;
@@ -60,19 +60,18 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Override
-    public UserResponse register(UserCreateRequest request) {
+    public UserResponse register(CreateUserRequest request) {
         String avatarUrl = null;
         if (request.avatar() != null && !request.avatar().isEmpty()) {
             avatarUrl = cloudinaryService.upload(request.avatar());
         }
-        final String finalAvatarUrl = avatarUrl;
 
+        final String finalAvatarUrl = avatarUrl;
         try {
             return transactionTemplate.execute((status) -> {
                 if (userRepository.existsByUsername(request.username())) {
                     throw new DuplicateResourceException("Username này đã tồn tại");
                 }
-
                 User user = userMapper.toEntity(request);
                 user.setPassword(passwordEncoder.encode(request.password()));
                 user.setRole(UserRole.READER);
@@ -90,6 +89,13 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Transactional(readOnly = true)
     @Override
     public UserResponse getCurrentUser(int id) {
+        return userMapper.toDto(userRepository
+                .findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy user")));
+    }
+
+    @Override
+    public UserResponse getUserById(int id) {
         return userMapper.toDto(userRepository
                 .findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy user")));

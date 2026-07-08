@@ -1,9 +1,9 @@
 package com.harry.clio.service.impl;
 
-import com.harry.clio.dto.AuthResponse;
 import com.harry.clio.dto.CustomUser;
-import com.harry.clio.dto.LoginRequest;
-import com.harry.clio.dto.LoginResult;
+import com.harry.clio.dto.login.AuthResponse;
+import com.harry.clio.dto.login.LoginRequest;
+import com.harry.clio.dto.login.LoginResult;
 import com.harry.clio.exception.AuthenticationFailedException;
 import com.harry.clio.service.AuthService;
 import com.harry.clio.util.JwtUtil;

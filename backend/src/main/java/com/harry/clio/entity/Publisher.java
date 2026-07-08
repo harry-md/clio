@@ -23,12 +23,6 @@ public class Publisher {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false, length = 255)
-    private String name;
-
-    @Column(columnDefinition = "TEXT")
-    private String description;
-
     @Column(nullable = false)
     private String bankAccountNumber;
 

@@ -58,6 +58,12 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers("/api/users")
                         .permitAll()
+                        .requestMatchers("/api/authors/**")
+                        .permitAll()
+                        .requestMatchers("/api/categories/**")
+                        .permitAll()
+                        .requestMatchers("/api/publishers/**")
+                        .hasAnyRole("ADMIN", "PUBLISHER")
                         .anyRequest()
                         .authenticated())
                 .addFilterBefore(jwtFilter, BasicAuthenticationFilter.class);

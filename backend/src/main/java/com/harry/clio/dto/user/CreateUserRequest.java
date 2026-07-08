@@ -1,4 +1,4 @@
-package com.harry.clio.dto;
+package com.harry.clio.dto.user;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -8,7 +8,7 @@ import jakarta.validation.constraints.Size;
 
 import org.springframework.web.multipart.MultipartFile;
 
-public record UserCreateRequest(
+public record CreateUserRequest(
         @NotBlank(message = "Tên đăng nhập không được để trống")
         @Size(max = 255, message = "Tên đăng nhập vượt quá độ dài cho phép")
         String username,

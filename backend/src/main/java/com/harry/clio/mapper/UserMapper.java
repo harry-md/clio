@@ -1,7 +1,7 @@
 package com.harry.clio.mapper;
 
-import com.harry.clio.dto.UserCreateRequest;
-import com.harry.clio.dto.UserResponse;
+import com.harry.clio.dto.user.CreateUserRequest;
+import com.harry.clio.dto.user.UserResponse;
 import com.harry.clio.entity.User;
 
 import org.mapstruct.Mapper;
@@ -13,7 +13,7 @@ public interface UserMapper {
     @Mapping(target = "avatar", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    User toEntity(UserCreateRequest request);
+    User toEntity(CreateUserRequest request);
 
     UserResponse toDto(User user);
 }
