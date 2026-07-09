@@ -13,10 +13,10 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
+@Builder
+@AllArgsConstructor
 @Getter
 @Setter
 @NoArgsConstructor
@@ -41,6 +41,7 @@ public class BookAuthor {
     @JoinColumn(name = "book_id", nullable = false)
     private Book book;
 
+    @Builder.Default
     @Column(nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
     private BookAuthorRole role = BookAuthorRole.AUTHOR;

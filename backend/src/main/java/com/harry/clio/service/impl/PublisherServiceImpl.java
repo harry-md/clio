@@ -13,7 +13,6 @@ import com.harry.clio.service.PublisherService;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -43,7 +42,6 @@ public class PublisherServiceImpl implements PublisherService {
     }
 
     @Override
-    @Transactional
     public PublisherDto createPublisher(PublisherDto publisherDto) {
         if (publisherRepository.existsById(publisherDto.userId())) {
             throw new ResourceNotFoundException("Nhà xuất bản đã tồn tại");
@@ -54,9 +52,10 @@ public class PublisherServiceImpl implements PublisherService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
         user.setRole(UserRole.PUBLISHER);
 
-        Publisher publisher = new Publisher();
-        publisher.setUser(user);
-        publisher.setBankAccountNumber(publisherDto.bankAccountNumber());
+        Publisher publisher = Publisher.builder()
+                .user(user)
+                .bankAccountNumber(publisherDto.bankAccountNumber())
+                .build();
         return publisherMapper.toDto(publisherRepository.save(publisher));
     }
 

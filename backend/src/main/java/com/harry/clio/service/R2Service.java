@@ -44,9 +44,7 @@ public class R2Service {
             s3Client.putObject(req, RequestBody.fromFile(tempFile));
             return objectKey;
         } finally {
-            if (tempFile != null && tempFile.exists()) {
-                tempFile.delete();
-            }
+            tempFile.delete();
         }
     }
 
@@ -67,7 +65,7 @@ public class R2Service {
             throw new BadRequestException("File không được để trống");
         }
         if (file.getSize() > MAX_FILE_SIZE) {
-            throw new BadRequestException("File vượt quá kích thước tối đa 100MB");
+            throw new BadRequestException("File vượt quá kích thước tối đa");
         }
         File tempFile = null;
         try {

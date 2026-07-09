@@ -22,10 +22,10 @@ public record CreateBookRequest(
         BigDecimal price,
 
         @Valid @NotEmpty(message = "Tác giả không được để trống")
-        List<BookAuthorJson> authors,
+        List<@Valid BookAuthorJson> authors,
 
         @NotEmpty(message = "Danh mục sách không được để trống")
-        Set<Integer> categoryIds,
+        Set<@NotNull Integer> categoryIds,
 
         @Size(max = 20000, message = "Mô tả sách vượt quá độ dài cho phép")
         String description,

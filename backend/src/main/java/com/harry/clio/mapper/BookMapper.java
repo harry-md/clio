@@ -1,6 +1,5 @@
 package com.harry.clio.mapper;
 
-import com.harry.clio.dto.author.AuthorResponse;
 import com.harry.clio.dto.book.BookDetailResponse;
 import com.harry.clio.dto.book.BookInfoResponse;
 import com.harry.clio.dto.book.BookListResponse;
@@ -14,9 +13,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring")
 public interface BookMapper {
@@ -47,17 +44,4 @@ public interface BookMapper {
 
     @Mapping(target = "bookInfo", source = "bookInfo")
     BookDetailResponse toDetailResponse(Book book, BookInfoResponse bookInfo);
-
-    default List<BookAuthorJson> toAuthorSnapshots(
-            List<BookAuthorJson> requestAuthors, List<AuthorResponse> authorResponses) {
-        Map<Integer, AuthorResponse> authorById = authorResponses.stream()
-                .collect(Collectors.toMap(AuthorResponse::id, author -> author));
-
-        return requestAuthors.stream()
-                .map(requestAuthor -> {
-                    AuthorResponse author = authorById.get(requestAuthor.authorId());
-                    return new BookAuthorJson(author.id(), author.fullName(), requestAuthor.role());
-                })
-                .toList();
-    }
 }
