@@ -1,7 +1,7 @@
 package com.harry.clio.service.impl;
 
 import com.harry.clio.dto.book.BookDetailResponse;
-import com.harry.clio.dto.book.CreateBookRequest;
+import com.harry.clio.dto.book.CreateBookMetadataRequest;
 import com.harry.clio.entity.*;
 import com.harry.clio.exception.BadRequestException;
 import com.harry.clio.mapper.BookInfoMapper;
@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashSet;
 import java.util.List;
@@ -36,16 +37,17 @@ public class BookServiceImpl implements BookService {
     private final R2Service r2Service;
 
     @Override
-    public BookDetailResponse uploadBook(int publisherId, CreateBookRequest request) {
+    public BookDetailResponse uploadBook(
+            int publisherId, CreateBookMetadataRequest request, MultipartFile file) {
         if (categoryRepository.countByIdIn(request.categoryIds())
                 != request.categoryIds().size()) {
             throw new BadRequestException("Danh mục không hợp lệ");
         }
 
-        String originFileUrl = null;
+        String fileUrl = null;
         try {
-            originFileUrl = r2Service.uploadOriginEbook(request.file());
-            final String finalOriginFileUrl = originFileUrl;
+            fileUrl = r2Service.uploadOriginEbook(file);
+            final String finalFileUrl = fileUrl;
 
             return transactionTemplate.execute(status -> {
                 Set<Category> categories =
@@ -55,7 +57,7 @@ public class BookServiceImpl implements BookService {
                 Book book = bookRepository.save(bookMapper.toEntity(
                         request,
                         publisherRepository.getReferenceById(publisherId),
-                        finalOriginFileUrl,
+                        finalFileUrl,
                         authorSnapshots,
                         categories));
 
@@ -65,12 +67,12 @@ public class BookServiceImpl implements BookService {
                         .book(book)
                         .isbn(request.isbn())
                         .description(request.description())
-                        .fileSizeBytes(request.file().getSize())
+                        .fileSize(file.getSize())
                         .build());
                 return bookMapper.toDetailResponse(book, bookInfoMapper.toResponse(bookInfo));
             });
         } catch (RuntimeException ex) {
-            if (originFileUrl != null) r2Service.delete(originFileUrl);
+            if (fileUrl != null) r2Service.delete(fileUrl);
             throw ex;
         }
     }

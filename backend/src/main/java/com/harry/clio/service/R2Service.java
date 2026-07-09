@@ -31,7 +31,7 @@ public class R2Service {
     private final S3Client s3Client;
 
     public String uploadOriginEbook(MultipartFile file) {
-        File tempFile = validateEbook(file);
+        File tmpFile = validateEbook(file);
         String objectKey = "books/origin/" + UUID.randomUUID() + ".epub";
 
         try {
@@ -41,10 +41,10 @@ public class R2Service {
                     .contentType("application/epub+zip")
                     .contentLength(file.getSize())
                     .build();
-            s3Client.putObject(req, RequestBody.fromFile(tempFile));
+            s3Client.putObject(req, RequestBody.fromFile(tmpFile));
             return objectKey;
         } finally {
-            tempFile.delete();
+            tmpFile.delete();
         }
     }
 
@@ -67,25 +67,24 @@ public class R2Service {
         if (file.getSize() > MAX_FILE_SIZE) {
             throw new BadRequestException("File vượt quá kích thước tối đa");
         }
-        File tempFile = null;
-        try {
-            tempFile = File.createTempFile("ebook-", ".epub");
-            file.transferTo(tempFile);
 
-            EpubCheck epubCheck = new EpubCheck(tempFile);
+        File tmpFile = null;
+        try {
+            tmpFile = File.createTempFile(UUID.randomUUID().toString(), ".epub");
+            file.transferTo(tmpFile);
+
+            EpubCheck epubCheck = new EpubCheck(tmpFile);
             int result = epubCheck.doValidate();
-            boolean hasError = (result & EPUBCHECK_ERROR) != 0;
             boolean hasFatal = (result & EPUBCHECK_FATAL) != 0;
-            if (hasError || hasFatal) {
+            if (hasFatal) {
                 throw new BadRequestException("File EPUB không hợp lệ");
             }
-
-            return tempFile;
+            return tmpFile;
         } catch (IOException ex) {
             throw new BadRequestException("Lỗi đọc file epub");
         } catch (RuntimeException ex) {
-            if (tempFile != null && tempFile.exists()) {
-                tempFile.delete();
+            if (tmpFile != null) {
+                tmpFile.delete();
             }
             throw ex;
         }

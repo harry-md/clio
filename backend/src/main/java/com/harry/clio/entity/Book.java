@@ -107,7 +107,7 @@ public class Book {
     @CreationTimestamp
     private Instant createdAt;
 
-    @Column(nullable = false, updatable = false)
+    @Column(nullable = false)
     @UpdateTimestamp
     private Instant updatedAt;
 }

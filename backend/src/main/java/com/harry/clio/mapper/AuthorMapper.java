@@ -7,17 +7,12 @@ import com.harry.clio.entity.Author;
 
 import org.mapstruct.*;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface AuthorMapper {
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "avatar", ignore = true)
-    @Mapping(target = "verified", ignore = true)
     Author toEntity(CreateAuthorRequest dto);
 
     AuthorResponse toDto(Author entity);
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "avatar", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateEntity(UpdateAuthorRequest dto, @MappingTarget Author entity);
 }

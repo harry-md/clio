@@ -40,7 +40,7 @@ public class BookInfo {
 
     @Builder.Default
     @Column(nullable = false)
-    private Long fileSizeBytes = 0L;
+    private Long fileSize = 0L;
 
     @Builder.Default
     @Column(nullable = false)

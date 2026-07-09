@@ -5,13 +5,11 @@ import com.harry.clio.entity.BookAuthorJson;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 
-import org.springframework.web.multipart.MultipartFile;
-
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Set;
 
-public record CreateBookRequest(
+public record CreateBookMetadataRequest(
         @NotBlank(message = "Tên sách không được để trống")
         @Size(max = 255, message = "Tên sách vượt quá độ dài cho phép")
         String title,
@@ -22,7 +20,7 @@ public record CreateBookRequest(
         BigDecimal price,
 
         @Valid @NotEmpty(message = "Tác giả không được để trống")
-        List<@Valid BookAuthorJson> authors,
+        List<BookAuthorJson> authors,
 
         @NotEmpty(message = "Danh mục sách không được để trống")
         Set<@NotNull Integer> categoryIds,
@@ -31,6 +29,4 @@ public record CreateBookRequest(
         String description,
 
         @Size(max = 20, message = "ISBN vượt quá độ dài cho phép")
-        String isbn,
-
-        @NotNull(message = "File sách không được để trống") MultipartFile file) {}
+        String isbn) {}

@@ -40,7 +40,7 @@ public class Order {
     @CreationTimestamp
     private Instant createdAt;
 
-    @Column(nullable = false, updatable = true)
+    @Column(nullable = false)
     @UpdateTimestamp
     private Instant updatedAt;
 }
