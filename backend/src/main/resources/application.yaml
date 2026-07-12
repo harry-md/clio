@@ -1,0 +1,54 @@
+spring:
+  threads:
+    virtual:
+      enabled: true
+  config:
+    import: optional:file:.env.properties
+  application:
+    name: clio
+  datasource:
+    hikari:
+      auto-commit: false
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/cliodb
+    username: root
+    password: root
+  sql:
+    init:
+      mode: always
+  jpa:
+    defer-datasource-initialization: true
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          fetch_size: 100
+        connection:
+          provider_disables_autocommit: true
+    open-in-view: false
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION}
+cloudinary:
+  cloud_name: ${CLOUDINARY_CLOUD_NAME}
+  api_key: ${CLOUDINARY_API_KEY}
+  api_secret: ${CLOUDINARY_API_SECRET}
+r2:
+  bucket_name: ${R2_BUCKET_NAME}
+  account_id: ${R2_ACCOUNT_ID}
+  access_key: ${R2_ACCESS_KEY}
+  secret_key: ${R2_SECRET_KEY}
+#logging:
+#  level:
+#    org:
+#      hibernate:
+#        SQL: DEBUG
+#        orm:
+#          jdbc:
+#            bind: TRACE
+#  file:
+#    name: app.log
