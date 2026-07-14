@@ -82,7 +82,7 @@ public class Book {
     @Builder.Default
     @Column(nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
-    private BookStatus status = BookStatus.PROCESSING;
+    private BookStatus status = BookStatus.QUEUED;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(

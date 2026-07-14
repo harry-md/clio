@@ -2,6 +2,7 @@ package com.harry.clio.dto.book;
 
 import com.harry.clio.dto.category.CategoryResponse;
 import com.harry.clio.entity.BookAuthorJson;
+import com.harry.clio.entity.BookStatus;
 import com.harry.clio.entity.BookType;
 
 import java.math.BigDecimal;
@@ -15,6 +16,7 @@ public record BookDetailResponse(
         BigDecimal price,
         String thumbnail,
         BookType type,
+        BookStatus status,
         Double rating,
         Long ratingCount,
         List<BookAuthorJson> authors,

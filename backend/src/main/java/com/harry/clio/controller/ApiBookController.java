@@ -2,6 +2,8 @@ package com.harry.clio.controller;
 
 import com.harry.clio.dto.CustomUser;
 import com.harry.clio.dto.book.BookDetailResponse;
+import com.harry.clio.dto.book.BookFilterRequest;
+import com.harry.clio.dto.book.BookListResponse;
 import com.harry.clio.dto.book.CreateBookMetadataRequest;
 import com.harry.clio.service.BookService;
 
@@ -9,6 +11,7 @@ import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/books")
-public class BookController {
+public class ApiBookController {
     private final BookService bookService;
 
     @PreAuthorize("hasRole('PUBLISHER')")
@@ -31,5 +34,11 @@ public class BookController {
             @RequestPart("file") MultipartFile file) {
         BookDetailResponse response = bookService.uploadBook(principal.getId(), request, file);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @GetMapping
+    public ResponseEntity<Page<BookListResponse>> list(
+            @Valid @ModelAttribute BookFilterRequest filterRequest) {
+        return ResponseEntity.ok(bookService.getBooks());
     }
 }

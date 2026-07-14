@@ -1,7 +1,7 @@
 package com.harry.clio.entity;
 
 public enum BookStatus {
-    FAILED,
-    PROCESSING,
-    COMPLETED
+    QUEUED,
+    COMPLETED,
+    FAILED
 }

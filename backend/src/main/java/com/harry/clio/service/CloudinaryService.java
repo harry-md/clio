@@ -36,7 +36,7 @@ public class CloudinaryService {
                 throw new CloudinaryException("Định dạng file không hợp lệ");
             }
         } catch (IOException ex) {
-            log.error("Lỗi khi đọc file", ex);
+            log.error("Lỗi khi đọc file {}", file.getName(), ex);
             throw new CloudinaryException("Lỗi khi đọc file");
         }
     }
@@ -49,7 +49,7 @@ public class CloudinaryService {
                     .upload(file.getBytes(), ObjectUtils.asMap("resource_type", "auto"));
             return res.get("secure_url").toString();
         } catch (IOException ex) {
-            log.error("Lỗi khi upload ảnh Cloudinary", ex);
+            log.error("Lỗi khi upload ảnh Cloudinary {}", file.getName(), ex);
             throw new CloudinaryException("Lỗi khi upload ảnh");
         }
     }
@@ -68,7 +68,7 @@ public class CloudinaryService {
         try {
             cloudinary.uploader().destroy(publicId, ObjectUtils.asMap("resource_type", "auto"));
         } catch (IOException ex) {
-            log.error("Lỗi khi xóa ảnh Cloudinary", ex);
+            log.error("Lỗi khi xóa ảnh Cloudinary {}", url, ex);
             throw new CloudinaryException("Lỗi khi xóa ảnh");
         }
     }

@@ -1,24 +1,28 @@
 package com.harry.clio.service;
 
-import com.harry.clio.config.RedisKeys;
-
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
-import tools.jackson.core.JacksonException;
+import java.time.Duration;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
 public class BookProcessingQueue {
+    private static final String QUEUE_KEY = "book-processing:queue";
     private final StringRedisTemplate redisTemplate;
 
     public void enqueue(Integer bookId) {
-        try {
-            redisTemplate.opsForList().leftPush(RedisKeys.BOOK_PROCESSING_QUEUE, bookId.toString());
-        } catch (JacksonException ex) {
-            throw new RuntimeException("Lỗi tạo job xử lý ebook", ex);
+        redisTemplate.opsForList().leftPush(QUEUE_KEY, bookId.toString());
+    }
+
+    public Optional<Integer> dequeue(Duration timeout) {
+        String result = redisTemplate.opsForList().rightPop(QUEUE_KEY, timeout);
+        if (result == null) {
+            return Optional.empty();
         }
+        return Optional.of(Integer.parseInt(result));
     }
 }

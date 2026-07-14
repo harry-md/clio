@@ -1,17 +1,20 @@
 package com.harry.clio.service.impl;
 
 import com.harry.clio.dto.book.BookDetailResponse;
+import com.harry.clio.dto.book.BookListResponse;
 import com.harry.clio.dto.book.CreateBookMetadataRequest;
 import com.harry.clio.entity.*;
 import com.harry.clio.exception.BadRequestException;
 import com.harry.clio.mapper.BookInfoMapper;
 import com.harry.clio.mapper.BookMapper;
 import com.harry.clio.repository.*;
+import com.harry.clio.service.BookProcessingQueue;
 import com.harry.clio.service.BookService;
 import com.harry.clio.service.R2Service;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
@@ -35,6 +38,9 @@ public class BookServiceImpl implements BookService {
     private final CategoryRepository categoryRepository;
     private final PublisherRepository publisherRepository;
     private final R2Service r2Service;
+    private final BookProcessingQueue bookProcessingQueue;
+
+    private record CreatedBook(Integer bookId, BookDetailResponse response) {}
 
     @Override
     public BookDetailResponse uploadBook(
@@ -45,11 +51,12 @@ public class BookServiceImpl implements BookService {
         }
 
         String fileUrl = null;
+        CreatedBook savedBook;
         try {
             fileUrl = r2Service.uploadOriginEbook(file);
             final String finalFileUrl = fileUrl;
 
-            return transactionTemplate.execute(status -> {
+            savedBook = transactionTemplate.execute(status -> {
                 Set<Category> categories =
                         new HashSet<>(categoryRepository.findAllById(request.categoryIds()));
                 List<BookAuthorJson> authorSnapshots = buildAuthorSnapshot(request.authors());
@@ -69,19 +76,29 @@ public class BookServiceImpl implements BookService {
                         .description(request.description())
                         .fileSize(file.getSize())
                         .build());
-                return bookMapper.toDetailResponse(book, bookInfoMapper.toResponse(bookInfo));
+
+                return new CreatedBook(
+                        book.getId(),
+                        bookMapper.toDetailResponse(book, bookInfoMapper.toResponse(bookInfo)));
             });
         } catch (RuntimeException ex) {
             if (fileUrl != null) r2Service.delete(fileUrl);
             throw ex;
         }
+        bookProcessingQueue.enqueue(savedBook.bookId());
+        return savedBook.response();
+    }
+
+    @Override
+    public Page<BookListResponse> getBooks() {
+        return null;
     }
 
     private List<BookAuthorJson> buildAuthorSnapshot(List<BookAuthorJson> request) {
         Set<Integer> authorIds =
                 request.stream().map(BookAuthorJson::authorId).collect(Collectors.toSet());
         Map<Integer, Author> authors = authorRepository.findAllById(authorIds).stream()
-                .collect(Collectors.toMap(author -> author.getId(), author -> author));
+                .collect(Collectors.toMap(Author::getId, author -> author));
         return request.stream()
                 .map(authorJson -> {
                     Author author = authors.get(authorJson.authorId());

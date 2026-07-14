@@ -4,25 +4,30 @@ import com.adobe.epubcheck.api.EpubCheck;
 import com.harry.clio.exception.BadRequestException;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.UUID;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class R2Service {
     private static final long MAX_FILE_SIZE = 100 * 1024 * 1024;
-    private static final int EPUBCHECK_ERROR = 2;
     private static final int EPUBCHECK_FATAL = 4;
 
     @Value("${r2.bucket_name}")
@@ -44,7 +49,44 @@ public class R2Service {
             s3Client.putObject(req, RequestBody.fromFile(tmpFile));
             return objectKey;
         } finally {
-            tmpFile.delete();
+            deleteTmpFile(tmpFile);
+        }
+    }
+
+    public Path downloadToTemp(String objectKey) {
+        Path tmpFile = null;
+        try {
+            tmpFile = Files.createTempFile("origin-", ".epub");
+            Files.deleteIfExists(tmpFile);
+
+            GetObjectRequest req = GetObjectRequest.builder()
+                    .bucket(R2_BUCKET_NAME)
+                    .key(objectKey)
+                    .build();
+            s3Client.getObject(req, tmpFile);
+
+            return tmpFile;
+        } catch (IOException | RuntimeException ex) {
+            if (tmpFile != null) {
+                deleteTmpFile(tmpFile);
+            }
+            throw new RuntimeException(ex);
+        }
+    }
+
+    public String uploadEncryptedEbook(Path file) {
+        String objectKey = "books/encrypted/" + UUID.randomUUID();
+        try {
+            PutObjectRequest req = PutObjectRequest.builder()
+                    .bucket(R2_BUCKET_NAME)
+                    .key(objectKey)
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE)
+                    .build();
+            s3Client.putObject(req, RequestBody.fromFile(file));
+            return objectKey;
+        } catch (RuntimeException ex) {
+            log.error("Lỗi upload file {}", objectKey, ex);
+            throw ex;
         }
     }
 
@@ -53,11 +95,15 @@ public class R2Service {
             return;
         }
 
-        DeleteObjectRequest req = DeleteObjectRequest.builder()
-                .bucket(R2_BUCKET_NAME)
-                .key(objectKey)
-                .build();
-        s3Client.deleteObject(req);
+        try {
+            DeleteObjectRequest req = DeleteObjectRequest.builder()
+                    .bucket(R2_BUCKET_NAME)
+                    .key(objectKey)
+                    .build();
+            s3Client.deleteObject(req);
+        } catch (RuntimeException ex) {
+            log.error("Lỗi xóa file {}", objectKey, ex);
+        }
     }
 
     private File validateEbook(MultipartFile file) {
@@ -77,16 +123,35 @@ public class R2Service {
             int result = epubCheck.doValidate();
             boolean hasFatal = (result & EPUBCHECK_FATAL) != 0;
             if (hasFatal) {
-                throw new BadRequestException("File EPUB không hợp lệ");
+                throw new BadRequestException("File Ebook có lỗi");
             }
             return tmpFile;
         } catch (IOException ex) {
-            throw new BadRequestException("Lỗi đọc file epub");
+            deleteTmpFile(tmpFile);
+            throw new BadRequestException("Lỗi đọc file ebook");
         } catch (RuntimeException ex) {
-            if (tmpFile != null) {
-                tmpFile.delete();
-            }
+            deleteTmpFile(tmpFile);
             throw ex;
+        }
+    }
+
+    private void deleteTmpFile(Path tmpFile) {
+        if (tmpFile != null) {
+            try {
+                Files.deleteIfExists(tmpFile);
+            } catch (IOException ex) {
+                log.error("Lỗi xóa file tạm {}", tmpFile.getFileName().toString(), ex);
+            }
+        }
+    }
+
+    private void deleteTmpFile(File tmpFile) {
+        if (tmpFile != null) {
+            try {
+                Files.deleteIfExists(tmpFile.toPath());
+            } catch (IOException ex) {
+                log.error("Lỗi xóa file tạm {}", tmpFile.getName(), ex);
+            }
         }
     }
 }

@@ -32,6 +32,7 @@ spring:
     show-sql: true
     properties:
       hibernate:
+        generate_statistics: true
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
         jdbc:
@@ -54,6 +55,10 @@ r2:
   account_id: ${R2_ACCOUNT_ID}
   access_key: ${R2_ACCESS_KEY}
   secret_key: ${R2_SECRET_KEY}
+
+clio:
+  master_key: ${EBOOK_MASTER_KEY}
+  page_size: 12
 #logging:
 #  level:
 #    org:

@@ -19,6 +19,7 @@ public interface BookMapper {
     @Mapping(target = "categories", source = "categories")
     @Mapping(target = "publisher", source = "publisher")
     @Mapping(target = "fileUrl", source = "fileUrl")
+    @Mapping(target = "status", constant = "QUEUED")
     Book toEntity(
             CreateBookMetadataRequest request,
             Publisher publisher,
