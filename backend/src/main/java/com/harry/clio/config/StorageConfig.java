@@ -55,7 +55,7 @@ public class StorageConfig {
     }
 
     @Bean
-    public S3Client r2Client() {
+    public S3Client s3Client() {
         return S3Client.builder()
                 .endpointOverride(
                         URI.create("https://" + R2_ACCOUNT_ID + ".r2.cloudflarestorage.com"))

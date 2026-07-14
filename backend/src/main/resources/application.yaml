@@ -2,10 +2,19 @@ spring:
   threads:
     virtual:
       enabled: true
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
   config:
     import: optional:file:.env.properties
   application:
     name: clio
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
   datasource:
     hikari:
       auto-commit: false
@@ -23,13 +32,17 @@ spring:
     show-sql: true
     properties:
       hibernate:
+        generate_statistics: true
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
         jdbc:
-          fetch_size: 100
+          batch_size: 30
         connection:
           provider_disables_autocommit: true
+        order_updates: true
+        order_inserts: true
     open-in-view: false
+
 jwt:
   secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION}
@@ -42,6 +55,10 @@ r2:
   account_id: ${R2_ACCOUNT_ID}
   access_key: ${R2_ACCESS_KEY}
   secret_key: ${R2_SECRET_KEY}
+
+clio:
+  master_key: ${EBOOK_MASTER_KEY}
+  page_size: 12
 #logging:
 #  level:
 #    org:

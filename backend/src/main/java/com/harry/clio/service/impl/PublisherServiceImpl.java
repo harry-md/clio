@@ -13,13 +13,11 @@ import com.harry.clio.service.PublisherService;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @RequiredArgsConstructor
 @Service
-@Transactional
 public class PublisherServiceImpl implements PublisherService {
     private final PublisherRepository publisherRepository;
     private final PublisherMapper publisherMapper;
@@ -32,7 +30,6 @@ public class PublisherServiceImpl implements PublisherService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public PublisherDto getPublisherByUserId(int userId) {
         return publisherMapper.toDto(getPublisherOrThrow(userId));
     }
@@ -55,9 +52,10 @@ public class PublisherServiceImpl implements PublisherService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
         user.setRole(UserRole.PUBLISHER);
 
-        Publisher publisher = new Publisher();
-        publisher.setUser(user);
-        publisher.setBankAccountNumber(publisherDto.bankAccountNumber());
+        Publisher publisher = Publisher.builder()
+                .user(user)
+                .bankAccountNumber(publisherDto.bankAccountNumber())
+                .build();
         return publisherMapper.toDto(publisherRepository.save(publisher));
     }
 

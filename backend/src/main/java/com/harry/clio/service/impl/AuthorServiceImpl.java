@@ -11,50 +11,45 @@ import com.harry.clio.service.AuthorService;
 import com.harry.clio.service.CloudinaryService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionTemplate;
 
 @RequiredArgsConstructor
+@Slf4j
 @Service
 public class AuthorServiceImpl implements AuthorService {
     private final AuthorRepository authorRepository;
     private final AuthorMapper authorMapper;
     private final CloudinaryService cloudinaryService;
-    private final TransactionTemplate transactionTemplate;
 
     @Override
-    @Transactional(readOnly = true)
     public AuthorResponse getAuthorById(int authorId) {
-        return authorMapper.toDto(authorRepository
-                .findById(authorId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tác giả")));
+        return authorMapper.toDto(getAuthorOrThrow(authorId));
     }
 
-    private void handleDeleteAvatar(String avatarUrl) {
-        try {
-            cloudinaryService.delete(avatarUrl);
-        } catch (RuntimeException ex) {
-        }
+    private Author getAuthorOrThrow(int authorId) {
+        return authorRepository
+                .findById(authorId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tác giả"));
     }
 
     @Override
     public AuthorResponse createAuthor(CreateAuthorRequest request) {
-        String avatarUrl = "";
+        String avatarUrl = null;
+        if (request.avatarFile() != null && !request.avatarFile().isEmpty()) {
+            avatarUrl = cloudinaryService.upload(request.avatarFile());
+        }
+
+        Author author = authorMapper.toEntity(request);
+        if (avatarUrl != null) {
+            author.setAvatar(avatarUrl);
+        }
         try {
-            if (request.avatarFile() != null && !request.avatarFile().isEmpty()) {
-                avatarUrl = cloudinaryService.upload(request.avatarFile());
-            }
-            final String finalAvatarUrl = avatarUrl;
-            return transactionTemplate.execute(status -> {
-                Author author = authorMapper.toEntity(request);
-                author.setAvatar(finalAvatarUrl);
-                return authorMapper.toDto(authorRepository.save(author));
-            });
+            return authorMapper.toDto(authorRepository.save(author));
         } catch (RuntimeException ex) {
             if (avatarUrl != null) {
-                handleDeleteAvatar(avatarUrl);
+                cloudinaryService.delete(avatarUrl);
             }
             throw ex;
         }
@@ -62,55 +57,35 @@ public class AuthorServiceImpl implements AuthorService {
 
     @Override
     public AuthorResponse updateAuthor(int authorId, UpdateAuthorRequest request) {
-        if (request.avatarFile() == null || request.avatarFile().isEmpty()) {
-            return transactionTemplate.execute(status -> {
-                Author author = authorRepository
-                        .findById(authorId)
-                        .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tác giả"));
-                authorMapper.updateEntity(request, author);
-                return authorMapper.toDto(authorRepository.save(author));
-            });
+        Author author = getAuthorOrThrow(authorId);
+
+        String oldAvatarUrl = author.getAvatar();
+        String newAvatarUrl = null;
+
+        authorMapper.updateEntity(request, author);
+        if (request.avatarFile() != null && !request.avatarFile().isEmpty()) {
+            newAvatarUrl = cloudinaryService.upload(request.avatarFile());
+            author.setAvatar(newAvatarUrl);
         }
 
-        String oldAvatarUrl = authorRepository
-                .findById(authorId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tác giả"))
-                .getAvatar();
-
-        String newAvatarUrl = null;
+        AuthorResponse res = null;
         try {
-            newAvatarUrl = cloudinaryService.upload(request.avatarFile());
-            final String finalNewAvatarUrl = newAvatarUrl;
-
-            AuthorResponse response = transactionTemplate.execute(status -> {
-                Author author = authorRepository
-                        .findById(authorId)
-                        .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tác giả"));
-                authorMapper.updateEntity(request, author);
-                author.setAvatar(finalNewAvatarUrl);
-                return authorMapper.toDto(author);
-            });
-
-            handleDeleteAvatar(oldAvatarUrl);
-            return response;
+            res = authorMapper.toDto(authorRepository.save(author));
         } catch (RuntimeException ex) {
-            if (newAvatarUrl != null) {
-                handleDeleteAvatar(newAvatarUrl);
-            }
+            cloudinaryService.delete(newAvatarUrl);
             throw ex;
         }
+        if (newAvatarUrl != null) {
+            cloudinaryService.delete(oldAvatarUrl);
+        }
+        return res;
     }
 
     @Override
     public void deleteAuthor(int authorId) {
-        String avatarUrl = transactionTemplate.execute(status -> {
-            Author author = authorRepository
-                    .findById(authorId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tác giả"));
-            String url = author.getAvatar();
-            authorRepository.delete(author);
-            return url;
-        });
-        handleDeleteAvatar(avatarUrl);
+        Author author = getAuthorOrThrow(authorId);
+        String avatarUrl = author.getAvatar();
+        authorRepository.delete(author);
+        cloudinaryService.delete(avatarUrl);
     }
 }

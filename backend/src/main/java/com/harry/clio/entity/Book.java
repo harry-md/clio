@@ -14,9 +14,7 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
@@ -29,8 +27,10 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 
+@Builder
 @Getter
 @Setter
+@AllArgsConstructor
 @NoArgsConstructor
 @Entity
 @Table(name = "books")
@@ -42,31 +42,35 @@ public class Book {
     @Column(nullable = false)
     private String title;
 
+    @Builder.Default
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal price = BigDecimal.ZERO;
 
+    @Builder.Default
     @Column(nullable = false)
     @ColumnDefault(
             "'https://res.cloudinary.com/dswxedhsf/image/upload/v1782883664/book_fgsg7m.jpg'")
     private String thumbnail =
             "https://res.cloudinary.com/dswxedhsf/image/upload/v1782883664/book_fgsg7m.jpg";
 
+    @Builder.Default
     @Column(nullable = false, length = 10)
     @Enumerated(EnumType.STRING)
     private BookType type = BookType.SYSTEM;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String fileUrl;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String encryptedFileUrl;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String encryptedContentKey;
 
     @Column(nullable = true)
     private Double rating;
 
+    @Builder.Default
     @Column(nullable = false)
     @ColumnDefault("0")
     private Long ratingCount = 0L;
@@ -74,6 +78,11 @@ public class Book {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(nullable = true, columnDefinition = "JSONB")
     private List<BookAuthorJson> authors;
+
+    @Builder.Default
+    @Column(nullable = false, length = 20)
+    @Enumerated(EnumType.STRING)
+    private BookStatus status = BookStatus.QUEUED;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
@@ -90,6 +99,7 @@ public class Book {
     @JoinColumn(name = "uploader_id", nullable = true)
     private User uploader;
 
+    @Builder.Default
     @Column(name = "is_active", nullable = false)
     private boolean active = true;
 
@@ -97,7 +107,7 @@ public class Book {
     @CreationTimestamp
     private Instant createdAt;
 
-    @Column(nullable = false, updatable = false)
+    @Column(nullable = false)
     @UpdateTimestamp
     private Instant updatedAt;
 }
