@@ -1,5 +1,5 @@
 package com.harry.clio.repository.specification;
-import org.hibernate.query.criteria.HibernateCriteriaBuilder
+
 import com.harry.clio.dto.book.BookFilterRequest;
 import com.harry.clio.entity.Book;
 
@@ -23,8 +23,8 @@ public class BookSpecification {
                         String.format("%%%s%%", request.title().toLowerCase())));
             }
             if (request.authorFullname() != null && !request.authorFullname().isBlank()) {
-                HibernateCriteriaBuilder hcb = (HibernateCriteriaBuilder) cb;
-                Expression<String> authorsText = hcb.cast((JpaExpression<Object>) root.get("authors"), String.class);
+                Expression<String> authorsText = ((HibernateCriteriaBuilder) cb)
+                        .cast((JpaExpression<Object>) root.get("authors"), String.class);
                 predicates.add(cb.like(
                         cb.lower(authorsText),
                         String.format("%%%s%%", request.authorFullname().toLowerCase())));

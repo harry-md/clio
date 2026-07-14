@@ -23,17 +23,17 @@ public record BookFilterRequest(
         @Max(value = 5, message = "Khoảng điểm của sách bắt đầu không hợp lệ")
         Integer fromRating,
 
-        @PositiveOrZero(message = "Khoảng điểm của sách kết thúc không hợp lệ")
-        @Max(value = 5, message = "Khoảng điểm của sách kết thúc không hợp lệ")
+        @PositiveOrZero(message = "Khoảng điểm đánh giá của sách kết thúc không hợp lệ")
+        @Max(value = 5, message = "Khoảng điểm đánh giá của sách kết thúc không hợp lệ")
         Integer toRating) {
 
     @AssertTrue(message = "Khoảng giá sách không hợp lệ")
-    public boolean validPriceRange() {
+    public boolean isValidPriceRange() {
         return fromPrice == null || toPrice == null || fromPrice.compareTo(toPrice) <= 0;
     }
 
-    @AssertTrue(message = "Khoảng điểm của sách không hợp lệ")
-    public boolean validRatingRange() {
+    @AssertTrue(message = "Khoảng điểm đánh giá của sách không hợp lệ")
+    public boolean isValidRatingRange() {
         return fromRating == null || toRating == null || fromRating <= toRating;
     }
 }

@@ -1,13 +1,16 @@
 package com.harry.clio.service.impl;
 
 import com.harry.clio.dto.book.BookDetailResponse;
+import com.harry.clio.dto.book.BookFilterRequest;
 import com.harry.clio.dto.book.BookListResponse;
 import com.harry.clio.dto.book.CreateBookMetadataRequest;
 import com.harry.clio.entity.*;
 import com.harry.clio.exception.BadRequestException;
+import com.harry.clio.exception.ResourceNotFoundException;
 import com.harry.clio.mapper.BookInfoMapper;
 import com.harry.clio.mapper.BookMapper;
 import com.harry.clio.repository.*;
+import com.harry.clio.repository.specification.BookSpecification;
 import com.harry.clio.service.BookProcessingQueue;
 import com.harry.clio.service.BookService;
 import com.harry.clio.service.R2Service;
@@ -15,6 +18,8 @@ import com.harry.clio.service.R2Service;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
@@ -89,11 +94,6 @@ public class BookServiceImpl implements BookService {
         return savedBook.response();
     }
 
-    @Override
-    public Page<BookListResponse> getBooks() {
-        return null;
-    }
-
     private List<BookAuthorJson> buildAuthorSnapshot(List<BookAuthorJson> request) {
         Set<Integer> authorIds =
                 request.stream().map(BookAuthorJson::authorId).collect(Collectors.toSet());
@@ -117,5 +117,19 @@ public class BookServiceImpl implements BookService {
                         .role(snapshot.role())
                         .build())
                 .toList();
+    }
+
+    @Override
+    public Page<BookListResponse> getAllBooks(BookFilterRequest request, Pageable pageable) {
+        Specification<Book> spec = BookSpecification.buildFilter(request);
+        return bookRepository.findAll(spec, pageable).map(bookMapper::toListResponse);
+    }
+
+    @Override
+    public BookDetailResponse getBookDetail(Integer bookId) {
+        Book book = bookRepository
+                .findWithDetailById(bookId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sách"));
+        return bookMapper.toDetailResponse(book, bookInfoMapper.toResponse(book.getBookInfo()));
     }
 }
