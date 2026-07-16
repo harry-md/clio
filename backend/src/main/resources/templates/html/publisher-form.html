@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head th:replace="~{html/base :: head('Publisher Form')}"></head>
+
+<body>
+<div class="admin-shell">
+  <div th:replace="~{html/base :: sidebar('publishers')}"></div>
+  <div class="admin-main">
+    <div th:replace="~{html/base :: topnav}"></div>
+
+    <main class="dashboard-content">
+      <div class="container-fluid px-3 px-lg-4 py-4">
+        <div class="page-heading">
+          <div class="page-heading-copy">
+            <span class="page-icon"><i class="bi bi-person-plus" aria-hidden="true"></i></span>
+            <div>
+              <p class="eyebrow mb-1">Management</p>
+              <h1 class="h3 mb-1" th:text="${isEdit ? 'Sửa Publisher' : 'Thêm Publisher'}">
+              </h1>
+              <p class="text-muted mb-0">Chuyển tài khoản user thành Publisher.</p>
+            </div>
+          </div>
+          <div class="heading-actions"><a class="btn btn-outline-secondary btn-sm" th:href="@{/publishers}"><i
+                  class="bi bi-arrow-left" aria-hidden="true"></i></a></div>
+        </div>
+
+        <section class="row g-3">
+          <div class="col-12 col-xl-8">
+            <form class="panel needs-validation" novalidate method="post" th:object="${publisherForm}" th:action="${formAction}">
+              <div class="mb-3" th:if="${!isEdit}">
+                <label class="form-label" for="userId">User</label>
+                <select class="form-select" id="userId" th:field="*{userId}">
+                  <option value="">Chọn user</option>
+                  <option th:each="user : ${availableUsers}" th:value="${user.userId}"
+                          th:text="|${user.username} - ${user.email}|">
+                  </option>
+                </select>
+                <div class="text-danger" th:if="${#fields.hasErrors('userId')}" th:errors="*{userId}"></div>
+              </div>
+
+              <div class="mb-3" th:if="${isEdit}">
+                <label class="form-label">User</label>
+                <input type="hidden" th:field="*{userId}">
+                <input class="form-control" type="text"
+                       th:value="|${selectedPublisher.firstName + ' ' + selectedPublisher.lastName} (${selectedPublisher.username})|" disabled>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label" for="bankAccountNumber">Số tài khoản ngân hàng</label>
+                <input class="form-control" id="bankAccountNumber" th:field="*{bankAccountNumber}">
+                <div class="text-danger" th:if="${#fields.hasErrors('bankAccountNumber')}"
+                     th:errors="*{bankAccountNumber}">
+                </div>
+              </div>
+              <button class="btn btn-primary" type="submit" th:text="${isEdit ? 'Lưu' : 'Tạo Publisher'}">
+                <a class="btn btn-outline-secondary" th:href="${isEdit ? '/publishers/' + selectedPublisher.userId : '/publishers'}">
+                  Hủy
+                </a>
+              </button>
+            </form>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer th:replace="~{html/base :: footer}"></footer>
+  </div>
+</div>
+
+<script th:src="@{/assets/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/assets/js/main.js}"></script>
+</body>
+</html>

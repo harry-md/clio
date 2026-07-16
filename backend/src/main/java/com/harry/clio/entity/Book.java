@@ -91,9 +91,6 @@ public class Book {
     @Column(name = "is_active", nullable = false)
     private boolean active = true;
 
-    @OneToOne(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
-    private BookInfo bookInfo;
-
     @Column(nullable = false, updatable = false)
     @CreationTimestamp
     private Instant createdAt;

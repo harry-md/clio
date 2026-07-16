@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{html/base :: head('Publishers')}"></head>
+
+<body>
+<div class="admin-shell">
+  <div th:replace="~{html/base :: sidebar('publishers')}"></div>
+  <div class="admin-main">
+    <div th:replace="~{html/base :: topnav}"></div>
+    <main class="dashboard-content">
+      <div class="container-fluid px-3 px-lg-4 py-4">
+        <div class="page-heading">
+          <div class="page-heading-copy">
+            <span class="page-icon"><i class="bi bi-people" aria-hidden="true"></i></span>
+            <div>
+              <p class="eyebrow mb-1">Management</p>
+              <h1 class="h3 mb-1">Publishers</h1>
+              <p class="text-muted mb-0">Manage publisher accounts and payment information.</p>
+            </div>
+          </div>
+          <div class="heading-actions">
+            <a class="btn btn-primary btn-sm"
+               th:href="@{/publishers/create}">
+              <i class="bi bi-person-plus"></i>
+              Thêm Publisher
+            </a>
+          </div>
+        </div>
+
+        <section class="panel mt-3">
+          <div class="panel-header">
+            <div>
+              <h2 class="h5 mb-1 section-title"><i class="bi bi-table" aria-hidden="true"></i><span>User List</span>
+              </h2>
+              <p class="text-muted mb-0">Search, review, and manage team member accounts.</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+              <input class="form-control form-control-sm table-search" type="search" placeholder="Search users"
+                     data-table-search="publishersTable" aria-label="Search users">
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table align-middle mb-0"
+                   id="publishersTable"
+                   data-searchable-table>
+              <thead>
+              <tr>
+                <th>User</th>
+                <th>Email</th>
+                <th>Bank Account</th>
+                <th>Balance</th>
+                <th class="text-end">Action</th>
+              </tr>
+              </thead>
+
+              <tbody>
+              <tr th:each="publisher : ${publishers}">
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    <img class="avatar-img avatar-sm"
+                         th:src="${publisher.avatar}"
+                         th:alt="${publisher.firstName} + ' ' + ${publisher.lastName}">
+                    <div>
+                      <p class="fw-semibold mb-0"
+                         th:text="${publisher.firstName} + ' ' + ${publisher.lastName}">
+                      </p>
+
+                      <p class="text-muted small mb-0"
+                         th:text="${publisher.username}">
+                      </p>
+                    </div>
+                  </div>
+                </td>
+
+                <td th:text="${publisher.email}"></td>
+
+                <td th:text="${publisher.bankAccountNumber}"></td>
+
+                <td th:text="${publisher.balance}"></td>
+
+                <td class="text-end">
+                  <a class="btn btn-light btn-sm"
+                     th:href="@{/publishers/{id}(id=${publisher.userId})}">
+                    View
+                  </a>
+
+                  <a class="btn btn-primary btn-sm"
+                     th:href="@{/publishers/{id}/edit(id=${publisher.userId})}">
+                    Edit
+                  </a>
+                </td>
+              </tr>
+
+              <tr th:if="${#lists.isEmpty(publishers)}">
+                <td colspan="5"
+                    class="text-center text-muted py-4">
+                  No publishers found.
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer th:replace="~{html/base :: footer}"></footer>
+  </div>
+</div>
+
+<script th:src="@{assets/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{assets/js/main.js}"></script>
+</body>
+</html>

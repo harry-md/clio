@@ -1,6 +1,7 @@
 package com.harry.clio.mapper;
 
 import com.harry.clio.dto.user.CreateUserRequest;
+import com.harry.clio.dto.user.UserOption;
 import com.harry.clio.dto.user.UserResponse;
 import com.harry.clio.entity.User;
 
@@ -14,4 +15,7 @@ public interface UserMapper {
     User toEntity(CreateUserRequest request);
 
     UserResponse toDto(User user);
+
+    @Mapping(target = "userId", source = "id")
+    UserOption toUserOption(User user);
 }

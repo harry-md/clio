@@ -1,61 +1,91 @@
 package com.harry.clio.controller;
 
-import com.harry.clio.dto.CustomUser;
-import com.harry.clio.dto.publisher.PublisherDto;
+import com.harry.clio.dto.publisher.PublisherAdminDto;
+import com.harry.clio.dto.publisher.PublisherForm;
 import com.harry.clio.service.PublisherService;
+
+import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 
 @RequiredArgsConstructor
-@RestController
-@RequestMapping("/api/publishers")
+@Controller
 public class PublisherController {
     private final PublisherService publisherService;
 
-    @GetMapping("/current-publisher")
-    public ResponseEntity<PublisherDto> selfRetrieve(
-            @AuthenticationPrincipal CustomUser principal) {
-        return ResponseEntity.ok(publisherService.getPublisherByUserId(principal.getId()));
+    @GetMapping("/publishers")
+    public String list(Model model) {
+        model.addAttribute("publishers", publisherService.getAllPublishers());
+        return "html/publishers";
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/{publisherId}")
-    public ResponseEntity<PublisherDto> retrieve(@PathVariable int publisherId) {
-        return ResponseEntity.ok(publisherService.getPublisherByUserId(publisherId));
+    @GetMapping("/publishers/create")
+    public String createView(Model model) {
+        model.addAttribute("publisherForm", new PublisherForm());
+        model.addAttribute("availableUsers", publisherService.getUserOptions());
+        model.addAttribute("isEdit", false);
+        model.addAttribute("formAction", "/publishers/create");
+        return "html/publisher-form";
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping
-    public ResponseEntity<List<PublisherDto>> list() {
-        return ResponseEntity.ok(publisherService.getAllPublishers());
+    @PostMapping("/publishers/create")
+    public String create(
+            @Valid @ModelAttribute("publisherForm") PublisherForm publisherForm,
+            BindingResult bindingResult,
+            Model model) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("availableUsers", publisherService.getUserOptions());
+            model.addAttribute("isEdit", false);
+            model.addAttribute("formAction", "/publishers/create");
+            return "html/publisher-form";
+        }
+        publisherService.createPublisher(publisherForm);
+        return "redirect:/publishers";
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping
-    public ResponseEntity<PublisherDto> create(@RequestBody PublisherDto publisherDto) {
-        return new ResponseEntity<>(
-                publisherService.createPublisher(publisherDto), HttpStatus.CREATED);
+    @GetMapping("/publishers/{userId}")
+    public String detail(@PathVariable int userId, Model model) {
+        model.addAttribute("publisher", publisherService.getPublisherAdmin(userId));
+        return "html/publisher-details";
     }
 
-    @PreAuthorize("hasRole('PUBLISHER')")
-    @PatchMapping("/current-publisher")
-    public ResponseEntity<PublisherDto> selfUpdate(
-            @AuthenticationPrincipal CustomUser principal, @RequestBody PublisherDto publisherDto) {
-        return ResponseEntity.ok(publisherService.updatePublisher(principal.getId(), publisherDto));
+    @GetMapping("/publishers/{userId}/edit")
+    public String editView(@PathVariable int userId, Model model) {
+        PublisherAdminDto publisher = publisherService.getPublisherAdmin(userId);
+        PublisherForm form = new PublisherForm();
+        form.setUserId(publisher.userId());
+        form.setBankAccountNumber(publisher.bankAccountNumber());
+
+        model.addAttribute("publisherForm", form);
+        model.addAttribute("selectedPublisher", publisher);
+        model.addAttribute("isEdit", true);
+        model.addAttribute("formAction", "/publishers/" + userId + "/edit");
+        return "html/publisher-form";
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    @PatchMapping("/{publisherId}")
-    public ResponseEntity<PublisherDto> update(
-            @PathVariable int publisherId, @RequestBody PublisherDto publisherDto) {
-        return ResponseEntity.ok(publisherService.updatePublisher(publisherId, publisherDto));
+    @PostMapping("/publishers/{userId}/edit")
+    public String edit(
+            @PathVariable int userId,
+            @Valid @ModelAttribute("publisherForm") PublisherForm publisherForm,
+            BindingResult bindingResult,
+            Model model) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("selectedPublisher", publisherService.getPublisherAdmin(userId));
+
+            model.addAttribute("isEdit", true);
+            model.addAttribute("formAction", "/publishers/" + userId + "/edit");
+
+            return "html/publisher-form";
+        }
+        publisherService.updatePublisher(userId, publisherForm);
+        return "redirect:/publishers/" + userId;
     }
 }

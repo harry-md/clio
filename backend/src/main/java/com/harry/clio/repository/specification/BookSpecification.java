@@ -2,6 +2,7 @@ package com.harry.clio.repository.specification;
 
 import com.harry.clio.dto.book.BookFilterRequest;
 import com.harry.clio.entity.Book;
+import com.harry.clio.entity.BookType;
 
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
@@ -43,5 +44,13 @@ public class BookSpecification {
             }
             return cb.and(predicates.toArray(Predicate[]::new));
         };
+    }
+
+    public static Specification<Book> hasType(BookType type) {
+        return (root, query, cb) -> cb.equal(root.get("type"), type);
+    }
+
+    public static Specification<Book> isActive(boolean active) {
+        return (root, query, cb) -> cb.equal(root.get("active"), active);
     }
 }

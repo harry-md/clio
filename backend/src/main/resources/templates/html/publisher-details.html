@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head th:replace="~{html/base :: head('Publisher Details')}">
+</head>
+
+<body>
+<div class="admin-shell">
+  <div th:replace="~{html/base :: sidebar('publishers')}"></div>
+  <div class="admin-main">
+    <div th:replace="~{html/base :: topnav}"></div>
+    <main class="dashboard-content">
+      <div class="container-fluid px-3 px-lg-4 py-4">
+        <div class="page-heading">
+          <div class="page-heading-copy">
+            <span class="page-icon"><i class="bi bi-person-lines-fill" aria-hidden="true"></i></span>
+            <div>
+              <p class="eyebrow mb-1">Management</p>
+              <h1 class="h3 mb-1">User Details</h1>
+              <p class="text-muted mb-0">Inspect account status, profile data, permissions, and recent activity.</p>
+            </div>
+          </div>
+          <div class="heading-actions"><a class="btn btn-outline-secondary btn-sm" th:href="@{/publishers}"><i class="bi bi-arrow-left" aria-hidden="true"></i></a></div>
+        </div>
+
+        <section class="row g-3">
+          <div class="col-12 col-xl-4">
+            <div class="panel h-100 text-center profile-card">
+              <div class="profile-hero pt-5">
+                <img class="avatar-img avatar-xl profile-photo" th:src="${publisher.avatar}" th:alt="${publisher.firstName + ' ' + publisher.lastName}">
+                <h2 class="h5 mb-1" th:text="${publisher.firstName + ' ' + publisher.lastName}"></h2>
+                <p class="text-muted mb-3" th:text="${publisher.username}"></p>
+                <span class="badge text-bg-success">Publisher</span>
+              </div>
+              <div class="info-list mt-4 text-start">
+                <div>
+                  <span>Email</span>
+                  <strong th:text="${publisher.email}"></strong>
+                </div>
+                <div>
+                  <span>User ID</span>
+                  <strong th:text="${publisher.userId}"></strong>
+                </div>
+                <div>
+                  <span>Số tài khoản ngân hàng</span>
+                  <strong th:text="${publisher.bankAccountNumber}"></strong>
+                </div>
+                <div>
+                  <span>Số dư</span>
+                  <strong th:text="${publisher.balance}"></strong>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 col-xl-8">
+            <div class="panel mb-3">
+              <div class="panel-header">
+                <div>
+                  <h2 class="h5 mb-1 section-title"><i class="bi bi-building"></i><span>Thông tin của Publisher</span>
+                </div>
+                <a class="btn btn-primary btn-sm" th:href="@{/publishers/{id}/edit(id=${publisher.userId})}">Sửa Publisher</a>
+              </div>
+
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <div class="mini-card">
+                    <span>Username</span>
+                    <strong th:text="${publisher.username}"></strong>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="mini-card">
+                    <span>Bank Account</span>
+                    <strong th:text="${publisher.bankAccountNumber}"></strong>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="mini-card">
+                    <span>Balance</span>
+                    <strong th:text="${publisher.balance}"></strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer th:replace="~{html/base :: footer}"></footer>
+  </div>
+</div>
+
+<script th:src="@{/assets/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/assets/js/main.js}"></script>
+</body>
+</html>
