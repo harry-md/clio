@@ -12,6 +12,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -38,7 +41,14 @@ public class ApiBookController {
 
     @GetMapping
     public ResponseEntity<Page<BookListResponse>> list(
-            @Valid @ModelAttribute BookFilterRequest filterRequest) {
-        return ResponseEntity.ok(bookService.getBooks());
+            @Valid @ModelAttribute BookFilterRequest request,
+            @PageableDefault(size = 12, sort = "createdAt", direction = Sort.Direction.DESC)
+                    Pageable pageable) {
+        return ResponseEntity.ok(bookService.getAllBooks(request, pageable));
+    }
+
+    @GetMapping("/{bookId}")
+    public ResponseEntity<BookDetailResponse> getBookDetail(@PathVariable Integer bookId) {
+        return ResponseEntity.ok(bookService.getBookDetail(bookId));
     }
 }
