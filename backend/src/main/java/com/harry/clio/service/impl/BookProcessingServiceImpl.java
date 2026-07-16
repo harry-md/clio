@@ -48,6 +48,8 @@ public class BookProcessingServiceImpl implements BookProcessingService {
     private final BookInfoRepository bookInfoRepository;
     private final TransactionTemplate transactionTemplate;
 
+    private record EpubExtractData(long wordCount, byte[] coverImage) {}
+
     @Value("${clio.master_key}")
     private String MASTER_KEY;
 

@@ -41,16 +41,38 @@ public class CloudinaryService {
         }
     }
 
+    private void validate(byte[] data) {
+        if (data.length > MAX_IMAGE_SIZE) {
+            throw new CloudinaryException("Ảnh vượt quá kích thước cho phép");
+        }
+        String mimeType = tika.detect(data);
+        if (!mimeType.startsWith("image/")) {
+            throw new CloudinaryException("Định dạng file không hợp lệ");
+        }
+    }
+
     public String upload(MultipartFile file) {
         validate(file);
         try {
             Map res = cloudinary
                     .uploader()
-                    .upload(file.getBytes(), ObjectUtils.asMap("resource_type", "auto"));
+                    .upload(file.getBytes(), ObjectUtils.asMap("resource_type", "image"));
             return res.get("secure_url").toString();
         } catch (IOException ex) {
             log.error("Lỗi khi upload ảnh Cloudinary {}", file.getName(), ex);
             throw new CloudinaryException("Lỗi khi upload ảnh");
+        }
+    }
+
+    public String upload(byte[] data) {
+        validate(data);
+        try {
+            Map res =
+                    cloudinary.uploader().upload(data, ObjectUtils.asMap("resource_type", "image"));
+            return res.get("secure_url").toString();
+        } catch (IOException ex) {
+            log.error("Lỗi khi upload ảnh bìa Cloudinary", ex);
+            throw new CloudinaryException("Lỗi khi upload ảnh bìa");
         }
     }
 

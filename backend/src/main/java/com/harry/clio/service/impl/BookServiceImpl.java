@@ -121,7 +121,8 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public Page<BookListResponse> getAllBooks(BookFilterRequest request, Pageable pageable) {
-        Specification<Book> spec = BookSpecification.buildFilter(request);
+        Specification<Book> spec = Specification.where(BookSpecification.hasType(BookType.SYSTEM)
+                .and(BookSpecification.isActive(true).and(BookSpecification.buildFilter(request))));
         return bookRepository.findAll(spec, pageable).map(bookMapper::toListResponse);
     }
 
@@ -130,6 +131,9 @@ public class BookServiceImpl implements BookService {
         Book book = bookRepository
                 .findWithDetailById(bookId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sách"));
-        return bookMapper.toDetailResponse(book, bookInfoMapper.toResponse(book.getBookInfo()));
+        BookInfo bookInfo = bookInfoRepository
+                .findById(book.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thông tin sách"));
+        return bookMapper.toDetailResponse(book, bookInfoMapper.toResponse(bookInfo));
     }
 }

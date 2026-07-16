@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/authors")
-public class AuthorController {
+public class ApiAuthorController {
     private final AuthorService authorService;
 
     @GetMapping("/{authorId}")

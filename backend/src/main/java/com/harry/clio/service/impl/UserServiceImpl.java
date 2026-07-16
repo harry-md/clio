@@ -2,6 +2,7 @@ package com.harry.clio.service.impl;
 
 import com.harry.clio.dto.CustomUser;
 import com.harry.clio.dto.user.CreateUserRequest;
+import com.harry.clio.dto.user.UserOption;
 import com.harry.clio.dto.user.UserResponse;
 import com.harry.clio.entity.User;
 import com.harry.clio.entity.UserRole;
@@ -23,6 +24,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Set;
 
 @RequiredArgsConstructor
@@ -89,5 +91,12 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Override
     public UserResponse getUserById(int id) {
         return userMapper.toDto(getUserOrThrow(id));
+    }
+
+    @Override
+    public List<UserOption> getUserOptions() {
+        return userRepository.findAllByRole(UserRole.READER).stream()
+                .map(userMapper::toUserOption)
+                .toList();
     }
 }
