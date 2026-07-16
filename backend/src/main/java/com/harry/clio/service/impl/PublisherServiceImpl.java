@@ -1,11 +1,15 @@
 package com.harry.clio.service.impl;
 
+import com.harry.clio.dto.publisher.PublisherAdminDto;
 import com.harry.clio.dto.publisher.PublisherDto;
+import com.harry.clio.dto.publisher.PublisherForm;
+import com.harry.clio.dto.user.UserOption;
 import com.harry.clio.entity.Publisher;
 import com.harry.clio.entity.User;
 import com.harry.clio.entity.UserRole;
 import com.harry.clio.exception.ResourceNotFoundException;
 import com.harry.clio.mapper.PublisherMapper;
+import com.harry.clio.mapper.UserMapper;
 import com.harry.clio.repository.PublisherRepository;
 import com.harry.clio.repository.UserRepository;
 import com.harry.clio.service.PublisherService;
@@ -19,11 +23,11 @@ import java.util.List;
 
 @RequiredArgsConstructor
 @Service
-@Transactional
 public class PublisherServiceImpl implements PublisherService {
     private final PublisherRepository publisherRepository;
     private final PublisherMapper publisherMapper;
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
     private Publisher getPublisherOrThrow(int userId) {
         return publisherRepository
@@ -32,39 +36,63 @@ public class PublisherServiceImpl implements PublisherService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public PublisherDto getPublisherByUserId(int userId) {
         return publisherMapper.toDto(getPublisherOrThrow(userId));
     }
 
+    @Transactional(readOnly = true)
     @Override
-    public List<PublisherDto> getAllPublishers() {
-        return publisherRepository.findAll().stream()
-                .map(publisherMapper::toDto)
+    public List<PublisherAdminDto> getAllPublishers() {
+        return publisherRepository.findAllWithDetail().stream()
+                .map(publisher -> publisherMapper.toAdminDto(publisher.getUser(), publisher))
                 .toList();
     }
 
     @Override
-    public PublisherDto createPublisher(PublisherDto publisherDto) {
-        if (publisherRepository.existsById(publisherDto.userId())) {
+    public PublisherAdminDto getPublisherAdmin(int userId) {
+        return publisherRepository
+                .findWithDetailByUserId(userId)
+                .map(publisher -> publisherMapper.toAdminDto(publisher.getUser(), publisher))
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhà xuất bản"));
+    }
+
+    @Override
+    public List<UserOption> getUserOptions() {
+        return userRepository.findAllByRole(UserRole.READER).stream()
+                .map(userMapper::toUserOption)
+                .toList();
+    }
+
+    @Transactional
+    @Override
+    public PublisherDto createPublisher(PublisherForm publisherForm) {
+        if (publisherRepository.existsById(publisherForm.getUserId())) {
             throw new ResourceNotFoundException("Nhà xuất bản đã tồn tại");
         }
 
         User user = userRepository
-                .findById(publisherDto.userId())
+                .findById(publisherForm.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
-        user.setRole(UserRole.PUBLISHER);
 
-        Publisher publisher = new Publisher();
-        publisher.setUser(user);
-        publisher.setBankAccountNumber(publisherDto.bankAccountNumber());
+        user.setRole(UserRole.PUBLISHER);
+        Publisher publisher = Publisher.builder()
+                .user(user)
+                .bankAccountNumber(publisherForm.getBankAccountNumber())
+                .build();
         return publisherMapper.toDto(publisherRepository.save(publisher));
     }
 
     @Override
-    public PublisherDto updatePublisher(int userId, PublisherDto publisherDto) {
+    public PublisherDto updatePublisher(int userId, PublisherForm publisherForm) {
         Publisher publisher = getPublisherOrThrow(userId);
-        publisher.setBankAccountNumber(publisherDto.bankAccountNumber());
+        publisher.setBankAccountNumber(publisherForm.getBankAccountNumber());
+        return publisherMapper.toDto(publisherRepository.save(publisher));
+    }
+
+    @Override
+    public PublisherDto updatePublisher(int userId, PublisherDto dto) {
+        Publisher publisher = getPublisherOrThrow(userId);
+        publisher.setBankAccountNumber(dto.bankAccountNumber());
         return publisherMapper.toDto(publisherRepository.save(publisher));
     }
 }

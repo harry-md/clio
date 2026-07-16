@@ -2,6 +2,7 @@ package com.harry.clio.service.impl;
 
 import com.harry.clio.dto.CustomUser;
 import com.harry.clio.dto.user.CreateUserRequest;
+import com.harry.clio.dto.user.UserOption;
 import com.harry.clio.dto.user.UserResponse;
 import com.harry.clio.entity.User;
 import com.harry.clio.entity.UserRole;
@@ -22,9 +23,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionTemplate;
 
+import java.util.List;
 import java.util.Set;
 
 @RequiredArgsConstructor
@@ -34,7 +34,6 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     private final CloudinaryService cloudinaryService;
     private final UserMapper userMapper;
     private final BCryptPasswordEncoder passwordEncoder;
-    private final TransactionTemplate transactionTemplate;
 
     private User getUserOrThrow(int id) {
         return userRepository
@@ -42,7 +41,6 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy user"));
     }
 
-    @Transactional(readOnly = true)
     @Override
     public UserDetails loadUserByUsername(@NonNull String username)
             throws UsernameNotFoundException {
@@ -70,31 +68,35 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             avatarUrl = cloudinaryService.upload(request.avatar());
         }
 
-        final String finalAvatarUrl = avatarUrl;
+        if (userRepository.existsByUsername(request.username())) {
+            if (avatarUrl != null) cloudinaryService.delete(avatarUrl);
+            throw new DuplicateResourceException("Username này đã tồn tại");
+        }
+
+        User user = userMapper.toEntity(request);
+        user.setPassword(passwordEncoder.encode(request.password()));
+        user.setRole(UserRole.READER);
+        if (avatarUrl != null) {
+            user.setAvatar(avatarUrl);
+        }
+
         try {
-            return transactionTemplate.execute((status) -> {
-                if (userRepository.existsByUsername(request.username())) {
-                    throw new DuplicateResourceException("Username này đã tồn tại");
-                }
-                User user = userMapper.toEntity(request);
-                user.setPassword(passwordEncoder.encode(request.password()));
-                user.setRole(UserRole.READER);
-                if (finalAvatarUrl != null) {
-                    user.setAvatar(finalAvatarUrl);
-                }
-                return userMapper.toDto(userRepository.save(user));
-            });
+            return userMapper.toDto(userRepository.save(user));
         } catch (Exception ex) {
-            if (finalAvatarUrl != null) {
-                cloudinaryService.delete(finalAvatarUrl);
-            }
+            cloudinaryService.delete(avatarUrl);
             throw ex;
         }
     }
 
-    @Transactional(readOnly = true)
     @Override
     public UserResponse getUserById(int id) {
         return userMapper.toDto(getUserOrThrow(id));
+    }
+
+    @Override
+    public List<UserOption> getUserOptions() {
+        return userRepository.findAllByRole(UserRole.READER).stream()
+                .map(userMapper::toUserOption)
+                .toList();
     }
 }

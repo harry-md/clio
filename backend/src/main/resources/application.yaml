@@ -2,12 +2,29 @@ spring:
   threads:
     virtual:
       enabled: true
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 100MB
+      max-request-size: 100MB
+      file-size-threshold: 5MB
+      resolve-lazily: false
   config:
     import: optional:file:.env.properties
   application:
     name: clio
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
   datasource:
     hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
       auto-commit: false
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/cliodb
@@ -17,19 +34,24 @@ spring:
     init:
       mode: always
   jpa:
+    open-in-view: false
     defer-datasource-initialization: true
     hibernate:
       ddl-auto: update
     show-sql: true
     properties:
       hibernate:
+        generate_statistics: true
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_batch_fetch_size: 30
         jdbc:
-          fetch_size: 100
+          batch_size: 30
         connection:
           provider_disables_autocommit: true
-    open-in-view: false
+        order_updates: true
+        order_inserts: true
+
 jwt:
   secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION}
@@ -42,6 +64,10 @@ r2:
   account_id: ${R2_ACCOUNT_ID}
   access_key: ${R2_ACCESS_KEY}
   secret_key: ${R2_SECRET_KEY}
+
+clio:
+  master_key: ${EBOOK_MASTER_KEY}
+  page_size: 12
 #logging:
 #  level:
 #    org:

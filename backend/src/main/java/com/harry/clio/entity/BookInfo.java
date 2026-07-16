@@ -11,10 +11,10 @@ import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
+@Builder
+@AllArgsConstructor
 @Getter
 @Setter
 @NoArgsConstructor
@@ -33,15 +33,18 @@ public class BookInfo {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Builder.Default
     @Column(nullable = false, length = 2)
     @Enumerated(EnumType.STRING)
     private Language language = Language.EN;
 
+    @Builder.Default
     @Column(nullable = false)
-    private Long fileSizeBytes;
+    private Long fileSize = 0L;
 
+    @Builder.Default
     @Column(nullable = false)
-    private Long wordCount;
+    private Long wordCount = 0L;
 
     @Column(nullable = true)
     private String isbn;

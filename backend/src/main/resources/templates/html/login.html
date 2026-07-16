@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="adminHMD authentication page">
+  <title>Login | adminHMD</title>
+  <link rel="stylesheet" th:href="@{/assets/css/bootstrap.min.css}">
+  <link rel="stylesheet" th:href="@{/assets/vendors/bootstrap-icons/bootstrap-icons.css}">
+  <link rel="stylesheet" th:href="@{/assets/css/style.css}">
+</head>
+
+<body class="auth-body">
+<button class="icon-button theme-toggle auth-theme-toggle" type="button" data-theme-toggle
+        aria-label="Switch color theme" title="Switch color theme">
+  <i class="bi bi-moon-stars" data-theme-icon aria-hidden="true"></i>
+</button>
+<main class="auth-page">
+  <section class="auth-card">
+    <form class="needs-validation" novalidate th:action="@{/login}" method="post">
+      <div class="mb-4">
+        <p class="eyebrow mb-1">Secure Access</p>
+        <h1 class="h3 mb-1">Đăng nhập Admin</h1>
+      </div>
+      <div class="alert alert-danger" th:if="${param.error}">Username hoặc mật khẩu không đúng.</div>
+      <div class="alert alert-success" th:if="${param.logout}">Bạn đã đăng xuất.</div>
+      <div class="mb-3"><label class="form-label" for="username">Username</label>
+        <input class="form-control" id="username" name="username" type="text" autocomplete="username" required>
+        <div class="invalid-feedback">
+          Username không được để trống.
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label"
+               for="password">
+          Password
+        </label>
+
+        <input class="form-control"
+               id="password"
+               name="password"
+               type="password"
+               autocomplete="current-password"
+               required>
+
+        <div class="invalid-feedback">
+          Password không được để trống.
+        </div>
+      </div>
+
+      <input type="hidden"
+             th:name="${_csrf.parameterName}"
+             th:value="${_csrf.token}">
+
+      <button class="btn btn-primary w-100"
+              type="submit">
+        <i class="bi bi-box-arrow-in-right"></i>
+        Đăng nhập
+      </button>
+    </form>
+  </section>
+</main>
+<script th:src="@{/assets/js/main.js}"></script>
+<script th:src="@{/assets/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>

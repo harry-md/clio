@@ -2,14 +2,14 @@ package com.harry.clio.entity;
 
 import jakarta.persistence.*;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.math.BigDecimal;
 
+@Builder
 @Getter
 @Setter
+@AllArgsConstructor
 @NoArgsConstructor
 @Entity
 @Table(name = "publishers")
@@ -26,6 +26,7 @@ public class Publisher {
     @Column(nullable = false)
     private String bankAccountNumber;
 
+    @Builder.Default
     @Column(nullable = false, scale = 2, precision = 15)
     private BigDecimal balance = BigDecimal.ZERO;
 }

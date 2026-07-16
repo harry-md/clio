@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -17,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/authors")
-public class AuthorController {
+public class ApiAuthorController {
     private final AuthorService authorService;
 
     @GetMapping("/{authorId}")
@@ -26,14 +27,14 @@ public class AuthorController {
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'PUBLISHER')")
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<AuthorResponse> create(
             @Valid @ModelAttribute CreateAuthorRequest authorRequest) {
         return new ResponseEntity<>(authorService.createAuthor(authorRequest), HttpStatus.CREATED);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PatchMapping("/{authorId}")
+    @PatchMapping(path = "/{authorId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<AuthorResponse> update(
             @PathVariable int authorId, @Valid @ModelAttribute UpdateAuthorRequest authorRequest) {
         return new ResponseEntity<>(

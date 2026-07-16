@@ -46,7 +46,7 @@ public class PublisherMonthlyRevenue {
     @CreationTimestamp
     private Instant createdAt;
 
-    @Column(nullable = false, updatable = true)
+    @Column(nullable = false)
     @UpdateTimestamp
     private Instant updatedAt;
 }
