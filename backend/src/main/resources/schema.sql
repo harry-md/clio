@@ -19,3 +19,5 @@ CREATE INDEX IF NOT EXISTS idx_orders_user_created_at_desc ON orders (user_id, c
 
 CREATE INDEX IF NOT EXISTS idx_order_details_book ON order_details (book_id);
 CREATE INDEX IF NOT EXISTS idx_order_details_order ON order_details (order_id);
+
+CREATE INDEX IF NOT EXISTS idx_reviews_book ON reviews (book_id);

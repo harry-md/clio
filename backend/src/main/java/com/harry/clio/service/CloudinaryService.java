@@ -22,7 +22,7 @@ public class CloudinaryService {
     private final Cloudinary cloudinary;
     private final Tika tika;
     private static final int MAX_IMAGE_SIZE = 10 * 1024 * 1024;
-    private static List<String> defaultUrls = List.of(
+    private static final List<String> defaultUrls = List.of(
             "https://res.cloudinary.com/dswxedhsf/image/upload/v1782883664/book_fgsg7m.jpg",
             "https://res.cloudinary.com/dswxedhsf/image/upload/v1782626276/avatar_qoprdc.png");
 
