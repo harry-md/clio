@@ -9,7 +9,7 @@ export type AuthUser = {
 export type BookAuthor = {
   authorId: number;
   authorFullname: string;
-  role: string;
+  role: "AUTHOR" | "COAUTHOR" | "ARTIST" | "TRANSLATOR";
 };
 
 export type Book = {
@@ -37,7 +37,6 @@ export type BookInfo = {
 };
 
 export type BookDetail = Book & {
-  status: "QUEUED" | "COMPLETED" | "FAILED";
   categories: BookCategory[];
   bookInfo: BookInfo;
   createdAt: string;

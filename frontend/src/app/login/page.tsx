@@ -4,11 +4,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type SubmitEvent, useState } from "react";
 import { ClioLogo } from "@/components/ClioLogo";
+import { useAuth } from "@/context/AuthContext";
 import { Api, getApiErrorMessage } from "@/lib/api";
 import type { AuthUser } from "@/lib/types";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { setUser } = useAuth();
 
   const [form, setForm] = useState({
     username: "",
@@ -24,9 +26,9 @@ export default function LoginPage() {
     setSubmitting(true);
 
     try {
-      await Api.post<AuthUser>("/login", form);
-      router.push("/");
-      router.refresh();
+      const { data } = await Api.post<AuthUser>("/login", form);
+      setUser(data);
+      router.replace("/");
     } catch (requestError) {
       setError(
         getApiErrorMessage(

@@ -1,11 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { BookCard } from "@/components/BookCard";
-import { SiteHeader } from "@/components/Header";
+import { Header } from "@/components/Header";
+import { Rating } from "@/components/Rating";
+import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { Api, getApiErrorMessage } from "@/lib/api";
 import type { Book, PageResponse } from "@/lib/types";
+import { Pagination } from "@/components/Pagination";
 
 const filters = [
   {
@@ -24,7 +27,6 @@ const filters = [
     label: "Đánh giá cao",
     params: {
       sort: ["rating,desc", "id,desc"],
-      fromRating: 4,
     },
   },
 ];
@@ -38,50 +40,75 @@ const priceFormatter = new Intl.NumberFormat("vi-VN", {
 export default function HomePage() {
   const [books, setBooks] = useState<Book[]>([]);
   const [activeFilter, setActiveFilter] = useState(0);
-  const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const loadBooks = useCallback(async () => {
-    setLoading(true);
-    setError("");
-
-    try {
-      const selectedFilter = filters[activeFilter];
-
-      const { data } = await Api.get<PageResponse<Book>>("/books", {
-        params: {
-          page: 0,
-          size: 12,
-          ...selectedFilter.params,
-          ...(search ? { title: search } : {}),
-        },
-      });
-
-      setBooks(data.content);
-    } catch (requestError) {
-      setError(
-        getApiErrorMessage(requestError, "Không thể tải danh sách sách."),
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [activeFilter, search]);
-
   useEffect(() => {
-    loadBooks();
-  }, [loadBooks]);
+    const controller = new AbortController();
 
+    const fetchBooks = async () => {
+      setLoading(true);
+      setError("");
+
+      try {
+        const selectedFilter = filters[activeFilter];
+
+        const { data } = await Api.get<PageResponse<Book>>("/books", {
+          signal: controller.signal,
+          params: {
+            page: currentPage,
+            size: 12,
+            ...selectedFilter.params,
+          },
+        });
+
+        setBooks(data.content);
+        setTotalPages(data.totalPages);
+      } catch (requestError) {
+        if (!controller.signal.aborted) {
+          setError(
+            getApiErrorMessage(requestError, "Không thể tải danh sách sách."),
+          );
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void fetchBooks();
+
+    return () => {
+      controller.abort();
+    };
+  }, [activeFilter, currentPage]);
+
+  const handlePageChange = (page: number) => {
+    if (page < 0 || page >= totalPages || page === currentPage) {
+      return;
+    }
+
+    setCurrentPage(page);
+
+    document.getElementById("book-list")?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  };
   const featuredBook = books[0];
-  const featuredAuthors =
-    featuredBook?.authors?.map((author) => author.authorFullname).join(", ") ||
-    "Clio Editorial";
 
   return (
     <main className="min-h-screen bg-[#151515]">
-      <SiteHeader onSearch={setSearch} />
+      {loading && <LoadingOverlay label="Đang tải danh sách sách..." />}
+      <Header />
 
-      <section className="relative overflow-hidden border-b border-[#343432] bg-[#1d1d1b]">
+      <section
+        id="book-list"
+        className="mx-auto max-w-360 scroll-mt-20 px-5 py-14 lg:px-10 lg:py-20"
+      >
         {featuredBook?.thumbnail && (
           <div
             className="absolute inset-0 bg-cover bg-center opacity-15 blur-[2px]"
@@ -94,20 +121,26 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-[linear-gradient(90deg,#181818_10%,rgba(24,24,24,.94)_42%,rgba(24,24,24,.5)_100%)]" />
         <div className="relative mx-auto grid min-h-120 max-w-360 items-center gap-12 px-5 py-16 md:grid-cols-[1fr_260px] lg:px-10">
           <div className="max-w-2xl">
-            <h1 className="font-serif text-4xl font-semibold leading-tight text-[#f5f2eb] sm:text-5xl lg:text-6xl">
+            <h1 className="font-serif text-7xl font-semibold leading-tight text-[#f5f2eb] sm:text-5xl lg:text-7xl">
               {featuredBook?.title ?? "Hệ thống đọc và phân phối ebook"}
             </h1>
+            <div className="mt-1">
+              <Rating
+                rating={featuredBook?.rating ?? null}
+                count={featuredBook?.ratingCount ?? 0}
+              />
+            </div>
             <div className="mt-9 flex flex-wrap items-center gap-3">
               {featuredBook ? (
                 <>
                   <Link
                     href={`/books/${featuredBook.id}`}
-                    className="primary-button min-w-36"
+                    className="primary-button min-w-36 text-2xl"
                   >
-                    Xem sách
+                    Xem chi tiết
                   </Link>
 
-                  <span className="border-l border-[#4a4945] pl-5 text-sm font-semibold text-[#e57a3c]">
+                  <span className="border-l border-[#4a4945] pl-5 text-2xl font-semibold text-[#e57a3c]">
                     {Number(featuredBook.price) === 0
                       ? "Miễn phí"
                       : priceFormatter.format(Number(featuredBook.price))}
@@ -123,7 +156,7 @@ export default function HomePage() {
                     href="/login"
                     className="inline-flex h-12 items-center border border-[#555550] px-5 text-sm font-semibold text-[#e9e7e0] hover:border-[#85857f]"
                   >
-                    Tôi đã có tài khoản
+                    Đã có tài khoản
                   </Link>
                 </>
               )}
@@ -149,8 +182,8 @@ export default function HomePage() {
       <section className="mx-auto max-w-360 px-5 py-14 lg:px-10 lg:py-20">
         <div className="flex flex-col justify-between gap-6 border-b border-[#343432] pb-7 md:flex-row md:items-end">
           <div>
-            <h2 className="mt-2 font-serif text-3xl font-semibold text-[#f0eee8]">
-              {search ? `Kết quả cho “${search}”` : "Khám phá thư viện"}
+            <h2 className="mt-2 font-sans text-5xl font-semibold text-[#f0eee8]">
+              Khám phá thư viện
             </h2>
           </div>
 
@@ -159,7 +192,10 @@ export default function HomePage() {
               <button
                 key={filter.label}
                 type="button"
-                onClick={() => setActiveFilter(index)}
+                onClick={() => {
+                  setActiveFilter(index);
+                  setCurrentPage(0);
+                }}
                 className={`h-10 border px-4 text-sm font-semibold transition ${
                   activeFilter === index
                     ? "border-[#75a9d3] bg-[#263745] text-white"
@@ -178,37 +214,28 @@ export default function HomePage() {
           </div>
         )}
 
-        {loading ? (
-          <div className="grid grid-cols-2 gap-x-5 gap-y-10 pt-10 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-            {Array.from({ length: 12 }).map((_, index) => (
-              <div key={index} className="animate-pulse">
-                <div className="aspect-2/3 bg-[#262624]" />
-                <div className="mt-4 h-4 w-4/5 bg-[#292927]" />
-                <div className="mt-3 h-3 w-1/2 bg-[#242422]" />
-              </div>
-            ))}
-          </div>
-        ) : books.length > 0 ? (
+        {books.length > 0 ? (
           <div className="grid grid-cols-2 gap-x-5 gap-y-11 pt-10 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
             {books.map((book) => (
               <BookCard key={book.id} book={book} />
             ))}
           </div>
-        ) : (
+        ) : !loading ? (
           <div className="border-b border-[#343432] py-24 text-center">
             <p className="font-sans text-2xl text-[#d8d6cf]">
               Chưa tìm thấy sách phù hợp
             </p>
+
             <p className="mt-2 text-sm text-[#85847f]">
-              Hãy thử một tên sách hoặc bộ lọc khác.
+              Hãy thử một bộ lọc khác.
             </p>
           </div>
-        )}
+        ) : null}
       </section>
 
       <footer className="border-t border-[#343432] bg-[#111111]">
         <div className="mx-auto flex max-w-360 flex-col gap-3 px-5 py-8 text-sm text-[#777671] sm:flex-row sm:items-center sm:justify-between lg:px-10">
-          <p className="font-serif text-lg text-[#c4c2bb]">Clio</p>
+          <p className="font-sans text-lg text-[#c4c2bb]">Clio</p>
           <p>&copy;2026 Clio</p>
         </div>
       </footer>

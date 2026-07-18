@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type ChangeEvent, type SubmitEvent, useEffect, useState } from "react";
-import { SiteHeader } from "@/components/Header";
+import { Header } from "@/components/Header";
 import { Api, getApiErrorMessage } from "@/lib/api";
 
 type RegisterForm = {
@@ -128,7 +128,7 @@ export default function RegisterPage() {
 
   return (
     <main className="min-h-screen bg-[#151515]">
-      <SiteHeader />
+      <Header />
 
       <div className="mx-auto max-w-2xl px-5 py-14 lg:py-20">
         <section>

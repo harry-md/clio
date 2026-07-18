@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { SiteHeader } from "@/components/Header";
+import { Header } from "@/components/Header";
+import { Rating } from "@/components/Rating";
 import { Api, getApiErrorMessage } from "@/lib/api";
 import type { BookDetail } from "@/lib/types";
+import { LoadingOverlay } from "@/components/LoadingOverlay";
 
 const priceFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -23,33 +25,6 @@ const languageLabels: Record<string, string> = {
   ZH: "Tiếng Trung",
   KO: "Tiếng Hàn",
   ES: "Tiếng Tây Ban Nha",
-};
-
-const Rating = ({
-  rating,
-  count,
-}: {
-  rating: number | null;
-  count: number;
-}) => {
-  if (rating === null || count === 0) {
-    return <span className="text-sm text-[#9a9993]">Chưa có đánh giá</span>;
-  }
-
-  const value = Math.max(0, Math.min(5, Math.round(rating)));
-
-  return (
-    <div className="flex items-center gap-3">
-      <span className="text-lg tracking-[0.15em] text-[#dfad55]">
-        {"★".repeat(value)}
-        <span className="text-[#55544f]">{"☆".repeat(5 - value)}</span>
-      </span>
-
-      <span className="text-sm text-[#9a9993]">
-        {rating.toFixed(1)} ({count} đánh giá)
-      </span>
-    </div>
-  );
 };
 
 const formatFileSize = (bytes: number) => {
@@ -77,11 +52,10 @@ export default function BookDetailPage() {
       return;
     }
 
-    const loadBook = async () => {
-      setLoading(true);
-      setError("");
-
+    const fetchBookDetail = async () => {
       try {
+        setLoading(true);
+        setError("");
         const { data } = await Api.get<BookDetail>(`/books/${bookId}`);
         setBook(data);
       } catch (requestError) {
@@ -93,32 +67,41 @@ export default function BookDetailPage() {
       }
     };
 
-    loadBook();
+    fetchBookDetail();
   }, [bookId]);
 
   return (
     <main className="min-h-screen bg-[#151515]">
-      <SiteHeader />
+      <Header />
 
       <div className="mx-auto max-w-360 px-5 py-8 lg:px-10 lg:py-12">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-base font-semibold text-[#81b3da] hover:text-white"
+          className="group inline-flex items-center gap-2 text-base text-[#81b3da] hover:text-white"
         >
-          <span aria-hidden="true">←</span>
+          <span>
+            <svg
+              role="img"
+              aria-hidden="true"
+              className="w-5 h-5 transition-colors text-[#81b3da] group-hover:text-white"
+              viewBox="0 0 1024 1024"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="currentColor"
+            >
+              <path
+                fill="currentColor"
+                d="M224 480h640a32 32 0 1 1 0 64H224a32 32 0 0 1 0-64z"
+              />
+              <path
+                fill="currentColor"
+                d="m237.248 512 265.408 265.344a32 32 0 0 1-45.312 45.312l-288-288a32 32 0 0 1 0-45.312l288-288a32 32 0 1 1 45.312 45.312L237.248 512z"
+              />
+            </svg>
+          </span>
           Quay lại
         </Link>
 
-        {loading && (
-          <div className="mt-10 grid animate-pulse gap-12 lg:grid-cols-[300px_1fr]">
-            <div className="aspect-2/3 bg-[#262624]" />
-            <div>
-              <div className="h-12 w-3/4 bg-[#292927]" />
-              <div className="mt-5 h-5 w-1/3 bg-[#242422]" />
-              <div className="mt-10 h-32 bg-[#242422]" />
-            </div>
-          </div>
-        )}
+        {loading && <LoadingOverlay label="Đang tải thông tin sách..." />}
 
         {!loading && error && (
           <div
@@ -156,7 +139,7 @@ export default function BookDetailPage() {
               </div>
 
               <div className="max-w-4xl">
-                <h1 className="mt-5 font-serif text-5xl font-semibold leading-tight text-[#f3f0e9] sm:text-6xl lg:text-7xl">
+                <h1 className="mt-2 font-serif text-4xl font-semibold leading-tight text-[#f3f0e9] sm:text-5xl lg:text-6xl">
                   {book.title}
                 </h1>
                 <div className="flex flex-wrap gap-2 text-lg">
@@ -164,7 +147,12 @@ export default function BookDetailPage() {
                     book.authors.map((author) => (
                       <Link
                         key={author.authorId}
-                        href={`/authors/${author.authorId}`}
+                        href={{
+                          pathname: "/search",
+                          query: {
+                            authorId: String(author.authorId),
+                          },
+                        }}
                         className="text-[#81b3da] transition hover:text-white hover:underline"
                       >
                         {author.authorFullname}
@@ -177,7 +165,7 @@ export default function BookDetailPage() {
                   )}
                 </div>
 
-                <div className="mt-7">
+                <div className="mt-2">
                   <Rating rating={book.rating} count={book.ratingCount} />
                 </div>
 
@@ -191,7 +179,7 @@ export default function BookDetailPage() {
                   <button
                     type="button"
                     disabled
-                    className="primary-button min-w-40 opacity-60"
+                    className="primary-button min-w-40 opacity-60 text-xl!"
                   >
                     Mua sách
                   </button>
@@ -202,8 +190,13 @@ export default function BookDetailPage() {
                     {book.categories.map((category) => (
                       <Link
                         key={category.id}
-                        href={`/categories/${category.id}`}
-                        className="border border-[#4a4945] px-3 py-1.5 text-1xl text-[#b7b5ae] transition hover:border-[#81b3da] hover:text-[#81b3da]"
+                        href={{
+                          pathname: "/search",
+                          query: {
+                            categoryId: String(category.id),
+                          },
+                        }}
+                        className="border border-[#4a4945] px-3 py-1.5 text-xl text-[#b7b5ae] transition hover:border-[#81b3da] hover:text-[#81b3da]"
                       >
                         {category.name}
                       </Link>

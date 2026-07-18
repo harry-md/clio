@@ -31,41 +31,37 @@ export function BookCard({ book }: BookCardProps) {
                 Clio edition
               </span>
 
-              <p className="font-serif text-2xl leading-tight text-[#f1efe9]">
+              <p className="font-sans text-2xl leading-tight text-[#f1efe9]">
                 {book.title}
               </p>
 
               <span className="h-px bg-[#6f6d67]" />
             </div>
           )}
-
-          <span className="absolute right-0 top-0 bg-[#151515]/90 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-widest text-[#d9d7d1]">
-            {book.type}
-          </span>
         </div>
       </Link>
 
       <div className="pt-4">
         <Link
           href={`/books/${book.id}`}
-          className="line-clamp-2 font-serif text-lg font-semibold leading-snug text-[#f3f1eb] transition hover:text-[#7eb7e8]"
+          className="line-clamp-2 font-sans text-xl font-semibold leading-snug text-[#f3f1eb] transition hover:text-[#7eb7e8]"
         >
           {book.title}
         </Link>
 
-        <p className="mt-1 truncate text-sm text-[#9c9b96]">{authorNames}</p>
+        <p className="mt-1 truncate text-base text-[#9c9b96]">{authorNames}</p>
 
         <div className="mt-3 flex items-center justify-between gap-3 border-t border-[#30302e] pt-3">
-          <span className="text-sm font-semibold text-[#e57a3c]">
+          <span className="font-semibold text-[#e57a3c]">
             {Number(book.price) === 0
               ? "Miễn phí"
               : priceFormatter.format(Number(book.price))}
           </span>
 
           {book.rating !== null && (
-            <span className="text-xs text-[#aaa9a4]">
-              <span className="text-[#dfad55]">★</span>{" "}
-              {book.rating.toFixed(1)} ({book.ratingCount})
+            <span className="text-[#aaa9a4]">
+              <span className="text-[#dfad55]">★</span> {book.rating.toFixed(1)}{" "}
+              ({book.ratingCount})
             </span>
           )}
         </div>

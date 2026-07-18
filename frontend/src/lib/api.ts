@@ -7,6 +7,9 @@ type ApiError = {
 export const Api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/api",
   withCredentials: true,
+  paramsSerializer: {
+    indexes: null,
+  },
 });
 
 export function getApiErrorMessage(

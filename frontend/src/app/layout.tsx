@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Lora } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/context/AuthContext";
 
 const geist = Geist({
   variable: "--font-geist",
@@ -30,7 +31,9 @@ export default function RootLayout({
       lang="vi"
       className={`${geist.variable} ${lora.variable} antialiased`}
     >
-      <body>{children}</body>
+      <body>
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }
