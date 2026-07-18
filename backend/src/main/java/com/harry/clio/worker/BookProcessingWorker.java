@@ -18,7 +18,7 @@ public class BookProcessingWorker implements SmartLifecycle {
 
     private final BookProcessingQueue bookProcessingQueue;
     private final BookProcessingService bookProcessingService;
-    private final TaskExecutor taskExecutor;
+    private final TaskExecutor bookProcessingExecutor;
 
     private volatile boolean running = false;
 
@@ -28,7 +28,7 @@ public class BookProcessingWorker implements SmartLifecycle {
             return;
         }
         running = true;
-        taskExecutor.execute(this::consumeLoop);
+        bookProcessingExecutor.execute(this::consumeLoop);
     }
 
     private void consumeLoop() {

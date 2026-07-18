@@ -3,8 +3,10 @@ package com.harry.clio.repository.specification;
 import com.harry.clio.dto.book.BookFilterRequest;
 import com.harry.clio.entity.Book;
 import com.harry.clio.entity.BookType;
+import com.harry.clio.entity.Category;
 
 import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
@@ -42,6 +44,19 @@ public class BookSpecification {
             if (request.toRating() != null) {
                 predicates.add(cb.lessThanOrEqualTo(root.get("rating"), request.toRating()));
             }
+            if (request.categoryId() != null) {
+                Join<Book, Category> categoryJoin = root.join("categories");
+                predicates.add(cb.equal(categoryJoin.get("id"), request.categoryId()));
+            }
+
+            if (request.authorId() != null) {
+                HibernateCriteriaBuilder hcb = (HibernateCriteriaBuilder) cb;
+                var authorExists = hcb.jsonExists(
+                                root.get("authors"), "$[*] ? (@.authorId == $authorId)")
+                        .passing("authorId", cb.literal(request.authorId()));
+                predicates.add(cb.isTrue(authorExists));
+            }
+
             return cb.and(predicates.toArray(Predicate[]::new));
         };
     }

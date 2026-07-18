@@ -25,7 +25,10 @@ public record BookFilterRequest(
 
         @PositiveOrZero(message = "Khoảng điểm đánh giá của sách kết thúc không hợp lệ")
         @Max(value = 5, message = "Khoảng điểm đánh giá của sách kết thúc không hợp lệ")
-        Integer toRating) {
+        Integer toRating,
+
+        Integer categoryId,
+        Integer authorId) {
 
     @AssertTrue(message = "Khoảng giá sách không hợp lệ")
     public boolean isValidPriceRange() {

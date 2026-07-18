@@ -1,26 +1,136 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #151515;
+  --foreground: #f0eee8;
+  --muted: #9b9a95;
+  --border: #343432;
+  --blue: #79aeda;
+  --orange: #e06f32;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-geist);
+  --font-serif: var(--font-lora);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--background);
 }
 
 body {
+  min-height: 100vh;
+  margin: 0;
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist), Arial, sans-serif;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:not(:disabled),
+a {
+  cursor: pointer;
+}
+
+::selection {
+  background: #315877;
+  color: white;
+}
+
+.nav-link {
+  display: flex;
+  min-height: 4.5rem;
+  align-items: center;
+  border-bottom: 2px solid transparent;
+  color: #a2a19c;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition:
+    color 150ms ease,
+    border-color 150ms ease;
+}
+
+.nav-link:hover {
+  color: #f0eee8;
+}
+
+.nav-link-active {
+  border-bottom-color: #73a8d4;
+  color: #f0eee8;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #ceccc5;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.form-input {
+  width: 100%;
+  height: 3rem;
+  border: 1px solid #444440;
+  border-radius: 0;
+  background: #1b1b1a;
+  padding: 0 0.875rem;
+  color: #f2f0ea;
+  outline: none;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease;
+}
+
+.form-input::placeholder {
+  color: #6f6e69;
+}
+
+.form-input:focus {
+  border-color: #75a9d3;
+  background: #20201f;
+}
+
+.form-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.primary-button {
+  display: inline-flex;
+  height: 3rem;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 0;
+  background: #e06f32;
+  padding: 0 1.25rem;
+  color: #171717;
+  font-weight: 750;
+  transition: background 150ms ease;
+}
+
+.primary-button:hover:not(:disabled) {
+  background: #f08344;
+}
+
+.primary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }

@@ -7,6 +7,7 @@ import com.harry.clio.exception.ResourceNotFoundException;
 import com.harry.clio.repository.BookInfoRepository;
 import com.harry.clio.repository.BookRepository;
 import com.harry.clio.service.BookProcessingService;
+import com.harry.clio.service.CloudinaryService;
 import com.harry.clio.service.R2Service;
 
 import lombok.RequiredArgsConstructor;
@@ -44,6 +45,7 @@ import javax.crypto.spec.SecretKeySpec;
 @Service
 public class BookProcessingServiceImpl implements BookProcessingService {
     private final R2Service r2Service;
+    private final CloudinaryService cloudinaryService;
     private final BookRepository bookRepository;
     private final BookInfoRepository bookInfoRepository;
     private final TransactionTemplate transactionTemplate;
@@ -67,10 +69,14 @@ public class BookProcessingServiceImpl implements BookProcessingService {
         Path cleanFile = null;
         Path encryptedFile = null;
         String encryptedFileUrl = null;
+        String thumbnailUrl = null;
         try {
             cleanFile = r2Service.downloadToTemp(book.getFileUrl());
-            long wordCount = countWords(cleanFile);
-
+            EpubExtractData extractResult = extractEpubData(cleanFile);
+            long wordCount = extractResult.wordCount();
+            if (extractResult.coverImage() != null) {
+                thumbnailUrl = cloudinaryService.upload(extractResult.coverImage());
+            }
             SecretKey contentKey = generateContentKey();
             encryptedFile = encryptFile(cleanFile, contentKey);
 
@@ -80,11 +86,15 @@ public class BookProcessingServiceImpl implements BookProcessingService {
             final long finalWordCount = wordCount;
             final String finalEncryptedFileUrl = encryptedFileUrl;
             final String finalEncryptedContentKey = encryptedContentKey;
+            final String finalThumbnailUrl = thumbnailUrl;
             transactionTemplate.executeWithoutResult(status -> {
                 Book managedBook = bookRepository.getReferenceById(bookId);
                 managedBook.setEncryptedFileUrl(finalEncryptedFileUrl);
                 managedBook.setEncryptedContentKey(finalEncryptedContentKey);
                 managedBook.setStatus(BookStatus.COMPLETED);
+                if (finalThumbnailUrl != null) {
+                    managedBook.setThumbnail(finalThumbnailUrl);
+                }
 
                 BookInfo bookInfo = bookInfoRepository.getReferenceById(bookId);
                 bookInfo.setWordCount(finalWordCount);
@@ -94,6 +104,9 @@ public class BookProcessingServiceImpl implements BookProcessingService {
             log.error("Lỗi xử lý sách {}", bookId, ex);
             if (encryptedFileUrl != null) {
                 r2Service.delete(encryptedFileUrl);
+            }
+            if (thumbnailUrl != null) {
+                cloudinaryService.delete(thumbnailUrl);
             }
             transactionTemplate.executeWithoutResult(status -> {
                 Book managedBook = bookRepository.getReferenceById(bookId);
@@ -105,10 +118,9 @@ public class BookProcessingServiceImpl implements BookProcessingService {
         }
     }
 
-    private long countWords(Path path) throws IOException {
+    private EpubExtractData extractEpubData(Path path) throws IOException {
         try (InputStream inputStream = Files.newInputStream(path)) {
             nl.siegmann.epublib.domain.Book book = new EpubReader().readEpub(inputStream);
-
             long wordCount = 0;
             for (Resource resource : book.getContents()) {
                 String htmlContent = new String(resource.getData(), StandardCharsets.UTF_8);
@@ -117,7 +129,12 @@ public class BookProcessingServiceImpl implements BookProcessingService {
                     wordCount += content.trim().split("\\s+").length;
                 }
             }
-            return wordCount;
+            byte[] coverImage = null;
+            Resource coverResource = book.getCoverImage();
+            if (coverResource != null) {
+                coverImage = coverResource.getData();
+            }
+            return new EpubExtractData(wordCount, coverImage);
         }
     }
 
