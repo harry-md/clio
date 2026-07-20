@@ -64,7 +64,12 @@ r2:
   account_id: ${R2_ACCOUNT_ID}
   access_key: ${R2_ACCESS_KEY}
   secret_key: ${R2_SECRET_KEY}
-
+stripe:
+  public_key: ${STRIPE_PUBLIC_KEY}
+  secret_key: ${STRIPE_SECRET_KEY}
+  webhook_secret: ${STRIPE_WEBHOOK_SECRET}
+  success_url: ${STRIPE_SUCCESS_URl}
+  cancel_url: ${STRIPE_CANCEL_URL}
 clio:
   master_key: ${EBOOK_MASTER_KEY}
   page_size: 12

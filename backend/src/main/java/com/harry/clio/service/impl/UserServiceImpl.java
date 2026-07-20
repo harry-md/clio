@@ -10,7 +10,6 @@ import com.harry.clio.exception.DuplicateResourceException;
 import com.harry.clio.exception.ResourceNotFoundException;
 import com.harry.clio.mapper.UserMapper;
 import com.harry.clio.repository.UserRepository;
-import com.harry.clio.service.CloudinaryService;
 import com.harry.clio.service.UserService;
 
 import lombok.RequiredArgsConstructor;
