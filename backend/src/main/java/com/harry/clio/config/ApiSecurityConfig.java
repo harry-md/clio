@@ -69,6 +69,8 @@ public class ApiSecurityConfig {
                         .permitAll()
                         .requestMatchers("/api/subscription-plans/**")
                         .permitAll()
+                        .requestMatchers("/api/orders/webhook")
+                        .permitAll()
                         .anyRequest()
                         .authenticated())
                 .addFilterBefore(jwtFilter, BasicAuthenticationFilter.class);
@@ -81,6 +83,7 @@ public class ApiSecurityConfig {
         config.setAllowedOrigins(List.of("http://localhost:3000"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowCredentials(true);
+        config.setAllowedHeaders(List.of("Content-Type", "Accept", "Authorization"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);

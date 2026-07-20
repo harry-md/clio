@@ -13,12 +13,13 @@ import com.harry.clio.repository.*;
 import com.harry.clio.repository.specification.BookSpecification;
 import com.harry.clio.service.BookProcessingQueue;
 import com.harry.clio.service.BookService;
-import com.harry.clio.service.R2Service;
 
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -123,7 +124,24 @@ public class BookServiceImpl implements BookService {
     public Page<BookListResponse> getAllBooks(BookFilterRequest request, Pageable pageable) {
         Specification<Book> spec = Specification.where(BookSpecification.hasType(BookType.SYSTEM)
                 .and(BookSpecification.isActive(true).and(BookSpecification.buildFilter(request))));
-        return bookRepository.findAll(spec, pageable).map(bookMapper::toListResponse);
+        Pageable normalizedPageable = applyNullHandling(pageable);
+        return bookRepository.findAll(spec, normalizedPageable).map(bookMapper::toListResponse);
+    }
+
+    private Pageable applyNullHandling(Pageable pageable) {
+        if (pageable.isUnpaged()) {
+            return pageable;
+        }
+
+        List<Sort.Order> orders = pageable.getSort().stream()
+                .map(order -> {
+                    if ("rating".equals(order.getProperty())) {
+                        return order.nullsLast();
+                    }
+                    return order;
+                })
+                .toList();
+        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(orders));
     }
 
     @Override

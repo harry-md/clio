@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface BookRepository
@@ -18,4 +19,11 @@ public interface BookRepository
         WHERE b.id = :bookId AND b.active = true AND b.type = 'SYSTEM'
         """)
     Optional<Book> findWithDetailById(@Param(value = "bookId") Integer bookId);
+
+    @Query("""
+        SELECT b
+        FROM Book b
+        WHERE b.active = true AND b.status = 'COMPLETED' AND b.type = 'SYSTEM' AND b.id IN :bookIds
+        """)
+    List<Book> findAllPurchasableByIdIn(List<Integer> bookIds);
 }

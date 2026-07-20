@@ -6,7 +6,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 @Configuration
 public class WorkerConfig {
-    @Bean
+    @Bean(value = "bookProcessingExecutor")
     public ThreadPoolTaskExecutor bookProcessingExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(1);

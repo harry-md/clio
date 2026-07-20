@@ -1,6 +1,5 @@
 package com.harry.clio.entity;
 
-
 import jakarta.validation.constraints.NotNull;
 
 public record BookAuthorJson(
