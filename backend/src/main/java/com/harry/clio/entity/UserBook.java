@@ -2,17 +2,17 @@ package com.harry.clio.entity;
 
 import jakarta.persistence.*;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
 
+@Builder
 @Getter
 @Setter
+@AllArgsConstructor
 @NoArgsConstructor
 @Entity
 @Table(
@@ -31,7 +31,7 @@ public class UserBook {
     @Enumerated(EnumType.STRING)
     private UserBookType type;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String cfiPosition;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

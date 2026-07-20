@@ -13,7 +13,6 @@ import com.harry.clio.repository.*;
 import com.harry.clio.repository.specification.BookSpecification;
 import com.harry.clio.service.BookProcessingQueue;
 import com.harry.clio.service.BookService;
-import com.harry.clio.service.R2Service;
 
 import lombok.RequiredArgsConstructor;
 

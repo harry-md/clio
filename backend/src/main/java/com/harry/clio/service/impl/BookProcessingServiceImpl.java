@@ -7,8 +7,6 @@ import com.harry.clio.exception.ResourceNotFoundException;
 import com.harry.clio.repository.BookInfoRepository;
 import com.harry.clio.repository.BookRepository;
 import com.harry.clio.service.BookProcessingService;
-import com.harry.clio.service.CloudinaryService;
-import com.harry.clio.service.R2Service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

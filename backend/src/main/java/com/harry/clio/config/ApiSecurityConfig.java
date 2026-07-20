@@ -69,6 +69,8 @@ public class ApiSecurityConfig {
                         .permitAll()
                         .requestMatchers("/api/subscription-plans/**")
                         .permitAll()
+                        .requestMatchers("/api/orders/webhook")
+                        .permitAll()
                         .anyRequest()
                         .authenticated())
                 .addFilterBefore(jwtFilter, BasicAuthenticationFilter.class);

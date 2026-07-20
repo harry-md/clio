@@ -1,4 +1,4 @@
-package com.harry.clio.service;
+package com.harry.clio.service.impl;
 
 import com.adobe.epubcheck.api.EpubCheck;
 import com.harry.clio.exception.BadRequestException;

@@ -1,4 +1,4 @@
-package com.harry.clio.service;
+package com.harry.clio.service.impl;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
