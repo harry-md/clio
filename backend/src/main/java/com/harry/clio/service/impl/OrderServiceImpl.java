@@ -134,6 +134,7 @@ public class OrderServiceImpl implements OrderService {
         if (order.getStatus() != OrderStatus.PENDING) {
             return;
         }
+
         List<OrderDetail> orderDetails = orderDetailRepository.findAllByOrderId(order.getId());
         List<UserBook> userBooks = orderDetails.stream()
                 .map(od -> UserBook.builder()
