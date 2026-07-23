@@ -1,13 +1,17 @@
 "use client";
 
+import { ArrowLeftIcon } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
+import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { Rating } from "@/components/Rating";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Api, getApiErrorMessage } from "@/lib/api";
 import type { BookDetail } from "@/lib/types";
-import { LoadingOverlay } from "@/components/LoadingOverlay";
+import { cn } from "@/lib/utils";
 
 const priceFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -56,6 +60,7 @@ export default function BookDetailPage() {
       try {
         setLoading(true);
         setError("");
+
         const { data } = await Api.get<BookDetail>(`/books/${bookId}`);
         setBook(data);
       } catch (requestError) {
@@ -67,71 +72,82 @@ export default function BookDetailPage() {
       }
     };
 
-    fetchBookDetail();
+    void fetchBookDetail();
   }, [bookId]);
 
+  const metadataItems = book
+    ? [
+        {
+          label: "Ngôn ngữ",
+          value:
+            languageLabels[book.bookInfo?.language] ??
+            book.bookInfo?.language ??
+            "Chưa cập nhật",
+        },
+        {
+          label: "ISBN",
+          value: book.bookInfo?.isbn || "Chưa cập nhật",
+        },
+        {
+          label: "Dung lượng",
+          value: formatFileSize(book.bookInfo?.fileSize ?? 0),
+        },
+        {
+          label: "Số trang",
+          value: book.bookInfo?.wordCount
+            ? Math.ceil(book.bookInfo.wordCount / 300)
+            : "Chưa cập nhật",
+        },
+      ]
+    : [];
+
   return (
-    <main className="min-h-screen bg-[#151515]">
+    <main className="min-h-screen bg-background">
       <Header />
 
       <div className="mx-auto max-w-360 px-5 py-8 lg:px-10 lg:py-12">
         <Link
           href="/"
-          className="group inline-flex items-center gap-2 text-base text-[#81b3da] hover:text-white"
+          className={cn(
+            buttonVariants({ variant: "link" }),
+            "group h-auto gap-2 px-0 text-base",
+          )}
         >
-          <span>
-            <svg
-              role="img"
-              aria-hidden="true"
-              className="w-5 h-5 transition-colors text-[#81b3da] group-hover:text-white"
-              viewBox="0 0 1024 1024"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="currentColor"
-            >
-              <path
-                fill="currentColor"
-                d="M224 480h640a32 32 0 1 1 0 64H224a32 32 0 0 1 0-64z"
-              />
-              <path
-                fill="currentColor"
-                d="m237.248 512 265.408 265.344a32 32 0 0 1-45.312 45.312l-288-288a32 32 0 0 1 0-45.312l288-288a32 32 0 1 1 45.312 45.312L237.248 512z"
-              />
-            </svg>
-          </span>
+          <ArrowLeftIcon
+            aria-hidden="true"
+            className="size-5 transition-transform group-hover:-translate-x-0.5"
+          />
           Quay lại
         </Link>
 
-        {loading && <LoadingOverlay label="Đang tải thông tin sách..." />}
+        {loading && <LoadingOverlay />}
 
         {!loading && error && (
-          <div
-            role="alert"
-            className="mt-10 border border-[#2b1d1a] bg-[#2b1d1a] p-5 text-[#e5a394] text-lg text-center"
-          >
-            {error}
-          </div>
+          <Alert variant="destructive" className="mt-10">
+            <AlertDescription className="text-center text-lg">
+              {error}
+            </AlertDescription>
+          </Alert>
         )}
 
         {!loading && book && (
           <>
-            <section className="mt-10 grid gap-10 border-b border-[#343432] pb-14 lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-16">
+            <section className="mt-10 grid gap-10 border-b border-border pb-14 lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-16">
               <div
-                className="relative aspect-2/3 w-full max-w-75 border border-[#514f49] bg-[#242422] bg-cover bg-center"
-                style={
-                  book.thumbnail
-                    ? {
-                        backgroundImage: `url("${book.thumbnail}")`,
-                      }
-                    : undefined
-                }
+                className="relative aspect-2/3 w-full max-w-75 border border-border-strong bg-muted bg-cover bg-center"
+                style={{
+                  backgroundImage: book.thumbnail
+                    ? `url("${book.thumbnail}")`
+                    : "linear-gradient(145deg, var(--cover-from), var(--cover-to))",
+                }}
               >
                 {!book.thumbnail && (
                   <div className="flex h-full flex-col justify-between p-7">
-                    <span className="text-xs uppercase tracking-[0.25em] text-[#aaa9a4]">
+                    <span className="text-xs uppercase tracking-[0.25em] text-muted-foreground">
                       Clio edition
                     </span>
 
-                    <h2 className="font-serif text-3xl leading-tight text-[#f1efe9]">
+                    <h2 className="font-serif text-3xl leading-tight text-foreground">
                       {book.title}
                     </h2>
                   </div>
@@ -139,9 +155,10 @@ export default function BookDetailPage() {
               </div>
 
               <div className="max-w-4xl">
-                <h1 className="mt-2 font-serif text-4xl font-semibold leading-tight text-[#f3f0e9] sm:text-5xl lg:text-6xl">
+                <h1 className="mt-2 font-serif text-4xl font-semibold leading-tight text-foreground sm:text-5xl lg:text-6xl">
                   {book.title}
                 </h1>
+
                 <div className="flex flex-wrap gap-2 text-lg">
                   {book.authors?.length > 0 ? (
                     book.authors.map((author) => (
@@ -154,13 +171,13 @@ export default function BookDetailPage() {
                             authorName: author.authorFullname,
                           },
                         }}
-                        className="text-[#81b3da] transition hover:text-white hover:underline"
+                        className="text-link transition hover:text-foreground hover:underline"
                       >
                         {author.authorFullname}
                       </Link>
                     ))
                   ) : (
-                    <span className="text-[#aaa9a4]">
+                    <span className="text-muted-foreground">
                       Chưa cập nhật tác giả
                     </span>
                   )}
@@ -170,20 +187,21 @@ export default function BookDetailPage() {
                   <Rating rating={book.rating} count={book.ratingCount} />
                 </div>
 
-                <div className="mt-9 flex flex-wrap items-center gap-4 border-y border-[#343432] py-6">
-                  <span className="font-sans text-3xl font-semibold text-[#e57a3c]">
+                <div className="mt-9 flex flex-wrap items-center gap-4 border-y border-border py-6">
+                  <span className="font-sans text-3xl font-semibold text-price">
                     {Number(book.price) === 0
                       ? "Miễn phí"
                       : priceFormatter.format(Number(book.price))}
                   </span>
 
-                  <button
+                  <Button
                     type="button"
+                    size="lg"
                     disabled
-                    className="primary-button min-w-40 opacity-60 text-xl!"
+                    className="min-w-40 text-xl disabled:opacity-60"
                   >
                     Mua sách
-                  </button>
+                  </Button>
                 </div>
 
                 {book.categories?.length > 0 && (
@@ -198,7 +216,13 @@ export default function BookDetailPage() {
                             categoryName: category.name,
                           },
                         }}
-                        className="border border-[#4a4945] px-3 py-1.5 text-xl text-[#b7b5ae] transition hover:border-[#81b3da] hover:text-[#81b3da]"
+                        className={cn(
+                          buttonVariants({
+                            variant: "outline",
+                            size: "sm",
+                          }),
+                          "text-muted-foreground hover:text-link",
+                        )}
                       >
                         {category.name}
                       </Link>
@@ -210,57 +234,36 @@ export default function BookDetailPage() {
 
             <section className="grid gap-12 py-14 lg:grid-cols-[minmax(0,1fr)_300px]">
               <div>
-                <h2 className="font-serif text-5xl font-semibold text-[#f0eee8]">
+                <h2 className="font-serif text-5xl font-semibold text-foreground">
                   Giới thiệu
                 </h2>
 
-                <div className="mt-6 max-w-3xl whitespace-pre-line text-2xl leading-9 text-[#f0eee8]">
+                <div className="mt-6 max-w-3xl whitespace-pre-line text-2xl leading-9 text-foreground">
                   {book.bookInfo?.description ||
                     "Chưa có phần giới thiệu cho sách này."}
                 </div>
               </div>
 
-              <aside className="border-t border-[#343432] pt-6 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
-                <h3 className="font-sans text-3xl font-semibold text-[#f0eee8]">
+              <aside className="border-t border-border pt-6 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
+                <h3 className="font-sans text-3xl font-semibold text-foreground">
                   Thông tin sách
                 </h3>
 
                 <dl className="mt-8 space-y-5 text-lg">
-                  <div className="flex justify-between gap-5 border-b border-[#2f2f2d] pb-4">
-                    <dt className="text-base text-[#8d8c86]">Ngôn ngữ</dt>
+                  {metadataItems.map((item) => (
+                    <div
+                      key={item.label}
+                      className="flex justify-between gap-5 border-b border-border pb-4"
+                    >
+                      <dt className="text-base text-muted-foreground">
+                        {item.label}
+                      </dt>
 
-                    <dd className="text-right text-lg text-[#d0cec7]">
-                      {languageLabels[book.bookInfo?.language] ??
-                        book.bookInfo?.language ??
-                        "Chưa cập nhật"}
-                    </dd>
-                  </div>
-
-                  <div className="flex justify-between gap-5 border-b border-[#2f2f2d] pb-4">
-                    <dt className="text-base text-[#8d8c86]">ISBN</dt>
-
-                    <dd className="text-right text-lg text-[#d0cec7]">
-                      {book.bookInfo?.isbn || "Chưa cập nhật"}
-                    </dd>
-                  </div>
-
-                  <div className="flex justify-between gap-5 border-b border-[#2f2f2d] pb-4">
-                    <dt className="text-base text-[#8d8c86]">Dung lượng</dt>
-
-                    <dd className="text-right text-lg text-[#d0cec7]">
-                      {formatFileSize(book.bookInfo?.fileSize ?? 0)}
-                    </dd>
-                  </div>
-
-                  <div className="flex justify-between gap-5 border-b border-[#2f2f2d] pb-4">
-                    <dt className="text-base text-[#8d8c86]">Số trang</dt>
-
-                    <dd className="text-right text-lg text-[#d0cec7]">
-                      {book.bookInfo?.wordCount
-                        ? Math.ceil(book.bookInfo.wordCount / 300)
-                        : "Chưa cập nhật"}
-                    </dd>
-                  </div>
+                      <dd className="text-right text-lg text-secondary-foreground">
+                        {item.value}
+                      </dd>
+                    </div>
+                  ))}
                 </dl>
               </aside>
             </section>

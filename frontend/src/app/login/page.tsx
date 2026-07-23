@@ -2,8 +2,13 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { type SubmitEvent, useState } from "react";
+import { type SubmitEvent, useEffect, useRef, useState } from "react";
 import { ClioLogo } from "@/components/ClioLogo";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 import { useAuth } from "@/context/AuthContext";
 import { Api, getApiErrorMessage } from "@/lib/api";
 import type { AuthUser } from "@/lib/types";
@@ -11,6 +16,11 @@ import type { AuthUser } from "@/lib/types";
 export default function LoginPage() {
   const router = useRouter();
   const { setUser } = useAuth();
+  const firstInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    firstInputRef.current?.focus();
+  }, []);
 
   const [form, setForm] = useState({
     username: "",
@@ -41,16 +51,25 @@ export default function LoginPage() {
     }
   };
 
+  const errorDescriptionId = error ? "login-error-description" : undefined;
+
   return (
-    <main className="grid min-h-screen bg-[#151515] lg:grid-cols-[minmax(0,1.1fr)_minmax(420px,.9fr)]">
-      <section className="relative hidden overflow-hidden border-r border-[#343432] bg-[#1a1a19] lg:flex">
-        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(113,73,43,.24),transparent_48%),linear-gradient(315deg,rgba(39,77,105,.2),transparent_45%)]" />
+    <main className="grid min-h-screen bg-background lg:grid-cols-[minmax(0,1.1fr)_minmax(420px,.9fr)]">
+      <section className="relative hidden overflow-hidden border-r border-border bg-card lg:flex">
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(135deg, var(--auth-warm-overlay), transparent 48%), linear-gradient(315deg, var(--auth-cool-overlay), transparent 45%)",
+          }}
+        />
+
         <div className="relative flex w-full items-center justify-center p-12 xl:p-16">
           <div className="absolute left-12 top-12 xl:left-16 xl:top-16">
             <ClioLogo />
           </div>
 
-          <h1 className="max-w-xl text-center font-serif text-5xl font-bold leading-tight text-[#f2efe8] xl:text-6xl">
+          <h1 className="max-w-xl text-center font-serif text-5xl font-bold leading-tight text-foreground xl:text-6xl">
             Tiếp tục đọc sách trên Clio
           </h1>
         </div>
@@ -62,22 +81,21 @@ export default function LoginPage() {
             <ClioLogo />
           </div>
 
-          <h2 className="text-center font-serif text-4xl font-semibold text-[#f3f0e9]">
+          <h2 className="text-center font-serif text-5xl font-semibold text-foreground">
             Đăng nhập
           </h2>
 
           <form className="mt-10 space-y-6" onSubmit={handleSubmit}>
-            <div>
-              <label htmlFor="username" className="form-label">
-                Tên đăng nhập
-              </label>
-              <input
+            <Field>
+              <FieldLabel htmlFor="username">Tên đăng nhập</FieldLabel>
+              <Input
+                ref={firstInputRef}
                 id="username"
                 name="username"
                 autoComplete="username"
                 required
-                className="form-input"
                 placeholder="Nhập tên đăng nhập"
+                aria-describedby={errorDescriptionId}
                 value={form.username}
                 onChange={(event) =>
                   setForm((current) => ({
@@ -86,20 +104,19 @@ export default function LoginPage() {
                   }))
                 }
               />
-            </div>
+            </Field>
 
-            <div>
-              <label htmlFor="password" className="form-label">
-                Mật khẩu
-              </label>
-              <input
+            <Field>
+              <FieldLabel htmlFor="password">Mật khẩu</FieldLabel>
+
+              <Input
                 id="password"
                 name="password"
                 type="password"
                 autoComplete="current-password"
                 required
-                className="form-input"
                 placeholder="Nhập mật khẩu"
+                aria-describedby={errorDescriptionId}
                 value={form.password}
                 onChange={(event) =>
                   setForm((current) => ({
@@ -108,31 +125,32 @@ export default function LoginPage() {
                   }))
                 }
               />
-            </div>
+            </Field>
 
             {error && (
-              <div
-                role="alert"
-                className="border border-[#7e4439] bg-[#2a1c19] px-4 py-3 text-sm text-[#e2a095]"
-              >
-                {error}
-              </div>
+              <Alert variant="destructive">
+                <AlertDescription id="login-error-description">
+                  {error}
+                </AlertDescription>
+              </Alert>
             )}
 
-            <button
+            <Button
               type="submit"
+              size="lg"
               disabled={submitting}
-              className="primary-button w-full"
+              className="w-full"
             >
+              {submitting && <Spinner data-icon="inline-start" />}
               {submitting ? "Đang đăng nhập..." : "Đăng nhập"}
-            </button>
+            </Button>
           </form>
 
-          <div className="mt-8 border-t border-[#343432] pt-7 text-center text-sm text-[#8f8e89]">
+          <div className="mt-8 border-t border-border pt-7 text-center text-sm text-muted-foreground">
             Chưa có tài khoản?{" "}
             <Link
               href="/register"
-              className="font-semibold text-[#7eb2db] hover:text-white"
+              className="font-semibold text-link transition hover:text-foreground"
             >
               Tạo tài khoản
             </Link>

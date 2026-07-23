@@ -1,16 +1,14 @@
 import { Suspense } from "react";
 import { Header } from "@/components/Header";
-import { SearchPageContent } from "@/components/SearchPageContent";
 import { LoadingOverlay } from "@/components/LoadingOverlay";
+import { SearchPageContent } from "@/components/SearchPageContent";
 
 export default function SearchPage() {
   return (
-    <main className="min-h-screen bg-[#151515]">
+    <main className="min-h-screen bg-background">
       <Header />
 
-      <Suspense
-        fallback={<LoadingOverlay label="Đang chuyển trang tìm kiếm..." />}
-      >
+      <Suspense fallback={<LoadingOverlay />}>
         <SearchPageContent />
       </Suspense>
     </main>

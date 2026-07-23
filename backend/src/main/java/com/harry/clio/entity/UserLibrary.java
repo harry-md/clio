@@ -16,20 +16,20 @@ import java.time.Instant;
 @NoArgsConstructor
 @Entity
 @Table(
-        name = "user_books",
+        name = "user_libraries",
         uniqueConstraints = {
             @UniqueConstraint(
-                    name = "uq_user_books_user_book",
+                    name = "uq_user_libraries_user_book",
                     columnNames = {"user_id", "book_id"})
         })
-public class UserBook {
+public class UserLibrary {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @Column(nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
-    private UserBookType type;
+    private UserLibraryType type;
 
     @Column(nullable = true)
     private String cfiPosition;

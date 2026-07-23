@@ -1,12 +1,30 @@
 "use client";
 
+import { SearchIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { ClioLogo } from "@/components/ClioLogo";
 import { LoadingOverlay } from "@/components/LoadingOverlay";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { Api } from "@/lib/api";
+import { cn } from "@/lib/utils";
+
+const navigationItems = [
+  {
+    href: "/",
+    label: "Khám phá",
+  },
+  {
+    href: "/library",
+    label: "Thư viện",
+  },
+  {
+    href: "/subscriptions",
+    label: "Gói đọc",
+  },
+] as const;
 
 export const Header = () => {
   const router = useRouter();
@@ -34,48 +52,53 @@ export const Header = () => {
 
   return (
     <>
-      {isNavigating && <LoadingOverlay label="Đang mở trang tìm kiếm..." />}
-      <header className="sticky top-0 z-40 border-b border-[#343432] bg-[#151515]/95 backdrop-blur-sm">
+      {isNavigating && <LoadingOverlay />}
+
+      <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="mx-auto flex min-h-18 max-w-360 items-center gap-6 px-5 lg:px-10">
           <ClioLogo />
 
           <nav className="hidden items-center gap-7 lg:flex">
-            <Link className="text-lg nav-link nav-link-active" href="/">
-              Khám phá
-            </Link>
-            <Link className="text-lg nav-link" href="/library">
-              Thư viện
-            </Link>
-            <Link className="text-lg nav-link" href="/subscriptions">
-              Gói đọc
-            </Link>
+            {navigationItems.map((item) => {
+              const isActive =
+                item.href === "/"
+                  ? pathname === "/"
+                  : pathname === item.href ||
+                    pathname.startsWith(`${item.href}/`);
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={isActive ? "page" : undefined}
+                  className={cn(
+                    "flex min-h-18 items-center border-b-2 border-transparent text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground",
+                    isActive && "border-ring text-foreground",
+                  )}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
           </nav>
 
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={handleOpenSearch}
-            className="cursor-text ml-auto hidden h-10 w-full max-w-md items-center border border-[#41413e] bg-[#1d1d1c] text-left transition hover:border-[#6d9fc9] md:flex"
+            className="ml-auto hidden w-full max-w-md cursor-text justify-start border-border-strong bg-card px-3 text-left font-normal text-subtle-foreground hover:bg-card hover:text-foreground md:flex"
           >
-            <svg
-              aria-hidden="true"
-              viewBox="0 0 24 24"
-              className="ml-3 size-4 fill-none stroke-[#8f8e89] stroke-2"
-            >
-              <circle cx="11" cy="11" r="7" />
-              <path d="m20 20-4-4" />
-            </svg>
+            <SearchIcon className="size-4 text-muted-foreground" />
 
-            <span className="cursor-text px-3 text-sm text-[#777671]">
-              Tìm kiếm sách...
-            </span>
-          </button>
+            <span className="cursor-text">Tìm kiếm sách...</span>
+          </Button>
 
           {!initialized ? (
             <div aria-hidden="true" className="h-10 w-36" />
           ) : user ? (
             <div className="flex items-center gap-3">
               <div
-                className="size-9 border border-[#484844] bg-[#292927] bg-cover bg-center"
+                className="size-9 border border-border-strong bg-secondary bg-cover bg-center"
                 style={
                   user.avatar
                     ? { backgroundImage: `url("${user.avatar}")` }
@@ -83,40 +106,42 @@ export const Header = () => {
                 }
               >
                 {!user.avatar && (
-                  <span
-                    className="grid h-full place-items-center text-sm
-                                font-semibold text-[#d8d6cf]"
-                  >
+                  <span className="grid h-full place-items-center text-sm font-semibold text-secondary-foreground">
                     {user.firstName.charAt(0).toUpperCase()}
                   </span>
                 )}
               </div>
 
               <div className="hidden xl:block">
-                <p className="text-sm font-medium text-[#eceae4]">
+                <p className="font-semibold text-foreground">
                   {user.firstName} {user.lastName}
                 </p>
-                <button
+
+                <Button
                   type="button"
+                  variant="link"
                   onClick={handleLogout}
-                  className="text-left text-xs text-[#8ebce2] hover:text-white"
+                  className="h-auto justify-start px-0 text-sm"
                 >
                   Đăng xuất
-                </button>
+                </Button>
               </div>
             </div>
           ) : (
             <div className="flex items-center gap-2">
               <Link
                 href="/login"
-                className="hidden h-10 items-center border border-[#484844] px-4 text-sm font-semibold text-[#e8e6df] transition hover:border-[#777771] sm:flex"
+                className={cn(
+                  buttonVariants({ variant: "outline" }),
+                  "hidden sm:inline-flex",
+                )}
               >
                 Đăng nhập
               </Link>
 
               <Link
                 href="/register"
-                className="flex h-10 items-center bg-[#e06f32] px-4 text-sm font-bold text-[#161616] transition hover:bg-[#f08243]"
+                className={buttonVariants({ variant: "default" })}
               >
                 Đăng ký
               </Link>

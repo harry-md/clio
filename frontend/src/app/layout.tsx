@@ -29,7 +29,7 @@ export default function RootLayout({
   return (
     <html
       lang="vi"
-      className={`${geist.variable} ${lora.variable} antialiased`}
+      className={`${geist.variable} ${lora.variable} dark antialiased`}
     >
       <body>
         <AuthProvider>{children}</AuthProvider>
