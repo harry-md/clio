@@ -7,7 +7,7 @@ export function ClioLogo() {
       className="flex items-center gap-3 text-white"
       aria-label="Clio home"
     >
-      <span className="grid size-12 place-items-center border-2 border-[#e36f32] font-sans text-xl font-bold text-[#e36f32]">
+      <span className="grid size-13 place-items-center border-2 border-[#e36f32] bg-[#e36f32] font-serif text-xl font-bold">
         Clio
       </span>
     </Link>

@@ -251,7 +251,7 @@ export function SearchPageContent() {
                 updateFilter("authorId", "");
                 setAuthorName("");
               }}
-              className="border border-[#537b9c] bg-[#202f3a] px-3 py-2 text-sm text-[#9ac8eb] hover:border-[#81b3da]"
+              className="border bg-[#f08243] px-3 py-2 text-sm text-[#161616]"
             >
               Tác giả: {authorName || `#${filters.authorId}`} ×
             </button>
@@ -264,7 +264,7 @@ export function SearchPageContent() {
                 updateFilter("categoryId", "");
                 setCategoryName("");
               }}
-              className="border border-[#665c43] bg-[#2d291f] px-3 py-2 text-sm text-[#d5bd83] hover:border-[#b69a5c]"
+              className="border bg-[#f08243] px-3 py-2 text-sm text-[#161616]"
             >
               Danh mục: {categoryName || `#${filters.categoryId}`} ×
             </button>

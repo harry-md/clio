@@ -5,8 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { ClioLogo } from "@/components/ClioLogo";
 import { LoadingOverlay } from "@/components/LoadingOverlay";
-import { Api } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
+import { Api } from "@/lib/api";
 
 export const Header = () => {
   const router = useRouter();
@@ -75,7 +75,7 @@ export const Header = () => {
           ) : user ? (
             <div className="flex items-center gap-3">
               <div
-                className="size-9 border rounded-2xl border-[#484844] bg-[#292927] bg-cover bg-center"
+                className="size-9 border border-[#484844] bg-[#292927] bg-cover bg-center"
                 style={
                   user.avatar
                     ? { backgroundImage: `url("${user.avatar}")` }

@@ -105,20 +105,17 @@ export default function HomePage() {
       {loading && <LoadingOverlay label="Đang tải danh sách sách..." />}
       <Header />
 
-      <section
-        id="book-list"
-        className="mx-auto max-w-360 scroll-mt-20 px-5 py-14 lg:px-10 lg:py-20"
-      >
+      <section className="relative overflow-hidden border-b border-[#343432] bg-[#1d1d1b]">
         {featuredBook?.thumbnail && (
           <div
-            className="absolute inset-0 bg-cover bg-center opacity-15 blur-[2px]"
+            className="absolute inset-0 bg-cover bg-center opacity-50"
             style={{
               backgroundImage: `url("${featuredBook.thumbnail}")`,
             }}
           />
         )}
 
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,#181818_10%,rgba(24,24,24,.94)_42%,rgba(24,24,24,.5)_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,#181818_8%,rgba(24,24,24,.8)_50%,rgba(24,24,24,.25)_100%)]" />
         <div className="relative mx-auto grid min-h-120 max-w-360 items-center gap-12 px-5 py-16 md:grid-cols-[1fr_260px] lg:px-10">
           <div className="max-w-2xl">
             <h1 className="font-serif text-7xl font-semibold leading-tight text-[#f5f2eb] sm:text-5xl lg:text-7xl">
@@ -179,7 +176,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-360 px-5 py-14 lg:px-10 lg:py-20">
+      <section
+        id="book-list"
+        className="mx-auto max-w-360 scroll-mt-20 px-5 py-14 lg:px-10 lg:py-20"
+      >
         <div className="flex flex-col justify-between gap-6 border-b border-[#343432] pb-7 md:flex-row md:items-end">
           <div>
             <h2 className="mt-2 font-sans text-5xl font-semibold text-[#f0eee8]">
@@ -231,6 +231,14 @@ export default function HomePage() {
             </p>
           </div>
         ) : null}
+        {books.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            disabled={loading}
+            onPageChangeAction={handlePageChange}
+          />
+        )}
       </section>
 
       <footer className="border-t border-[#343432] bg-[#111111]">

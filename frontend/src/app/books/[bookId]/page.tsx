@@ -106,7 +106,7 @@ export default function BookDetailPage() {
         {!loading && error && (
           <div
             role="alert"
-            className="mt-10 border border-[#83483d] bg-[#2b1d1a] p-5 text-sm text-[#e5a394]"
+            className="mt-10 border border-[#2b1d1a] bg-[#2b1d1a] p-5 text-[#e5a394] text-lg text-center"
           >
             {error}
           </div>
@@ -151,6 +151,7 @@ export default function BookDetailPage() {
                           pathname: "/search",
                           query: {
                             authorId: String(author.authorId),
+                            authorName: author.authorFullname,
                           },
                         }}
                         className="text-[#81b3da] transition hover:text-white hover:underline"
@@ -194,6 +195,7 @@ export default function BookDetailPage() {
                           pathname: "/search",
                           query: {
                             categoryId: String(category.id),
+                            categoryName: category.name,
                           },
                         }}
                         className="border border-[#4a4945] px-3 py-1.5 text-xl text-[#b7b5ae] transition hover:border-[#81b3da] hover:text-[#81b3da]"
