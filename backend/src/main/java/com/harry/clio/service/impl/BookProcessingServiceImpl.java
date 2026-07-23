@@ -63,6 +63,9 @@ public class BookProcessingServiceImpl implements BookProcessingService {
         Book book = bookRepository
                 .findById(bookId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sách"));
+        if (book.getStatus() == BookStatus.COMPLETED) {
+            return;
+        }
 
         Path cleanFile = null;
         Path encryptedFile = null;
@@ -110,6 +113,7 @@ public class BookProcessingServiceImpl implements BookProcessingService {
                 Book managedBook = bookRepository.getReferenceById(bookId);
                 managedBook.setStatus(BookStatus.FAILED);
             });
+            throw new RuntimeException("Xử lý sách thất bại: " + bookId, ex);
         } finally {
             deleteTmpFile(cleanFile);
             deleteTmpFile(encryptedFile);

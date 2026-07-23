@@ -3,26 +3,15 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { type SubmitEvent, useCallback, useEffect, useState } from "react";
 import { BookCard } from "@/components/BookCard";
+import { EmptyState } from "@/components/EmptyState";
 import { LoadingOverlay } from "@/components/LoadingOverlay";
+import {
+  type SearchFilters,
+  SearchFiltersForm,
+} from "@/components/SearchFiltersForm";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Api, getApiErrorMessage } from "@/lib/api";
 import type { Book, PageResponse } from "@/lib/types";
-
-type SearchFilters = {
-  title: string;
-  authorFullname: string;
-  fromPrice: string;
-  toPrice: string;
-  fromRating: string;
-  toRating: string;
-
-  categoryId: string;
-  authorId: string;
-};
-
-const ratingOptions = [0, 1, 2, 3, 4, 5];
-
-const inputClassName =
-  "h-11 w-full border border-[#41413e] bg-[#1d1d1c] px-3 text-sm text-white outline-none placeholder:text-[#777671] focus:border-[#6d9fc9]";
 
 const readFilters = (params: Pick<URLSearchParams, "get">): SearchFilters => ({
   title: params.get("title") ?? "",
@@ -79,8 +68,8 @@ export function SearchPageContent() {
   const [sort, setSort] = useState(
     () => searchParams.get("sort") ?? "createdAt,desc",
   );
-  const [submittedSort, setSubmittedSort] = useState(sort);
 
+  const [submittedSort, setSubmittedSort] = useState(sort);
   const [books, setBooks] = useState<Book[]>([]);
   const [totalElements, setTotalElements] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -214,10 +203,7 @@ export function SearchPageContent() {
     };
 
     setFilters(clearedFilters);
-
-    setSubmittedFilters({
-      ...clearedFilters,
-    });
+    setSubmittedFilters({ ...clearedFilters });
 
     setAuthorName("");
     setCategoryName("");
@@ -233,206 +219,56 @@ export function SearchPageContent() {
     });
   };
 
+  const removeScopedFilter = (filter: "author" | "category") => {
+    if (filter === "author") {
+      updateFilter("authorId", "");
+      setAuthorName("");
+      return;
+    }
+
+    updateFilter("categoryId", "");
+    setCategoryName("");
+  };
+
   return (
     <section className="mx-auto max-w-360 px-5 py-12 lg:px-10 lg:py-16">
-      {loading && <LoadingOverlay label="Đang tìm kiếm sách..." />}
-      <div className="border-b border-[#343432] pb-8">
-        <h1 className="mt-2 font-serif text-5xl font-bold text-[#f0eee8]">
+      {loading && <LoadingOverlay />}
+
+      <div className="border-b border-border pb-8">
+        <h1 className="mt-2 font-serif text-5xl font-bold text-foreground">
           Tìm kiếm sách
         </h1>
       </div>
 
-      {(filters.authorId || filters.categoryId) && (
-        <div className="flex flex-wrap gap-2 border-b border-[#343432] py-5">
-          {filters.authorId && (
-            <button
-              type="button"
-              onClick={() => {
-                updateFilter("authorId", "");
-                setAuthorName("");
-              }}
-              className="border border-[#537b9c] bg-[#202f3a] px-3 py-2 text-sm text-[#9ac8eb] hover:border-[#81b3da]"
-            >
-              Tác giả: {authorName || `#${filters.authorId}`} ×
-            </button>
-          )}
-
-          {filters.categoryId && (
-            <button
-              type="button"
-              onClick={() => {
-                updateFilter("categoryId", "");
-                setCategoryName("");
-              }}
-              className="border border-[#665c43] bg-[#2d291f] px-3 py-2 text-sm text-[#d5bd83] hover:border-[#b69a5c]"
-            >
-              Danh mục: {categoryName || `#${filters.categoryId}`} ×
-            </button>
-          )}
-        </div>
-      )}
-
-      <form
-        onSubmit={handleSearch}
-        className="grid gap-5 border-b border-[#343432] py-8 md:grid-cols-2 xl:grid-cols-4"
-      >
-        <label className="block md:col-span-2">
-          <span className="mb-2 block text-sm font-medium text-[#b8b6b0]">
-            Tên sách
-          </span>
-
-          <input
-            type="text"
-            value={filters.title}
-            onChange={(event) => updateFilter("title", event.target.value)}
-            placeholder="Nhập tên sách..."
-            className={inputClassName}
-          />
-        </label>
-
-        <label className="block md:col-span-2">
-          <span className="mb-2 block text-sm font-medium text-[#b8b6b0]">
-            Tên tác giả
-          </span>
-
-          <input
-            type="text"
-            value={filters.authorFullname}
-            onChange={(event) =>
-              updateFilter("authorFullname", event.target.value)
-            }
-            placeholder="Nhập tên tác giả..."
-            className={inputClassName}
-          />
-        </label>
-
-        <div className="md:col-span-2">
-          <span className="mb-2 block text-sm font-medium text-[#b8b6b0]">
-            Khoảng giá
-          </span>
-
-          <div className="grid grid-cols-2 gap-3">
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={filters.fromPrice}
-              onChange={(event) =>
-                updateFilter("fromPrice", event.target.value)
-              }
-              placeholder="Giá thấp nhất"
-              aria-label="Giá thấp nhất"
-              className={inputClassName}
-            />
-
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={filters.toPrice}
-              onChange={(event) => updateFilter("toPrice", event.target.value)}
-              placeholder="Giá cao nhất"
-              aria-label="Giá cao nhất"
-              className={inputClassName}
-            />
-          </div>
-        </div>
-
-        <div className="md:col-span-2">
-          <span className="mb-2 block text-sm font-medium text-[#b8b6b0]">
-            Khoảng đánh giá
-          </span>
-
-          <div className="grid grid-cols-2 gap-3">
-            <select
-              value={filters.fromRating}
-              onChange={(event) =>
-                updateFilter("fromRating", event.target.value)
-              }
-              aria-label="Điểm thấp nhất"
-              className={inputClassName}
-            >
-              <option value="">Từ điểm</option>
-
-              {ratingOptions.map((rating) => (
-                <option key={rating} value={rating}>
-                  {rating} sao
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={filters.toRating}
-              onChange={(event) => updateFilter("toRating", event.target.value)}
-              aria-label="Điểm cao nhất"
-              className={inputClassName}
-            >
-              <option value="">Đến điểm</option>
-
-              {ratingOptions.map((rating) => (
-                <option key={rating} value={rating}>
-                  {rating} sao
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <label className="block md:col-span-2">
-          <span className="mb-2 block text-sm font-medium text-[#b8b6b0]">
-            Sắp xếp
-          </span>
-
-          <select
-            value={sort}
-            onChange={(event) => setSort(event.target.value)}
-            className={inputClassName}
-          >
-            <option value="createdAt,desc">Mới phát hành</option>
-            <option value="ratingCount,desc">Phổ biến nhất</option>
-            <option value="rating,desc">Đánh giá cao nhất</option>
-            <option value="price,asc">Giá thấp đến cao</option>
-            <option value="price,desc">Giá cao đến thấp</option>
-            <option value="title,asc">Tên sách A–Z</option>
-          </select>
-        </label>
-
-        <div className="flex items-end gap-3 md:col-span-2">
-          <button
-            type="submit"
-            disabled={loading}
-            className="h-11 bg-[#e06f32] px-6 text-sm font-bold text-[#161616] transition hover:bg-[#f08243] disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            Tìm kiếm
-          </button>
-
-          <button
-            type="button"
-            onClick={clearFilters}
-            className="h-11 border border-[#555550] px-5 text-sm font-semibold text-[#aaa9a4] transition hover:border-[#85857f] hover:text-white"
-          >
-            Xóa bộ lọc
-          </button>
-        </div>
-      </form>
+      <SearchFiltersForm
+        filters={filters}
+        sort={sort}
+        authorName={authorName}
+        categoryName={categoryName}
+        loading={loading}
+        onFilterChangeAction={updateFilter}
+        onSortChangeAction={setSort}
+        onRemoveScopedFilterAction={removeScopedFilter}
+        onSubmitAction={handleSearch}
+        onClearAction={clearFilters}
+      />
 
       <div className="flex items-center justify-between py-7">
-        <h2 className="font-sans text-2xl font-semibold text-[#f0eee8]">
+        <h2 className="font-sans text-2xl font-semibold text-foreground">
           Kết quả tìm kiếm
         </h2>
 
         {!loading && !error && (
-          <span className="text-sm text-[#85847f]">{totalElements} sách</span>
+          <span className="text-sm text-subtle-foreground">
+            {totalElements} sách
+          </span>
         )}
       </div>
 
       {error && (
-        <div
-          role="alert"
-          className="border border-[#83483d] bg-[#2b1d1a] p-4 text-sm text-[#e5a394]"
-        >
-          {error}
-        </div>
+        <Alert className="mb-5" variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
       {books.length > 0 ? (
@@ -441,10 +277,8 @@ export function SearchPageContent() {
             <BookCard key={book.id} book={book} />
           ))}
         </div>
-      ) : !loading ? (
-        <div className="border-y border-[#343432] py-20 text-center">
-          <p className="text-xl text-[#d8d6cf]">Không tìm thấy sách phù hợp</p>
-        </div>
+      ) : !loading && !error ? (
+        <EmptyState title="Không tìm thấy sách phù hợp" />
       ) : null}
     </section>
   );

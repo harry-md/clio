@@ -4,11 +4,11 @@ export function ClioLogo() {
   return (
     <Link
       href="/"
-      className="flex items-center gap-3 text-white"
-      aria-label="Clio home"
+      className="flex items-center gap-3 text-foreground"
+      aria-label="Trang chủ Clio"
     >
-      <span className="grid size-12 place-items-center border-2 border-[#e36f32] font-sans text-xl font-bold text-[#e36f32]">
-        Clio
+      <span className="grid size-13 place-items-center border-2 border-primary bg-primary font-serif text-4xl font-bold text-foreground">
+        C
       </span>
     </Link>
   );

@@ -1,5 +1,8 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
 type PaginationProps = {
   currentPage: number;
   totalPages: number;
@@ -51,16 +54,16 @@ export function Pagination({
   return (
     <nav
       aria-label="Phân trang"
-      className="mt-12 flex flex-wrap items-center justify-center gap-2 border-t border-[#343432] pt-8"
+      className="mt-12 flex flex-wrap items-center justify-center gap-2 border-t border-border pt-8"
     >
-      <button
+      <Button
         type="button"
+        variant="outline"
         disabled={disabled || currentPage === 0}
         onClick={() => onPageChangeAction(currentPage - 1)}
-        className="h-10 border border-[#41413e] px-4 text-sm font-semibold text-[#aaa9a4] transition hover:border-[#75a9d3] hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
       >
         Trước
-      </button>
+      </Button>
 
       {pageItems.map((item) => {
         if (typeof item === "string") {
@@ -68,7 +71,7 @@ export function Pagination({
             <span
               key={item}
               aria-hidden="true"
-              className="grid size-10 place-items-center text-[#777671]"
+              className="grid size-10 place-items-center text-subtle-foreground"
             >
               …
             </span>
@@ -78,32 +81,33 @@ export function Pagination({
         const isActive = item === currentPage;
 
         return (
-          <button
+          <Button
             key={item}
             type="button"
+            size="icon"
+            variant={isActive ? "secondary" : "outline"}
             disabled={disabled}
             aria-label={`Trang ${item + 1}`}
             aria-current={isActive ? "page" : undefined}
             onClick={() => onPageChangeAction(item)}
-            className={`size-10 border text-sm font-semibold transition ${
-              isActive
-                ? "border-[#75a9d3] bg-[#263745] text-white"
-                : "border-[#41413e] text-[#aaa9a4] hover:border-[#75a9d3] hover:text-white"
-            }`}
+            className={cn(
+              isActive &&
+                "border-ring bg-accent text-accent-foreground hover:bg-accent",
+            )}
           >
             {item + 1}
-          </button>
+          </Button>
         );
       })}
 
-      <button
+      <Button
         type="button"
+        variant="outline"
         disabled={disabled || currentPage >= totalPages - 1}
         onClick={() => onPageChangeAction(currentPage + 1)}
-        className="h-10 border border-[#41413e] px-4 text-sm font-semibold text-[#aaa9a4] transition hover:border-[#75a9d3] hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
       >
         Sau
-      </button>
+      </Button>
     </nav>
   );
 }
