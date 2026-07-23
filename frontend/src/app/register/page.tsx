@@ -2,8 +2,19 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { type ChangeEvent, type SubmitEvent, useEffect, useState } from "react";
+import {
+  type ChangeEvent,
+  type SubmitEvent,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { Header } from "@/components/Header";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 import { Api, getApiErrorMessage } from "@/lib/api";
 
 type RegisterForm = {
@@ -25,6 +36,7 @@ const initialForm: RegisterForm = {
   email: "",
   avatar: null,
 };
+
 const MAX_FIELD_LENGTH = 255;
 const MAX_AVATAR_SIZE = 10 * 1024 * 1024;
 
@@ -62,11 +74,13 @@ const validateForm = (form: RegisterForm) => {
   if (form.avatar && form.avatar.size > MAX_AVATAR_SIZE) {
     return "Avatar vượt quá kích thước cho phép.";
   }
+
   return null;
 };
 
 export default function RegisterPage() {
   const router = useRouter();
+  const firstInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState(initialForm);
   const [avatarPreview, setAvatarPreview] = useState("");
@@ -74,8 +88,14 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    firstInputRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
     return () => {
-      if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+      if (avatarPreview) {
+        URL.revokeObjectURL(avatarPreview);
+      }
     };
   }, [avatarPreview]);
 
@@ -110,12 +130,12 @@ export default function RegisterPage() {
       payload.append("firstName", form.firstName.trim());
       payload.append("lastName", form.lastName.trim());
       payload.append("email", form.email.trim());
+
       if (form.avatar) {
         payload.append("avatar", form.avatar);
       }
 
       await Api.post("/users", payload);
-
       router.push("/login");
     } catch (requestError) {
       setError(
@@ -127,32 +147,28 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#151515]">
+    <main className="min-h-screen bg-background">
       <Header />
 
       <div className="mx-auto max-w-2xl px-5 py-14 lg:py-20">
         <section>
-          <h2 className="font-sans text-3xl font-semibold text-[#f0eee8]">
+          <h2 className="font-serif text-5xl font-semibold text-foreground">
             Tạo tài khoản
           </h2>
-
-          <p className="mt-2 text-sm text-[#8b8a85]">
-            Điền thông tin bên dưới để bắt đầu.
-          </p>
 
           <form
             className="mt-9 grid gap-x-5 gap-y-6 sm:grid-cols-2"
             onSubmit={handleSubmit}
           >
-            <div>
-              <label htmlFor="lastName" className="form-label">
-                Họ
-              </label>
-              <input
+            <Field>
+              <FieldLabel htmlFor="lastName">Họ</FieldLabel>
+
+              <Input
+                ref={firstInputRef}
                 id="lastName"
+                name="lastName"
                 required
                 autoComplete="family-name"
-                className="form-input"
                 placeholder="Nhập họ"
                 value={form.lastName}
                 onChange={(event) =>
@@ -162,17 +178,16 @@ export default function RegisterPage() {
                   }))
                 }
               />
-            </div>
+            </Field>
 
-            <div>
-              <label htmlFor="firstName" className="form-label">
-                Tên
-              </label>
-              <input
+            <Field>
+              <FieldLabel htmlFor="firstName">Tên</FieldLabel>
+
+              <Input
                 id="firstName"
+                name="firstName"
                 required
                 autoComplete="given-name"
-                className="form-input"
                 placeholder="Nhập tên"
                 value={form.firstName}
                 onChange={(event) =>
@@ -182,19 +197,18 @@ export default function RegisterPage() {
                   }))
                 }
               />
-            </div>
+            </Field>
 
-            <div className="sm:col-span-2">
-              <label htmlFor="email" className="form-label">
-                Email
-              </label>
-              <input
+            <Field className="sm:col-span-2">
+              <FieldLabel htmlFor="email">Email</FieldLabel>
+
+              <Input
                 id="email"
+                name="email"
                 type="email"
                 required
                 autoComplete="email"
-                className="form-input"
-                placeholder="Nhập Email"
+                placeholder="Nhập email"
                 value={form.email}
                 onChange={(event) =>
                   setForm((current) => ({
@@ -203,18 +217,17 @@ export default function RegisterPage() {
                   }))
                 }
               />
-            </div>
+            </Field>
 
-            <div className="sm:col-span-2">
-              <label htmlFor="username" className="form-label">
-                Tên đăng nhập
-              </label>
-              <input
+            <Field className="sm:col-span-2">
+              <FieldLabel htmlFor="username">Tên đăng nhập</FieldLabel>
+
+              <Input
                 id="username"
+                name="username"
                 required
                 autoComplete="username"
-                className="form-input"
-                placeholder="Nhập username"
+                placeholder="Nhập tên đăng nhập"
                 value={form.username}
                 onChange={(event) =>
                   setForm((current) => ({
@@ -223,18 +236,17 @@ export default function RegisterPage() {
                   }))
                 }
               />
-            </div>
+            </Field>
 
-            <div>
-              <label htmlFor="password" className="form-label">
-                Mật khẩu
-              </label>
-              <input
+            <Field>
+              <FieldLabel htmlFor="password">Mật khẩu</FieldLabel>
+
+              <Input
                 id="password"
+                name="password"
                 type="password"
                 required
                 autoComplete="new-password"
-                className="form-input"
                 placeholder="Nhập mật khẩu"
                 value={form.password}
                 onChange={(event) =>
@@ -244,18 +256,19 @@ export default function RegisterPage() {
                   }))
                 }
               />
-            </div>
+            </Field>
 
-            <div>
-              <label htmlFor="confirmPassword" className="form-label">
+            <Field>
+              <FieldLabel htmlFor="confirmPassword">
                 Xác nhận mật khẩu
-              </label>
-              <input
+              </FieldLabel>
+
+              <Input
                 id="confirmPassword"
+                name="confirmPassword"
                 type="password"
                 required
                 autoComplete="new-password"
-                className="form-input"
                 placeholder="Nhập lại mật khẩu"
                 value={form.confirmPassword}
                 onChange={(event) =>
@@ -265,13 +278,17 @@ export default function RegisterPage() {
                   }))
                 }
               />
-            </div>
+            </Field>
 
-            <div className="sm:col-span-2">
-              <span className="form-label">Ảnh đại diện</span>
-              <label className="flex min-h-24 cursor-pointer items-center gap-5 border border-dashed border-[#484844] bg-[#1a1a19] p-4 transition hover:border-[#74746e]">
+            <Field className="sm:col-span-2">
+              <FieldLabel htmlFor="avatar">Ảnh đại diện</FieldLabel>
+
+              <label
+                htmlFor="avatar"
+                className="flex min-h-24 cursor-pointer items-center gap-5 border border-dashed border-border-strong bg-card p-4 transition hover:border-ring"
+              >
                 <div
-                  className="grid size-16 shrink-0 place-items-center border border-[#444440] bg-[#252523] bg-cover bg-center text-2xl text-[#8d8c87]"
+                  className="grid size-16 shrink-0 place-items-center border border-input bg-secondary bg-cover bg-center text-2xl text-muted-foreground"
                   style={
                     avatarPreview
                       ? { backgroundImage: `url("${avatarPreview}")` }
@@ -282,47 +299,51 @@ export default function RegisterPage() {
                 </div>
 
                 <div>
-                  <p className="text-sm font-semibold text-[#d7d5ce]">
+                  <p className="text-sm font-semibold text-secondary-foreground">
                     Chọn ảnh
                   </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    PNG, JPEG hoặc WebP, tối đa 10 MB
+                  </p>
                 </div>
-
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp"
-                  className="sr-only"
-                  onChange={handleAvatar}
-                />
               </label>
-            </div>
+
+              <input
+                id="avatar"
+                name="avatar"
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                className="sr-only"
+                onChange={handleAvatar}
+              />
+            </Field>
 
             {error && (
-              <div
-                role="alert"
-                className="border border-[#7e4439] bg-[#2a1c19] px-4 py-3 text-sm text-[#e2a095] sm:col-span-2"
-              >
-                {error}
-              </div>
+              <Alert variant="destructive" className="sm:col-span-2">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
             )}
 
-            <div className="flex flex-col gap-4 border-t border-[#343432] pt-7 sm:col-span-2 sm:flex-row sm:items-center sm:justify-between">
-              <p className="max-w-sm text-xs leading-5 text-[#777671]"></p>
-              <p className="hidden text-sm text-[#8e8d88] sm:block">
+            <div className="flex flex-col gap-4 border-t border-border pt-7 sm:col-span-2 sm:flex-row sm:items-center sm:justify-between">
+              <p className="hidden text-sm text-muted-foreground sm:block">
                 Đã có tài khoản?{" "}
                 <Link
                   href="/login"
-                  className="font-semibold text-[#7eb2db] hover:text-white"
+                  className="font-semibold text-link transition hover:text-foreground"
                 >
                   Đăng nhập
                 </Link>
               </p>
-              <button
+
+              <Button
                 type="submit"
+                size="lg"
                 disabled={loading}
-                className="primary-button min-w-40"
+                className="min-w-40 sm:ml-auto"
               >
+                {loading && <Spinner data-icon="inline-start" />}
                 {loading ? "Đang tạo..." : "Tạo tài khoản"}
-              </button>
+              </Button>
             </div>
           </form>
         </section>

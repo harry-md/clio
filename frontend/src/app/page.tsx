@@ -3,12 +3,16 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { BookCard } from "@/components/BookCard";
+import { EmptyState } from "@/components/EmptyState";
 import { Header } from "@/components/Header";
-import { Rating } from "@/components/Rating";
 import { LoadingOverlay } from "@/components/LoadingOverlay";
+import { Pagination } from "@/components/Pagination";
+import { Rating } from "@/components/Rating";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Api, getApiErrorMessage } from "@/lib/api";
 import type { Book, PageResponse } from "@/lib/types";
-import { Pagination } from "@/components/Pagination";
+import { cn } from "@/lib/utils";
 
 const filters = [
   {
@@ -98,49 +102,60 @@ export default function HomePage() {
       block: "start",
     });
   };
+
   const featuredBook = books[0];
 
   return (
-    <main className="min-h-screen bg-[#151515]">
-      {loading && <LoadingOverlay label="Đang tải danh sách sách..." />}
+    <main className="min-h-screen bg-background">
+      {loading && <LoadingOverlay />}
+
       <Header />
 
-      <section
-        id="book-list"
-        className="mx-auto max-w-360 scroll-mt-20 px-5 py-14 lg:px-10 lg:py-20"
-      >
+      <section className="relative overflow-hidden border-b border-border bg-card">
         {featuredBook?.thumbnail && (
           <div
-            className="absolute inset-0 bg-cover bg-center opacity-15 blur-[2px]"
+            className="absolute inset-0 bg-cover bg-center opacity-50"
             style={{
               backgroundImage: `url("${featuredBook.thumbnail}")`,
             }}
           />
         )}
 
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,#181818_10%,rgba(24,24,24,.94)_42%,rgba(24,24,24,.5)_100%)]" />
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(90deg, var(--hero-shade) 2%, var(--hero-overlay-strong) 50%, var(--hero-overlay-soft) 100%)",
+          }}
+        />
+
         <div className="relative mx-auto grid min-h-120 max-w-360 items-center gap-12 px-5 py-16 md:grid-cols-[1fr_260px] lg:px-10">
           <div className="max-w-2xl">
-            <h1 className="font-serif text-7xl font-semibold leading-tight text-[#f5f2eb] sm:text-5xl lg:text-7xl">
+            <h1 className="font-serif text-5xl font-semibold leading-tight text-foreground sm:text-6xl lg:text-7xl">
               {featuredBook?.title ?? "Hệ thống đọc và phân phối ebook"}
             </h1>
+
             <div className="mt-1">
               <Rating
                 rating={featuredBook?.rating ?? null}
                 count={featuredBook?.ratingCount ?? 0}
               />
             </div>
+
             <div className="mt-9 flex flex-wrap items-center gap-3">
               {featuredBook ? (
                 <>
                   <Link
                     href={`/books/${featuredBook.id}`}
-                    className="primary-button min-w-36 text-2xl"
+                    className={cn(
+                      buttonVariants({ size: "lg" }),
+                      "min-w-36 text-xl",
+                    )}
                   >
                     Xem chi tiết
                   </Link>
 
-                  <span className="border-l border-[#4a4945] pl-5 text-2xl font-semibold text-[#e57a3c]">
+                  <span className="border-l border-border-strong pl-5 text-2xl font-semibold text-price">
                     {Number(featuredBook.price) === 0
                       ? "Miễn phí"
                       : priceFormatter.format(Number(featuredBook.price))}
@@ -148,13 +163,19 @@ export default function HomePage() {
                 </>
               ) : (
                 <>
-                  <Link href="/register" className="primary-button">
+                  <Link
+                    href="/register"
+                    className={buttonVariants({ size: "lg" })}
+                  >
                     Bắt đầu đọc
                   </Link>
 
                   <Link
                     href="/login"
-                    className="inline-flex h-12 items-center border border-[#555550] px-5 text-sm font-semibold text-[#e9e7e0] hover:border-[#85857f]"
+                    className={buttonVariants({
+                      variant: "outline",
+                      size: "lg",
+                    })}
                   >
                     Đã có tài khoản
                   </Link>
@@ -169,7 +190,7 @@ export default function HomePage() {
               className="hidden justify-self-end md:block"
             >
               <div
-                className="aspect-2/3 w-57.5 border border-[#514f49] bg-cover bg-center"
+                className="aspect-2/3 w-57.5 border border-border-strong bg-cover bg-center"
                 style={{
                   backgroundImage: `url("${featuredBook.thumbnail}")`,
                 }}
@@ -179,39 +200,45 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-360 px-5 py-14 lg:px-10 lg:py-20">
-        <div className="flex flex-col justify-between gap-6 border-b border-[#343432] pb-7 md:flex-row md:items-end">
-          <div>
-            <h2 className="mt-2 font-sans text-5xl font-semibold text-[#f0eee8]">
-              Khám phá thư viện
-            </h2>
-          </div>
+      <section
+        id="book-list"
+        className="mx-auto max-w-360 scroll-mt-20 px-5 py-14 lg:px-10 lg:py-20"
+      >
+        <div className="flex flex-col justify-between gap-6 border-b border-border pb-7 md:flex-row md:items-end">
+          <h2 className="mt-2 font-sans text-5xl font-semibold text-foreground">
+            Khám phá thư viện
+          </h2>
 
           <div className="flex flex-wrap gap-2">
-            {filters.map((filter, index) => (
-              <button
-                key={filter.label}
-                type="button"
-                onClick={() => {
-                  setActiveFilter(index);
-                  setCurrentPage(0);
-                }}
-                className={`h-10 border px-4 text-sm font-semibold transition ${
-                  activeFilter === index
-                    ? "border-[#75a9d3] bg-[#263745] text-white"
-                    : "border-[#41413e] text-[#aaa9a4] hover:border-[#6b6a65] hover:text-white"
-                }`}
-              >
-                {filter.label}
-              </button>
-            ))}
+            {filters.map((filter, index) => {
+              const isActive = activeFilter === index;
+
+              return (
+                <Button
+                  key={filter.label}
+                  type="button"
+                  variant={isActive ? "secondary" : "outline"}
+                  aria-pressed={isActive}
+                  onClick={() => {
+                    setActiveFilter(index);
+                    setCurrentPage(0);
+                  }}
+                  className={cn(
+                    isActive &&
+                      "border-ring bg-accent text-accent-foreground hover:bg-accent",
+                  )}
+                >
+                  {filter.label}
+                </Button>
+              );
+            })}
           </div>
         </div>
 
         {error && (
-          <div className="mt-8 border border-[#83483d] bg-[#2b1d1a] p-4 text-sm text-[#e5a394]">
-            {error}
-          </div>
+          <Alert variant="destructive" className="mt-8">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
 
         {books.length > 0 ? (
@@ -220,22 +247,27 @@ export default function HomePage() {
               <BookCard key={book.id} book={book} />
             ))}
           </div>
-        ) : !loading ? (
-          <div className="border-b border-[#343432] py-24 text-center">
-            <p className="font-sans text-2xl text-[#d8d6cf]">
-              Chưa tìm thấy sách phù hợp
-            </p>
-
-            <p className="mt-2 text-sm text-[#85847f]">
-              Hãy thử một bộ lọc khác.
-            </p>
-          </div>
+        ) : !loading && !error ? (
+          <EmptyState
+            className="mt-8"
+            title="Chưa tìm thấy sách phù hợp"
+            description="Hãy thử một bộ lọc khác."
+          />
         ) : null}
+
+        {books.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            disabled={loading}
+            onPageChangeAction={handlePageChange}
+          />
+        )}
       </section>
 
-      <footer className="border-t border-[#343432] bg-[#111111]">
-        <div className="mx-auto flex max-w-360 flex-col gap-3 px-5 py-8 text-sm text-[#777671] sm:flex-row sm:items-center sm:justify-between lg:px-10">
-          <p className="font-sans text-lg text-[#c4c2bb]">Clio</p>
+      <footer className="border-t border-border bg-overlay">
+        <div className="mx-auto flex max-w-360 flex-col gap-3 px-5 py-8 text-sm text-subtle-foreground sm:flex-row sm:items-center sm:justify-between lg:px-10">
+          <p className="font-sans text-lg text-secondary-foreground">Clio</p>
           <p>&copy;2026 Clio</p>
         </div>
       </footer>

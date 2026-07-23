@@ -33,7 +33,7 @@ public class OrderServiceImpl implements OrderService {
     private final OrderDetailRepository orderDetailRepository;
     private final BookRepository bookRepository;
     private final UserRepository userRepository;
-    private final UserBookRepository userBookRepository;
+    private final UserLibraryRepository userLibraryRepository;
     private final PaymentService paymentService;
     private final TransactionTemplate transactionTemplate;
 
@@ -64,7 +64,7 @@ public class OrderServiceImpl implements OrderService {
 
     private StripeSessionInput createPendingOrder(Integer userId, BookPurchaseRequest request) {
         List<Integer> bookIds = request.bookIds().stream().toList();
-        if (userBookRepository.existsByUserIdAndBookIdIn(userId, bookIds)) {
+        if (userLibraryRepository.existsByUserIdAndBookIdIn(userId, bookIds)) {
             throw new BadRequestException("Bạn đã sở hữu sách trong danh sách mua!");
         }
 
@@ -134,15 +134,16 @@ public class OrderServiceImpl implements OrderService {
         if (order.getStatus() != OrderStatus.PENDING) {
             return;
         }
+
         List<OrderDetail> orderDetails = orderDetailRepository.findAllByOrderId(order.getId());
-        List<UserBook> userBooks = orderDetails.stream()
-                .map(od -> UserBook.builder()
+        List<UserLibrary> userLibraries = orderDetails.stream()
+                .map(od -> UserLibrary.builder()
                         .user(order.getUser())
                         .book(od.getBook())
-                        .type(UserBookType.PURCHASED)
+                        .type(UserLibraryType.PURCHASED)
                         .build())
                 .toList();
-        userBookRepository.saveAll(userBooks);
+        userLibraryRepository.saveAll(userLibraries);
         order.setStripeSessionId(session.getId());
         order.setStatus(OrderStatus.PAID);
     }

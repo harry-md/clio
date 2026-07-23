@@ -5,9 +5,13 @@ type RatingProps = {
   count: number;
 };
 
+const STAR_NUMBERS = [1, 2, 3, 4, 5] as const;
+
 export function Rating({ rating, count }: RatingProps): ReactElement {
   if (rating === null || count === 0) {
-    return <span className="text-sm text-[#9a9993]">Chưa có đánh giá</span>;
+    return (
+      <span className="text-sm text-muted-foreground">Chưa có đánh giá</span>
+    );
   }
 
   const clampedRating = Math.max(0, Math.min(5, rating));
@@ -15,20 +19,21 @@ export function Rating({ rating, count }: RatingProps): ReactElement {
   return (
     <div className="flex items-center gap-2">
       <div className="flex items-center gap-1">
-        {[...Array(5)].map((_, index) => {
+        {STAR_NUMBERS.map((starNumber) => {
+          const starIndex = starNumber - 1;
+
           const fillPercentage = Math.max(
             0,
-            Math.min(100, (clampedRating - index) * 100),
+            Math.min(100, (clampedRating - starIndex) * 100),
           );
 
-          const gradientId = `star-grad-${index}-${clampedRating}`;
+          const gradientId = `star-grad-${starNumber}-${clampedRating}`;
 
           return (
             <svg
-              key={index}
-              role="img"
+              key={starNumber}
               aria-hidden="true"
-              className="h-5 w-5 text-[#e57a3c]"
+              className="size-5 text-rating"
               viewBox="0 0 24 24"
               xmlns="http://www.w3.org/2000/svg"
               fill={
@@ -48,7 +53,10 @@ export function Rating({ rating, count }: RatingProps): ReactElement {
                     x2="100%"
                     y2="0%"
                   >
-                    <stop offset={`${fillPercentage}%`} stopColor="#e57a3c" />
+                    <stop
+                      offset={`${fillPercentage}%`}
+                      stopColor="currentColor"
+                    />
                     <stop
                       offset={`${fillPercentage}%`}
                       stopColor="transparent"
@@ -69,7 +77,7 @@ export function Rating({ rating, count }: RatingProps): ReactElement {
         })}
       </div>
 
-      <span className="text-lg text-[#9a9993]">
+      <span className="text-lg text-muted-foreground">
         {rating.toFixed(1)} ({count} đánh giá)
       </span>
     </div>
