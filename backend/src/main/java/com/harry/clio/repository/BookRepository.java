@@ -18,7 +18,7 @@ public interface BookRepository
         JOIN FETCH b.categories c
         WHERE b.id = :bookId AND b.active = true AND b.type = 'SYSTEM'
         """)
-    Optional<Book> findWithDetailById(@Param(value = "bookId") Integer bookId);
+    Optional<Book> findWithCategoryById(@Param(value = "bookId") Integer bookId);
 
     @Query("""
         SELECT b

@@ -1,6 +1,7 @@
 package com.harry.clio.repository;
 
 import com.harry.clio.entity.Order;
+import com.harry.clio.entity.SubscriptionStatus;
 
 import jakarta.persistence.LockModeType;
 
@@ -29,8 +30,18 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
         GROUP BY o
         HAVING COUNT(od.id) = :size AND (SELECT COUNT(od2.id) FROM OrderDetail od2 WHERE od2.order = o) = :size
         """)
-    Optional<Order> findWithDetailsByUserIdAndBookIdsIn(
+    Optional<Order> findWithOrderDetailsByUserIdAndBookIdsIn(
             @Param("userId") Integer userId,
             @Param("bookIds") List<Integer> bookIds,
             @Param("size") long size);
+
+    boolean existsByUserIdAndStatus(Integer userId, SubscriptionStatus status);
+
+    @Query("""
+        SELECT o
+        FROM Order o
+        JOIN FETCH o.details od
+        WHERE o.user.id = :userId AND o.status = 'PENDING' AND od.type = 'SUBSCRIPTION'
+        """)
+    Optional<Order> findSubOrderWithOrderDetailByUserId(@Param("userId") Integer userId);
 }

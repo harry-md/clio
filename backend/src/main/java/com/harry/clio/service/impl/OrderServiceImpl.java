@@ -1,9 +1,10 @@
 package com.harry.clio.service.impl;
 
 import com.harry.clio.dto.order.BookPurchaseRequest;
-import com.harry.clio.dto.order.StripeBookItem;
 import com.harry.clio.dto.order.StripeCheckoutResponse;
+import com.harry.clio.dto.order.StripeLineItem;
 import com.harry.clio.dto.order.StripeSessionInput;
+import com.harry.clio.dto.subscription.SubscriptionPlanRequest;
 import com.harry.clio.entity.*;
 import com.harry.clio.exception.BadRequestException;
 import com.harry.clio.exception.InvalidWebhookException;
@@ -22,8 +23,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -35,17 +39,22 @@ public class OrderServiceImpl implements OrderService {
     private final UserRepository userRepository;
     private final UserLibraryRepository userLibraryRepository;
     private final PaymentService paymentService;
+    private final PublisherRepository publisherRepository;
     private final TransactionTemplate transactionTemplate;
+    private final SubscriptionRepository subscriptionRepository;
+    private final SubscriptionPlanRepository subscriptionPlanRepository;
+
+    private static final BigDecimal PUBLISHER_SHARE = new BigDecimal(0.7);
 
     @Override
     public StripeCheckoutResponse createCheckout(Integer userId, BookPurchaseRequest request) {
         List<Integer> bookIds = request.bookIds();
         Order existingOrder = orderRepository
-                .findWithDetailsByUserIdAndBookIdsIn(userId, request.bookIds(), bookIds.size())
+                .findWithOrderDetailsByUserIdAndBookIdsIn(userId, request.bookIds(), bookIds.size())
                 .orElse(null);
 
         Integer orderId;
-        List<StripeBookItem> stripeItems;
+        List<StripeLineItem> stripeItems;
         if (existingOrder == null) {
             StripeSessionInput stripeSessionInput =
                     transactionTemplate.execute(status -> createPendingOrder(userId, request));
@@ -53,9 +62,9 @@ public class OrderServiceImpl implements OrderService {
             stripeItems = stripeSessionInput.items();
         } else {
             orderId = existingOrder.getId();
-            stripeItems = orderDetailRepository.findAllByOrderId(orderId).stream()
-                    .map(d ->
-                            new StripeBookItem(d.getBook().getId(), d.getBookTitle(), d.getPrice()))
+            stripeItems = orderDetailRepository.findAllWithItemByOrderId(orderId).stream()
+                    .map(d -> new StripeLineItem(
+                            d.getBook().getId(), d.getBook().getTitle(), d.getPrice()))
                     .toList();
         }
         Session session = paymentService.createCheckoutSession(orderId, stripeItems);
@@ -78,16 +87,15 @@ public class OrderServiceImpl implements OrderService {
 
         BigDecimal totalAmount = BigDecimal.ZERO;
         List<OrderDetail> orderDetails = new ArrayList<>(books.size());
-        List<StripeBookItem> bookItems = new ArrayList<>(books.size());
+        List<StripeLineItem> bookItems = new ArrayList<>(books.size());
         for (Book book : books) {
             totalAmount = totalAmount.add(book.getPrice());
             orderDetails.add(OrderDetail.builder()
                     .order(order)
                     .book(book)
-                    .bookTitle(book.getTitle())
                     .price(book.getPrice())
                     .build());
-            bookItems.add(new StripeBookItem(book.getId(), book.getTitle(), book.getPrice()));
+            bookItems.add(new StripeLineItem(book.getId(), book.getTitle(), book.getPrice()));
         }
 
         order.setTotalAmount(totalAmount);
@@ -103,11 +111,11 @@ public class OrderServiceImpl implements OrderService {
         switch (event.getType()) {
             case "checkout.session.completed" -> {
                 Session session = getSessionFromEvent(event);
-                handlePaymentSucceeded(session);
+                handleSucceededPayment(session);
             }
             case "checkout.session.expired" -> {
                 Session session = getSessionFromEvent(event);
-                handlePaymentFailed(session);
+                handleFailedPayment(session);
             }
             default -> {}
         }
@@ -123,7 +131,7 @@ public class OrderServiceImpl implements OrderService {
         return session;
     }
 
-    private void handlePaymentSucceeded(Session session) {
+    private void handleSucceededPayment(Session session) {
         if (!"paid".equals(session.getPaymentStatus())) {
             return;
         }
@@ -135,25 +143,93 @@ public class OrderServiceImpl implements OrderService {
             return;
         }
 
-        List<OrderDetail> orderDetails = orderDetailRepository.findAllByOrderId(order.getId());
-        List<UserLibrary> userLibraries = orderDetails.stream()
-                .map(od -> UserLibrary.builder()
-                        .user(order.getUser())
-                        .book(od.getBook())
-                        .type(UserLibraryType.PURCHASED)
-                        .build())
-                .toList();
+        List<OrderDetail> orderDetails =
+                orderDetailRepository.findAllWithItemByOrderId(order.getId());
+        List<UserLibrary> userLibraries = new ArrayList<>(orderDetails.size());
+
+        Map<Integer, BigDecimal> revenueByPublisher = new HashMap<>();
+        for (OrderDetail od : orderDetails) {
+            Book book = od.getBook();
+            Publisher publisher = book.getPublisher();
+            BigDecimal publisherRevenue =
+                    od.getPrice().multiply(PUBLISHER_SHARE).setScale(2, RoundingMode.HALF_UP);
+            revenueByPublisher.merge(publisher.getUserId(), publisherRevenue, BigDecimal::add);
+
+            userLibraries.add(UserLibrary.builder()
+                    .user(order.getUser())
+                    .book(od.getBook())
+                    .type(UserLibraryType.PURCHASED)
+                    .build());
+        }
+
+        revenueByPublisher.forEach((publisherId, amount) -> {
+            int result = publisherRepository.increaseBalance(publisherId, amount);
+            if (result != 1) {
+                throw new RuntimeException("Lỗi chỉnh sửa số dư cho publisher");
+            }
+        });
+
         userLibraryRepository.saveAll(userLibraries);
         order.setStripeSessionId(session.getId());
         order.setStatus(OrderStatus.PAID);
     }
 
-    private void handlePaymentFailed(Session session) {
+    private void handleFailedPayment(Session session) {
         Order order = orderRepository
                 .findByIdForUpdate(Integer.parseInt(session.getClientReferenceId()))
                 .orElseThrow(() -> new InvalidWebhookException("Không tìm thấy đơn hàng"));
         if (order.getStatus() == OrderStatus.PENDING) {
             order.setStatus(OrderStatus.CANCELED);
+        }
+    }
+
+    @Override
+    public StripeCheckoutResponse createSubscriptionCheckout(
+            Integer userId, SubscriptionPlanRequest request) {
+        StripeSessionInput input = transactionTemplate.execute(status -> {
+            rejectActiveSubscription(userId);
+
+            Order existingOrder =
+                    orderRepository.findSubOrderWithOrderDetailByUserId(userId).orElse(null);
+            if (existingOrder == null) {
+                SubscriptionPlan plan = subscriptionPlanRepository
+                        .findByIdAndActiveTrue(request.subscriptionPlanId())
+                        .orElseThrow(
+                                () -> new BadRequestException("Không tìm thấy subscription plan"));
+                Order order = Order.builder()
+                        .user(userRepository.getReferenceById(userId))
+                        .totalAmount(plan.getPrice())
+                        .build();
+                orderRepository.save(order);
+
+                OrderDetail detail = OrderDetail.builder()
+                        .order(order)
+                        .subscriptionPlan(plan)
+                        .price(plan.getPrice())
+                        .type(OrderDetailType.SUBSCRIPTION)
+                        .build();
+                orderDetailRepository.save(detail);
+                return new StripeSessionInput(
+                        order.getId(),
+                        List.of(new StripeLineItem(plan.getId(), plan.getName(), plan.getPrice())));
+            } else {
+                OrderDetail detail = existingOrder.getDetails().stream()
+                        .findFirst()
+                        .orElseThrow(
+                                () -> new BadRequestException("Không tìm thấy chi tiết đơn hàng"));
+                SubscriptionPlan plan = detail.getSubscriptionPlan();
+                return new StripeSessionInput(
+                        existingOrder.getId(),
+                        List.of(new StripeLineItem(plan.getId(), plan.getName(), plan.getPrice())));
+            }
+        });
+        Session session = paymentService.createCheckoutSession(input.orderId(), input.items());
+        return new StripeCheckoutResponse(input.orderId(), session.getUrl());
+    }
+
+    private void rejectActiveSubscription(Integer userId) {
+        if (subscriptionRepository.existsByUserIdAndStatus(userId, SubscriptionStatus.ACTIVE)) {
+            throw new BadRequestException("Bạn đã có subscription đang active");
         }
     }
 }

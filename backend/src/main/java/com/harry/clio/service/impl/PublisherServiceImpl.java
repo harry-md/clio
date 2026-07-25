@@ -43,7 +43,7 @@ public class PublisherServiceImpl implements PublisherService {
     @Transactional(readOnly = true)
     @Override
     public List<PublisherAdminDto> getAllPublishers() {
-        return publisherRepository.findAllWithDetail().stream()
+        return publisherRepository.findAllWithUser().stream()
                 .map(publisher -> publisherMapper.toAdminDto(publisher.getUser(), publisher))
                 .toList();
     }
@@ -51,7 +51,7 @@ public class PublisherServiceImpl implements PublisherService {
     @Override
     public PublisherAdminDto getPublisherAdmin(int userId) {
         return publisherRepository
-                .findWithDetailByUserId(userId)
+                .findWithUserByUserId(userId)
                 .map(publisher -> publisherMapper.toAdminDto(publisher.getUser(), publisher))
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhà xuất bản"));
     }

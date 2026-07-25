@@ -31,15 +31,11 @@ public class OrderDetail {
     private SubscriptionPlan subscriptionPlan;
 
     @Builder.Default
-    @Column(name = "book_title", nullable = true)
-    private String bookTitle = "";
-
-    @Builder.Default
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal price = BigDecimal.ZERO;
 
     @Builder.Default
-    @Column(nullable = false, length = 10)
+    @Column(nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
     private OrderDetailType type = OrderDetailType.BOOK;
 }

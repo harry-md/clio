@@ -20,7 +20,7 @@ public class SubscriptionPlanServiceImpl implements SubscriptionPlanService {
 
     @Override
     public List<SubscriptionPlanResponse> getSubscriptionPlans() {
-        return subscriptionPlanRepository.findAll().stream()
+        return subscriptionPlanRepository.findAllByActiveTrue().stream()
                 .map(subscriptionPlanMapper::toDto)
                 .toList();
     }
@@ -28,7 +28,7 @@ public class SubscriptionPlanServiceImpl implements SubscriptionPlanService {
     @Override
     public SubscriptionPlanResponse getDetailSubscriptionPlan(Integer subscriptionPlanId) {
         return subscriptionPlanMapper.toDto(subscriptionPlanRepository
-                .findById(subscriptionPlanId)
+                .findByIdAndActiveTrue(subscriptionPlanId)
                 .orElseThrow(
                         () -> new ResourceNotFoundException("Không tìm thấy subscription plan")));
     }
