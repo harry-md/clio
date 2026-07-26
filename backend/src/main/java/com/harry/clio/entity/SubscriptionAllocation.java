@@ -2,15 +2,15 @@ package com.harry.clio.entity;
 
 import jakarta.persistence.*;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+@Builder
 @Getter
 @Setter
+@AllArgsConstructor
 @NoArgsConstructor
 @Entity
 @Table(
@@ -35,9 +35,11 @@ public class SubscriptionAllocation {
     @Column(nullable = false)
     private Integer year;
 
+    @Builder.Default
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal grossAmount = BigDecimal.ZERO;
 
+    @Builder.Default
     @Column(nullable = false, length = 10)
     @Enumerated(EnumType.STRING)
     private AllocationStatus status = AllocationStatus.PENDING;

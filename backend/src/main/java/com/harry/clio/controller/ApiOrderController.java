@@ -3,7 +3,10 @@ package com.harry.clio.controller;
 import com.harry.clio.dto.CustomUser;
 import com.harry.clio.dto.order.BookPurchaseRequest;
 import com.harry.clio.dto.order.StripeCheckoutResponse;
+import com.harry.clio.dto.subscription.SubscriptionPlanRequest;
 import com.harry.clio.service.OrderService;
+
+import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
 
@@ -22,6 +25,14 @@ public class ApiOrderController {
             @AuthenticationPrincipal CustomUser principal,
             @RequestBody BookPurchaseRequest request) {
         return ResponseEntity.ok(orderService.createCheckout(principal.getId(), request));
+    }
+
+    @PostMapping("/subscription")
+    public ResponseEntity<StripeCheckoutResponse> subscribe(
+            @AuthenticationPrincipal CustomUser principal,
+            @Valid @RequestBody SubscriptionPlanRequest request) {
+        return ResponseEntity.ok(
+                orderService.createSubscriptionCheckout(principal.getId(), request));
     }
 
     @PostMapping("/webhook")

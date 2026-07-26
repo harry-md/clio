@@ -1,6 +1,6 @@
 package com.harry.clio.service.impl;
 
-import com.harry.clio.dto.order.StripeBookItem;
+import com.harry.clio.dto.order.StripeLineItem;
 import com.harry.clio.exception.InvalidWebhookException;
 import com.harry.clio.exception.PaymentException;
 import com.harry.clio.service.PaymentService;
@@ -35,7 +35,7 @@ public class PaymentServiceImpl implements PaymentService {
     private String STRIPE_CANCEL_URL;
 
     @Override
-    public Session createCheckoutSession(Integer orderId, List<StripeBookItem> items) {
+    public Session createCheckoutSession(Integer orderId, List<StripeLineItem> items) {
         try {
             List<SessionCreateParams.LineItem> lineItems =
                     items.stream().map(this::createLineItem).toList();
@@ -57,11 +57,11 @@ public class PaymentServiceImpl implements PaymentService {
         }
     }
 
-    private SessionCreateParams.LineItem createLineItem(StripeBookItem item) {
+    private SessionCreateParams.LineItem createLineItem(StripeLineItem item) {
         SessionCreateParams.LineItem.PriceData.ProductData productData =
                 SessionCreateParams.LineItem.PriceData.ProductData.builder()
-                        .setName(item.bookTitle())
-                        .putMetadata("bookId", item.bookId().toString())
+                        .setName(item.itemName())
+                        .putMetadata("itemId", item.itemId().toString())
                         .build();
         SessionCreateParams.LineItem.PriceData priceData =
                 SessionCreateParams.LineItem.PriceData.builder()
