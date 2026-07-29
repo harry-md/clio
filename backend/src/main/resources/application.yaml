@@ -68,7 +68,7 @@ stripe:
   public_key: ${STRIPE_PUBLIC_KEY}
   secret_key: ${STRIPE_SECRET_KEY}
   webhook_secret: ${STRIPE_WEBHOOK_SECRET}
-  success_url: ${STRIPE_SUCCESS_URl}
+  success_url: ${STRIPE_SUCCESS_URL}
   cancel_url: ${STRIPE_CANCEL_URL}
 clio:
   master_key: ${EBOOK_MASTER_KEY}

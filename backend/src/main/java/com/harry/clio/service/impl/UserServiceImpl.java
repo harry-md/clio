@@ -4,11 +4,13 @@ import com.harry.clio.dto.CustomUser;
 import com.harry.clio.dto.user.CreateUserRequest;
 import com.harry.clio.dto.user.UserOption;
 import com.harry.clio.dto.user.UserResponse;
+import com.harry.clio.entity.SubscriptionStatus;
 import com.harry.clio.entity.User;
 import com.harry.clio.entity.UserRole;
 import com.harry.clio.exception.DuplicateResourceException;
 import com.harry.clio.exception.ResourceNotFoundException;
 import com.harry.clio.mapper.UserMapper;
+import com.harry.clio.repository.SubscriptionRepository;
 import com.harry.clio.repository.UserRepository;
 import com.harry.clio.service.UserService;
 
@@ -33,6 +35,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     private final CloudinaryService cloudinaryService;
     private final UserMapper userMapper;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final SubscriptionRepository subscriptionRepository;
 
     private User getUserOrThrow(int id) {
         return userRepository
@@ -80,7 +83,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         }
 
         try {
-            return userMapper.toDto(userRepository.save(user));
+            return userMapper.toDto(userRepository.save(user), false);
         } catch (Exception ex) {
             cloudinaryService.delete(avatarUrl);
             throw ex;
@@ -89,7 +92,9 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public UserResponse getUserById(int id) {
-        return userMapper.toDto(getUserOrThrow(id));
+        boolean isSubscribed =
+                subscriptionRepository.existsByUserIdAndStatus(id, SubscriptionStatus.ACTIVE);
+        return userMapper.toDto(getUserOrThrow(id), isSubscribed);
     }
 
     @Override

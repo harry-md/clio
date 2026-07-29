@@ -23,7 +23,7 @@ public class ApiOrderController {
     @PostMapping
     public ResponseEntity<StripeCheckoutResponse> checkout(
             @AuthenticationPrincipal CustomUser principal,
-            @RequestBody BookPurchaseRequest request) {
+            @Valid @RequestBody BookPurchaseRequest request) {
         return ResponseEntity.ok(orderService.createCheckout(principal.getId(), request));
     }
 

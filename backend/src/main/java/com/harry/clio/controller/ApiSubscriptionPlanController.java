@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -22,12 +21,5 @@ public class ApiSubscriptionPlanController {
     @GetMapping
     public ResponseEntity<List<SubscriptionPlanResponse>> list() {
         return ResponseEntity.ok(subscriptionPlanService.getSubscriptionPlans());
-    }
-
-    @GetMapping("/{subscriptionPlanId}")
-    public ResponseEntity<SubscriptionPlanResponse> retrive(
-            @PathVariable Integer subscriptionPlanId) {
-        return ResponseEntity.ok(
-                subscriptionPlanService.getDetailSubscriptionPlan(subscriptionPlanId));
     }
 }

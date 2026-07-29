@@ -14,7 +14,8 @@ public interface UserMapper {
     @Mapping(target = "avatar", ignore = true)
     User toEntity(CreateUserRequest request);
 
-    UserResponse toDto(User user);
+    @Mapping(target = "isSubscribed", source = "isSubscribed")
+    UserResponse toDto(User user, boolean isSubscribed);
 
     @Mapping(target = "userId", source = "id")
     UserOption toUserOption(User user);

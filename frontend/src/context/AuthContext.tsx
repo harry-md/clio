@@ -3,6 +3,7 @@
 import {
   createContext,
   type ReactNode,
+  useCallback,
   useContext,
   useEffect,
   useState,
@@ -14,17 +15,29 @@ type AuthContextValue = {
   user: AuthUser | null;
   initialized: boolean;
   setUser: (user: AuthUser | null) => void;
+  refreshUser: () => Promise<AuthUser>;
 };
-
-const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 type AuthProviderProps = {
   children: ReactNode;
 };
 
+const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+const getCurrentUser = async () => {
+  const { data } = await Api.get<AuthUser>("/current-user");
+  return data;
+};
+
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [initialized, setInitialized] = useState(false);
+
+  const refreshUser = useCallback(async () => {
+    const currentUser = await getCurrentUser();
+    setUser(currentUser);
+    return currentUser;
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -60,6 +73,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         user,
         initialized,
         setUser,
+        refreshUser,
       }}
     >
       {children}
@@ -69,10 +83,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-
   if (context === undefined) {
-    throw new Error("useAuth phải được sử dụng bên trong AuthProvider");
+    throw new Error("useAuth phải gọi trong AuthProvider");
   }
-
   return context;
 }

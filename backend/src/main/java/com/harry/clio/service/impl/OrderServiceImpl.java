@@ -112,16 +112,12 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public void handleWebhook(String sigHeader, String payload) {
         Event event = paymentService.constructWebhookEvent(sigHeader, payload);
-        switch (event.getType()) {
-            case "checkout.session.completed" -> {
-                Session session = getSessionFromEvent(event);
-                handleSucceededPayment(session);
-            }
-            case "checkout.session.expired" -> {
-                Session session = getSessionFromEvent(event);
-                handleFailedPayment(session);
-            }
-            default -> {}
+        Session session = getSessionFromEvent(event);
+
+        if ("checkout.session.completed".equals(event.getType())) {
+            handleSucceededPayment(session);
+        } else if ("checkout.session.expired".equals(event.getType())) {
+            handleFailedPayment(session);
         }
     }
 
@@ -150,10 +146,12 @@ public class OrderServiceImpl implements OrderService {
         List<OrderDetail> orderDetails =
                 orderDetailRepository.findAllWithItemByOrderId(order.getId());
         OrderDetailType type = orderDetails.getFirst().getType();
-        switch (type) {
-            case BOOK -> handleBookOrder(order, orderDetails);
-            case SUBSCRIPTION -> handleSubscriptionOrder(order, orderDetails.getFirst());
+        if (type == OrderDetailType.BOOK) {
+            handleBookOrder(order, orderDetails);
+        } else {
+            handleSubscriptionOrder(order, orderDetails.getFirst());
         }
+
         order.setStripeSessionId(session.getId());
         order.setStatus(OrderStatus.PAID);
     }
@@ -217,7 +215,7 @@ public class OrderServiceImpl implements OrderService {
             LocalDate endDate,
             BigDecimal totalAmount) {
         long totalDays = ChronoUnit.DAYS.between(startDate, endDate);
-        List<SubscriptionAllocation> allocations = new ArrayList<>(2);
+        List<SubscriptionAllocation> allocations = new ArrayList<>();
 
         LocalDate current = startDate;
         BigDecimal allocatedAmount = BigDecimal.ZERO;

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { Book } from "@/lib/types";
 
@@ -5,9 +6,7 @@ type BookCardProps = {
   book: Book;
 };
 
-const priceFormatter = new Intl.NumberFormat("vi-VN", {
-  style: "currency",
-  currency: "VND",
+const priceFormatter = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,
 });
 
@@ -21,9 +20,12 @@ export function BookCard({ book }: BookCardProps) {
       <Link href={`/books/${book.id}`} className="block">
         <div className="relative aspect-2/3 overflow-hidden border border-border bg-muted">
           {book.thumbnail ? (
-            <div
-              className="absolute inset-0 bg-cover bg-center transition duration-300 group-hover:scale-[1.025] group-hover:opacity-90"
-              style={{ backgroundImage: `url("${book.thumbnail}")` }}
+            <Image
+              src={book.thumbnail}
+              alt={`Bìa sách ${book.title}`}
+              fill
+              sizes="(min-width: 1280px) 16vw, (min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+              className="object-cover transition duration-300 group-hover:scale-[1.025] group-hover:opacity-90"
             />
           ) : (
             <div
@@ -37,7 +39,7 @@ export function BookCard({ book }: BookCardProps) {
                 Clio edition
               </span>
 
-              <p className="font-sans text-2xl leading-tight text-foreground">
+              <p className="text-2xl leading-tight text-foreground">
                 {book.title}
               </p>
 
@@ -50,20 +52,16 @@ export function BookCard({ book }: BookCardProps) {
       <div className="pt-4">
         <Link
           href={`/books/${book.id}`}
-          className="line-clamp-2 font-sans text-xl font-semibold leading-snug text-foreground transition hover:text-link"
+          className="line-clamp-2 text-xl font-semibold leading-snug text-foreground transition hover:text-link"
         >
           {book.title}
         </Link>
 
-        <p className="mt-1 truncate text-base text-muted-foreground">
-          {authorNames}
-        </p>
+        <p className="mt-1 truncate text-muted-foreground">{authorNames}</p>
 
         <div className="mt-3 flex items-center justify-between gap-3 border-t border-border pt-3">
           <span className="font-semibold text-price">
-            {Number(book.price) === 0
-              ? "Miễn phí"
-              : priceFormatter.format(Number(book.price))}
+            {`${priceFormatter.format(Number(book.price))} VND`}
           </span>
 
           {book.rating !== null && (

@@ -118,7 +118,7 @@ export function SearchFiltersForm({
         <FieldSet className="gap-2 md:col-span-2">
           <FieldLegend
             variant="label"
-            className="mb-0 text-sm font-semibold tracking-normal text-field-label normal-case"
+            className="mb-2 font-semibold tracking-normal text-field-label normal-case"
           >
             Khoảng giá
           </FieldLegend>
@@ -155,7 +155,7 @@ export function SearchFiltersForm({
         <FieldSet className="gap-2 md:col-span-2">
           <FieldLegend
             variant="label"
-            className="mb-0 text-sm font-semibold tracking-normal text-field-label normal-case"
+            className="mb-2 font-semibold tracking-normal text-field-label normal-case"
           >
             Khoảng đánh giá
           </FieldLegend>

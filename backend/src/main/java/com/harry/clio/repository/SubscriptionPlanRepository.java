@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface SubscriptionPlanRepository extends JpaRepository<SubscriptionPlan, Integer> {
-    Optional<SubscriptionPlan> findByIdAndActiveTrue(Integer id);
-
     List<SubscriptionPlan> findAllByActiveTrue();
+
+    Optional<SubscriptionPlan> findByIdAndActiveTrue(Integer id);
 }
