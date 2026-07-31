@@ -65,7 +65,7 @@ public class Book {
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(nullable = true, columnDefinition = "JSONB")
-    private List<BookAuthorJson> authors;
+    private List<BookAuthorResponse> authors;
 
     @Builder.Default
     @Column(nullable = false, length = 20)

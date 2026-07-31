@@ -17,7 +17,6 @@ import com.stripe.model.StripeObject;
 import com.stripe.model.checkout.Session;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,7 +32,6 @@ import java.util.List;
 import java.util.Map;
 
 @RequiredArgsConstructor
-@Slf4j
 @Service
 public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
@@ -48,7 +46,7 @@ public class OrderServiceImpl implements OrderService {
     private final SubscriptionPlanRepository subscriptionPlanRepository;
     private final SubscriptionAllocationRepository subscriptionAllocationRepository;
 
-    private static final BigDecimal PUBLISHER_SHARE = new BigDecimal(0.7);
+    private static final BigDecimal PUBLISHER_SHARE = new BigDecimal("0.7");
 
     @Override
     public StripeCheckoutResponse createCheckout(Integer userId, BookPurchaseRequest request) {
@@ -114,10 +112,9 @@ public class OrderServiceImpl implements OrderService {
         Event event = paymentService.constructWebhookEvent(sigHeader, payload);
         Session session = getSessionFromEvent(event);
 
-        if ("checkout.session.completed".equals(event.getType())) {
-            handleSucceededPayment(session);
-        } else if ("checkout.session.expired".equals(event.getType())) {
-            handleFailedPayment(session);
+        switch (event.getType()) {
+            case "checkout.session.completed" -> handleSucceededPayment(session);
+            case "checkout.session.expired" -> handleFailedPayment(session);
         }
     }
 
@@ -146,10 +143,9 @@ public class OrderServiceImpl implements OrderService {
         List<OrderDetail> orderDetails =
                 orderDetailRepository.findAllWithItemByOrderId(order.getId());
         OrderDetailType type = orderDetails.getFirst().getType();
-        if (type == OrderDetailType.BOOK) {
-            handleBookOrder(order, orderDetails);
-        } else {
-            handleSubscriptionOrder(order, orderDetails.getFirst());
+        switch (type) {
+            case BOOK -> handleBookOrder(order, orderDetails);
+            case SUBSCRIPTION -> handleSubscriptionOrder(order, orderDetails.getFirst());
         }
 
         order.setStripeSessionId(session.getId());

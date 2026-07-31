@@ -1,6 +1,6 @@
 package com.harry.clio.dto.book;
 
-import com.harry.clio.entity.BookAuthorJson;
+import com.harry.clio.entity.BookAuthorResponse;
 import com.harry.clio.entity.BookType;
 
 import java.math.BigDecimal;
@@ -14,4 +14,4 @@ public record BookListResponse(
         BookType type,
         Double rating,
         Long ratingCount,
-        List<BookAuthorJson> authors) {}
+        List<BookAuthorResponse> authors) {}

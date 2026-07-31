@@ -2,7 +2,7 @@ package com.harry.clio.entity;
 
 import jakarta.validation.constraints.NotNull;
 
-public record BookAuthorJson(
+public record BookAuthorResponse(
         @NotNull(message = "Id tác giả không được để trống") Integer authorId,
 
         String authorFullname,

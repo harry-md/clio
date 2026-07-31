@@ -56,23 +56,22 @@ jwt:
   secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION}
 cloudinary:
-  cloud_name: ${CLOUDINARY_CLOUD_NAME}
-  api_key: ${CLOUDINARY_API_KEY}
-  api_secret: ${CLOUDINARY_API_SECRET}
+  cloud-name: ${CLOUDINARY_CLOUD_NAME}
+  api-key: ${CLOUDINARY_API_KEY}
+  api-secret: ${CLOUDINARY_API_SECRET}
 r2:
-  bucket_name: ${R2_BUCKET_NAME}
-  account_id: ${R2_ACCOUNT_ID}
-  access_key: ${R2_ACCESS_KEY}
-  secret_key: ${R2_SECRET_KEY}
+  bucket-name: ${R2_BUCKET_NAME}
+  account-id: ${R2_ACCOUNT_ID}
+  access-key: ${R2_ACCESS_KEY}
+  secret-key: ${R2_SECRET_KEY}
 stripe:
-  public_key: ${STRIPE_PUBLIC_KEY}
-  secret_key: ${STRIPE_SECRET_KEY}
-  webhook_secret: ${STRIPE_WEBHOOK_SECRET}
-  success_url: ${STRIPE_SUCCESS_URL}
-  cancel_url: ${STRIPE_CANCEL_URL}
+  secret-key: ${STRIPE_SECRET_KEY}
+  webhook-secret: ${STRIPE_WEBHOOK_SECRET}
+  success-url: ${STRIPE_SUCCESS_URL}
+  cancel-url: ${STRIPE_CANCEL_URL}
 clio:
-  master_key: ${EBOOK_MASTER_KEY}
-  page_size: 12
+  master-key: ${CLIO_MASTER_KEY}
+  license-key: ${CLIO_LICENSE_KEY}
 #logging:
 #  level:
 #    org:

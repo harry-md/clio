@@ -16,11 +16,15 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.UUID;
 
 @Slf4j
@@ -30,7 +34,7 @@ public class R2Service {
     private static final long MAX_FILE_SIZE = 100 * 1024 * 1024;
     private static final int EPUBCHECK_FATAL = 4;
 
-    @Value("${r2.bucket_name}")
+    @Value("${r2.bucket-name}")
     private String R2_BUCKET_NAME;
 
     private final S3Client s3Client;
@@ -103,6 +107,21 @@ public class R2Service {
             s3Client.deleteObject(req);
         } catch (RuntimeException ex) {
             log.error("Lỗi xóa file {}", objectKey, ex);
+        }
+    }
+
+    public String getPresignedUrl(String objectKey) {
+        try (S3Presigner presigner = S3Presigner.create()) {
+            GetObjectRequest objectRequest = GetObjectRequest.builder()
+                    .bucket(R2_BUCKET_NAME)
+                    .key(objectKey)
+                    .build();
+            GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+                    .signatureDuration(Duration.ofMinutes(5))
+                    .getObjectRequest(objectRequest)
+                    .build();
+            PresignedGetObjectRequest presignedRequest = presigner.presignGetObject(presignRequest);
+            return presignedRequest.url().toExternalForm();
         }
     }
 

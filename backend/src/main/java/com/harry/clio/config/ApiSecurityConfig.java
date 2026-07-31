@@ -65,6 +65,8 @@ public class ApiSecurityConfig {
                         .permitAll()
                         .requestMatchers("/api/publishers/**")
                         .hasAnyRole("ADMIN", "PUBLISHER")
+                        .requestMatchers("/api/books/*/download")
+                        .authenticated()
                         .requestMatchers("/api/books/**")
                         .permitAll()
                         .requestMatchers("/api/subscription-plans/**")
