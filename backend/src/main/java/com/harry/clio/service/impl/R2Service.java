@@ -38,6 +38,7 @@ public class R2Service {
     private String R2_BUCKET_NAME;
 
     private final S3Client s3Client;
+    private final S3Presigner s3Presigner;
 
     public String uploadOriginEbook(MultipartFile file) {
         File tmpFile = validateEbook(file);
@@ -111,18 +112,14 @@ public class R2Service {
     }
 
     public String getPresignedUrl(String objectKey) {
-        try (S3Presigner presigner = S3Presigner.create()) {
-            GetObjectRequest objectRequest = GetObjectRequest.builder()
-                    .bucket(R2_BUCKET_NAME)
-                    .key(objectKey)
-                    .build();
-            GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
-                    .signatureDuration(Duration.ofMinutes(5))
-                    .getObjectRequest(objectRequest)
-                    .build();
-            PresignedGetObjectRequest presignedRequest = presigner.presignGetObject(presignRequest);
-            return presignedRequest.url().toExternalForm();
-        }
+        GetObjectRequest objectRequest =
+                GetObjectRequest.builder().bucket(R2_BUCKET_NAME).key(objectKey).build();
+        GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+                .signatureDuration(Duration.ofMinutes(5))
+                .getObjectRequest(objectRequest)
+                .build();
+        PresignedGetObjectRequest presignedRequest = s3Presigner.presignGetObject(presignRequest);
+        return presignedRequest.url().toExternalForm();
     }
 
     private File validateEbook(MultipartFile file) {

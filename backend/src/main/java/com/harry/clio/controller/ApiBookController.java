@@ -54,6 +54,6 @@ public class ApiBookController {
             @PathVariable Integer bookId,
             @AuthenticationPrincipal CustomUser principal,
             @Valid @RequestBody DownloadRequest request) {
-        return ResponseEntity.ok(null);
+        return ResponseEntity.ok(bookService.downloadBook(principal.getId(), bookId, request));
     }
 }

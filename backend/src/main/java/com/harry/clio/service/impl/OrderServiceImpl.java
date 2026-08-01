@@ -75,7 +75,8 @@ public class OrderServiceImpl implements OrderService {
 
     private StripeSessionInput createPendingOrder(Integer userId, BookPurchaseRequest request) {
         List<Integer> bookIds = request.bookIds().stream().toList();
-        if (userLibraryRepository.existsByUserIdAndBookIdIn(userId, bookIds)) {
+        if (userLibraryRepository.existsByUserIdAndBookIdInAndType(
+                userId, bookIds, UserLibraryType.PURCHASED)) {
             throw new BadRequestException("Bạn đã sở hữu sách trong danh sách mua!");
         }
 

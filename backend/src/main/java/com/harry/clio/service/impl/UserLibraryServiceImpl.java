@@ -16,6 +16,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @RequiredArgsConstructor
 @Service
 public class UserLibraryServiceImpl implements UserLibraryService {
@@ -27,24 +29,37 @@ public class UserLibraryServiceImpl implements UserLibraryService {
 
     @Override
     public LibraryResponse addToLibrary(Integer userId, Integer bookId) {
+        Optional<UserLibrary> existing =
+                userLibraryRepository.findByUserIdAndBookId(userId, bookId);
+        if (existing.isPresent()) {
+            return toResponse(existing.get());
+        }
+
         if (!subscriptionRepository.existsByUserIdAndStatus(userId, SubscriptionStatus.ACTIVE)) {
             throw new BadRequestException("Bạn không có subscription");
         }
 
         Book book = bookRepository
-                .findById(bookId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sách"));
-        User user = userRepository.getReferenceById(userId);
+                .findAddableBookById(bookId)
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Sách không thể thêm vào thư viện"));
         UserLibrary library = UserLibrary.builder()
-                .user(user)
+                .user(userRepository.getReferenceById(userId))
                 .book(book)
                 .type(UserLibraryType.SUBSCRIBED)
                 .build();
         try {
-            userLibraryRepository.save(library);
-            return userLibraryMapper.toResponse(library, UserLibraryType.SUBSCRIBED, null, book);
+            return toResponse(userLibraryRepository.saveAndFlush(library));
         } catch (DataIntegrityViolationException ex) {
-            throw new BadRequestException("Sách đã tồn tại trong thư viện");
+            UserLibrary concurrentlyCreated = userLibraryRepository
+                    .findByUserIdAndBookId(userId, bookId)
+                    .orElseThrow(() -> ex);
+            return toResponse(concurrentlyCreated);
         }
+    }
+
+    private LibraryResponse toResponse(UserLibrary library) {
+        return userLibraryMapper.toResponse(
+                library, library.getType(), library.getCfiPosition(), library.getBook());
     }
 }

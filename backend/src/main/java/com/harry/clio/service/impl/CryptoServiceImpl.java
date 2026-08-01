@@ -192,7 +192,8 @@ public class CryptoServiceImpl implements CryptoService {
 
     private PrivateKey parseLicensePrivateKey(String pem) {
         String encodedKey = pem.replace("-----BEGIN PRIVATE KEY-----", "")
-                .replace("-----END PRIVATE KEY-----", "");
+                .replace("-----END PRIVATE KEY-----", "")
+                .replaceAll("\\s+", "");
         try {
             byte[] keyBytes = Base64.getDecoder().decode(encodedKey);
             return KeyFactory.getInstance("RSA").generatePrivate(new PKCS8EncodedKeySpec(keyBytes));

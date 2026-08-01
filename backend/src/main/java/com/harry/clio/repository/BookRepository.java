@@ -38,4 +38,11 @@ public interface BookRepository
         WHERE b.id = :bookId
         """)
     int updateStatus(@Param("bookId") Integer bookId, @Param("status") BookStatus status);
+
+    @Query("""
+        SELECT b
+        FROM Book b
+        WHERE b.active = true AND b.status = 'COMPLETED' AND b.type = 'SYSTEM' AND b.id = :bookId
+        """)
+    Optional<Book> findAddableBookById(Integer bookId);
 }
