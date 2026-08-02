@@ -17,7 +17,6 @@ import com.stripe.model.StripeObject;
 import com.stripe.model.checkout.Session;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,7 +32,6 @@ import java.util.List;
 import java.util.Map;
 
 @RequiredArgsConstructor
-@Slf4j
 @Service
 public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
@@ -48,7 +46,7 @@ public class OrderServiceImpl implements OrderService {
     private final SubscriptionPlanRepository subscriptionPlanRepository;
     private final SubscriptionAllocationRepository subscriptionAllocationRepository;
 
-    private static final BigDecimal PUBLISHER_SHARE = new BigDecimal(0.7);
+    private static final BigDecimal PUBLISHER_SHARE = new BigDecimal("0.7");
 
     @Override
     public StripeCheckoutResponse createCheckout(Integer userId, BookPurchaseRequest request) {
@@ -77,7 +75,8 @@ public class OrderServiceImpl implements OrderService {
 
     private StripeSessionInput createPendingOrder(Integer userId, BookPurchaseRequest request) {
         List<Integer> bookIds = request.bookIds().stream().toList();
-        if (userLibraryRepository.existsByUserIdAndBookIdIn(userId, bookIds)) {
+        if (userLibraryRepository.existsByUserIdAndBookIdInAndType(
+                userId, bookIds, UserLibraryType.PURCHASED)) {
             throw new BadRequestException("Bạn đã sở hữu sách trong danh sách mua!");
         }
 
@@ -112,16 +111,11 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public void handleWebhook(String sigHeader, String payload) {
         Event event = paymentService.constructWebhookEvent(sigHeader, payload);
+        Session session = getSessionFromEvent(event);
+
         switch (event.getType()) {
-            case "checkout.session.completed" -> {
-                Session session = getSessionFromEvent(event);
-                handleSucceededPayment(session);
-            }
-            case "checkout.session.expired" -> {
-                Session session = getSessionFromEvent(event);
-                handleFailedPayment(session);
-            }
-            default -> {}
+            case "checkout.session.completed" -> handleSucceededPayment(session);
+            case "checkout.session.expired" -> handleFailedPayment(session);
         }
     }
 
@@ -154,6 +148,7 @@ public class OrderServiceImpl implements OrderService {
             case BOOK -> handleBookOrder(order, orderDetails);
             case SUBSCRIPTION -> handleSubscriptionOrder(order, orderDetails.getFirst());
         }
+
         order.setStripeSessionId(session.getId());
         order.setStatus(OrderStatus.PAID);
     }
@@ -217,7 +212,7 @@ public class OrderServiceImpl implements OrderService {
             LocalDate endDate,
             BigDecimal totalAmount) {
         long totalDays = ChronoUnit.DAYS.between(startDate, endDate);
-        List<SubscriptionAllocation> allocations = new ArrayList<>(2);
+        List<SubscriptionAllocation> allocations = new ArrayList<>();
 
         LocalDate current = startDate;
         BigDecimal allocatedAmount = BigDecimal.ZERO;

@@ -21,7 +21,9 @@ public class CategoryServiceImpl implements CategoryService {
     private final CategoryMapper categoryMapper;
 
     public List<CategoryResponse> getCategories() {
-        return categoryRepository.findAll().stream().map(categoryMapper::toDto).toList();
+        return categoryRepository.findAll().stream()
+                .map(categoryMapper::toResponse)
+                .toList();
     }
 
     private Category getCategoryOrThrow(int categoryId) {
@@ -32,20 +34,20 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public CategoryResponse getCategoryById(int categoryId) {
-        return categoryMapper.toDto(getCategoryOrThrow(categoryId));
+        return categoryMapper.toResponse(getCategoryOrThrow(categoryId));
     }
 
     @Override
     public CategoryResponse createCategory(CreateCategoryRequest request) {
         Category category = categoryMapper.toEntity(request);
-        return categoryMapper.toDto(categoryRepository.save(category));
+        return categoryMapper.toResponse(categoryRepository.save(category));
     }
 
     @Override
     public CategoryResponse updateCategory(int categoryId, CreateCategoryRequest request) {
         Category category = getCategoryOrThrow(categoryId);
         category.setName(request.name());
-        return categoryMapper.toDto(categoryRepository.save(category));
+        return categoryMapper.toResponse(categoryRepository.save(category));
     }
 
     @Override

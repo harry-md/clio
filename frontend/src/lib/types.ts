@@ -4,6 +4,7 @@ export type AuthUser = {
   lastName: string;
   avatar: string | null;
   role: "READER" | "PUBLISHER" | "ADMIN";
+  isSubscribed: boolean;
 };
 
 export type BookAuthor = {

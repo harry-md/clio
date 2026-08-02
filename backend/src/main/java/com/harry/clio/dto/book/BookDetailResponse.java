@@ -1,7 +1,7 @@
 package com.harry.clio.dto.book;
 
 import com.harry.clio.dto.category.CategoryResponse;
-import com.harry.clio.entity.BookAuthorJson;
+import com.harry.clio.entity.BookAuthorResponse;
 import com.harry.clio.entity.BookStatus;
 import com.harry.clio.entity.BookType;
 
@@ -19,7 +19,7 @@ public record BookDetailResponse(
         BookStatus status,
         Double rating,
         Long ratingCount,
-        List<BookAuthorJson> authors,
+        List<BookAuthorResponse> authors,
         Set<CategoryResponse> categories,
         BookInfoResponse bookInfo,
         Instant createdAt,

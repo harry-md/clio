@@ -1,6 +1,7 @@
 "use client";
 
-import { SearchIcon } from "lucide-react";
+import { SearchIcon, ShoppingCartIcon } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -8,21 +9,22 @@ import { ClioLogo } from "@/components/ClioLogo";
 import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
+import { useCart } from "@/context/CartContext";
 import { Api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 const navigationItems = [
   {
     href: "/",
-    label: "Khám phá",
-  },
-  {
-    href: "/library",
-    label: "Thư viện",
+    label: "Trang chủ",
   },
   {
     href: "/subscriptions",
     label: "Gói đọc",
+  },
+  {
+    href: "/library",
+    label: "Thư viện",
   },
 ] as const;
 
@@ -30,14 +32,15 @@ export const Header = () => {
   const router = useRouter();
   const pathname = usePathname();
   const { user, initialized, setUser } = useAuth();
-  const [isNavigating, setIsNavigating] = useState(false);
+  const { books, clearCart } = useCart();
+  const [navigating, setNavigating] = useState(false);
 
   const handleOpenSearch = () => {
     if (pathname === "/search") {
       return;
     }
 
-    setIsNavigating(true);
+    setNavigating(true);
     router.push("/search");
   };
 
@@ -45,6 +48,7 @@ export const Header = () => {
     try {
       await Api.post("/logout");
     } finally {
+      clearCart();
       setUser(null);
       router.replace("/");
     }
@@ -52,7 +56,7 @@ export const Header = () => {
 
   return (
     <>
-      {isNavigating && <LoadingOverlay />}
+      {navigating && <LoadingOverlay />}
 
       <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="mx-auto flex min-h-18 max-w-360 items-center gap-6 px-5 lg:px-10">
@@ -92,28 +96,57 @@ export const Header = () => {
 
             <span className="cursor-text">Tìm kiếm sách...</span>
           </Button>
+          <Link
+            href="/cart"
+            aria-label={`Giỏ hàng có ${books.length} cuốn sách`}
+            className={cn(
+              buttonVariants({
+                variant: "ghost",
+                size: "icon",
+              }),
+              "relative",
+            )}
+          >
+            <ShoppingCartIcon aria-hidden="true" />
+            {books.length > 0 && (
+              <span className="absolute -right-1 -top-1 grid min-h-5 min-w-5 place-items-center bg-primary px-1 text-xs font-bold text-primary-foreground">
+                {books.length}
+              </span>
+            )}
+          </Link>
 
           {!initialized ? (
             <div aria-hidden="true" className="h-10 w-36" />
           ) : user ? (
             <div className="flex items-center gap-3">
               <div
-                className="size-9 border border-border-strong bg-secondary bg-cover bg-center"
-                style={
-                  user.avatar
-                    ? { backgroundImage: `url("${user.avatar}")` }
-                    : undefined
-                }
+                className={cn(
+                  "relative size-9 shrink-0 overflow-hidden border bg-secondary",
+                  user.isSubscribed ? "border-primary" : "border-border-strong",
+                )}
               >
-                {!user.avatar && (
+                {user.avatar ? (
+                  <Image
+                    src={user.avatar}
+                    alt={`Avatar ${user.firstName} ${user.lastName}`}
+                    fill
+                    sizes="36px"
+                    className="object-cover"
+                  />
+                ) : (
                   <span className="grid h-full place-items-center text-sm font-semibold text-secondary-foreground">
-                    {user.firstName.charAt(0).toUpperCase()}
+                    {user.firstName}
                   </span>
                 )}
               </div>
 
               <div className="hidden xl:block">
-                <p className="font-semibold text-foreground">
+                <p
+                  className={cn(
+                    "font-semibold",
+                    user.isSubscribed ? "text-primary" : "text-foreground",
+                  )}
+                >
                   {user.firstName} {user.lastName}
                 </p>
 

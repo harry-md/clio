@@ -1,10 +1,7 @@
 package com.harry.clio.mapper;
 
 import com.harry.clio.dto.book.*;
-import com.harry.clio.entity.Book;
-import com.harry.clio.entity.BookAuthorJson;
-import com.harry.clio.entity.Category;
-import com.harry.clio.entity.Publisher;
+import com.harry.clio.entity.*;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -24,7 +21,7 @@ public interface BookMapper {
             CreateBookMetadataRequest request,
             Publisher publisher,
             String fileUrl,
-            List<BookAuthorJson> authorList,
+            List<BookAuthorResponse> authorList,
             Set<Category> categories);
 
     BookListResponse toListResponse(Book book);

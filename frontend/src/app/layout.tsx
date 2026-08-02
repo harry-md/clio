@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Lora } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import { CartProvider } from "@/context/CartContext";
 
 const geist = Geist({
   variable: "--font-geist",
@@ -32,7 +33,9 @@ export default function RootLayout({
       className={`${geist.variable} ${lora.variable} dark antialiased`}
     >
       <body>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <CartProvider>{children}</CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );
