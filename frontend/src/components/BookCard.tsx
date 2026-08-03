@@ -2,9 +2,9 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Book } from "@/lib/types";
 
-type BookCardProps = {
+interface BookCardProps {
   book: Book;
-};
+}
 
 const priceFormatter = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,

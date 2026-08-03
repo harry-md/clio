@@ -13,17 +13,17 @@ import type { Book } from "@/lib/types";
 
 const CART_STORAGE_KEY = "clio-cart";
 
-type CartContextValue = {
+interface CartContextValue {
   books: Book[];
   addBook: (book: Book) => void;
   removeBook: (bookId: number) => void;
   hasBook: (bookId: number) => boolean;
   clearCart: () => void;
-};
+}
 
-type CartProviderProps = {
+interface CartProviderProps {
   children: ReactNode;
-};
+}
 
 const CartContext = createContext<CartContextValue | undefined>(undefined);
 

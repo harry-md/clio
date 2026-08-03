@@ -30,8 +30,7 @@ public class ApiUserController {
     }
 
     @GetMapping("/current-user")
-    public ResponseEntity<UserResponse> getCurrentUser(
-            @AuthenticationPrincipal CustomUser principal) {
+    public ResponseEntity<UserResponse> currentUser(@AuthenticationPrincipal CustomUser principal) {
         return new ResponseEntity<>(userService.getUserById(principal.getId()), HttpStatus.OK);
     }
 }

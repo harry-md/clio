@@ -36,7 +36,7 @@ public class ApiOrderController {
     }
 
     @PostMapping("/webhook")
-    public ResponseEntity<Void> handleWebhook(
+    public ResponseEntity<Void> webhook(
             @RequestHeader("Stripe-Signature") String sigHeader, @RequestBody String payload) {
         orderService.handleWebhook(sigHeader, payload);
         return ResponseEntity.ok().build();

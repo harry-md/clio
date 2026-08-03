@@ -20,7 +20,7 @@ const priceFormatter = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,
 });
 
-const languageLabels: Record<string, string> = {
+const langMap = {
   VI: "Tiếng Việt",
   EN: "Tiếng Anh",
   FR: "Tiếng Pháp",
@@ -30,7 +30,7 @@ const languageLabels: Record<string, string> = {
   ZH: "Tiếng Trung",
   KO: "Tiếng Hàn",
   ES: "Tiếng Tây Ban Nha",
-};
+} as const;
 
 const formatFileSize = (bytes: number) => {
   if (!bytes) {
@@ -84,10 +84,7 @@ export default function BookDetailPage() {
     ? [
         {
           label: "Ngôn ngữ",
-          value:
-            languageLabels[book.bookInfo?.language] ??
-            book.bookInfo?.language ??
-            "Chưa cập nhật",
+          value: langMap[book.bookInfo.language],
         },
         {
           label: "ISBN",
@@ -174,20 +171,23 @@ export default function BookDetailPage() {
 
                 <div className="flex flex-wrap gap-2 text-lg">
                   {book.authors?.length > 0 ? (
-                    book.authors.map((author) => (
-                      <Link
-                        key={author.authorId}
-                        href={{
-                          pathname: "/search",
-                          query: {
-                            authorId: String(author.authorId),
-                            authorName: author.authorFullname,
-                          },
-                        }}
-                        className="text-link transition hover:text-foreground hover:underline"
-                      >
-                        {author.authorFullname}
-                      </Link>
+                    book.authors.map((author, index) => (
+                      <span className="text-link" key={author.authorId}>
+                        <Link
+                          href={{
+                            pathname: "/search",
+                            query: {
+                              authorId: String(author.authorId),
+                              authorName: author.authorFullname,
+                            },
+                          }}
+                          className="text-link transition hover:text-foreground hover:underline"
+                        >
+                          {author.authorFullname}
+                        </Link>
+
+                        {index < book.authors.length - 1 && ", "}
+                      </span>
                     ))
                   ) : (
                     <span className="text-muted-foreground">
@@ -214,7 +214,7 @@ export default function BookDetailPage() {
                       className="min-w-52"
                     >
                       <ShoppingCartIcon data-icon="inline-start" />
-                      {bookInCart ? "Đã có trong giỏ" : "Thêm sách vào giỏ"}
+                      {bookInCart ? "Đã có trong giỏ" : "Thêm vào giỏ"}
                     </Button>
 
                     {user?.isSubscribed && (

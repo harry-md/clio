@@ -9,18 +9,19 @@ import {
   useState,
 } from "react";
 import { Api } from "@/lib/api";
+import { ensureDeviceKey } from "@/lib/offline";
 import type { AuthUser } from "@/lib/types";
 
-type AuthContextValue = {
+interface AuthContextValue {
   user: AuthUser | null;
   initialized: boolean;
   setUser: (user: AuthUser | null) => void;
   refreshUser: () => Promise<AuthUser>;
-};
+}
 
-type AuthProviderProps = {
+interface AuthProviderProps {
   children: ReactNode;
-};
+}
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
@@ -38,6 +39,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setUser(currentUser);
     return currentUser;
   }, []);
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+    void ensureDeviceKey().catch();
+  }, [user]);
 
   useEffect(() => {
     let active = true;

@@ -25,7 +25,7 @@ export default function PaymentSuccessPage() {
 
         window.sessionStorage.removeItem("clio-pending-book-checkout");
 
-        await refreshUser().catch(() => undefined);
+        await refreshUser().catch();
         router.replace("/");
       };
 

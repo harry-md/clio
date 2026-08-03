@@ -12,19 +12,19 @@ import { Spinner } from "@/components/ui/spinner";
 import { useAuth } from "@/context/AuthContext";
 import { Api, getApiErrorMessage } from "@/lib/api";
 
-type SubscriptionPlan = {
+interface SubscriptionPlan {
   id: number;
   name: string;
   price: number;
   duration: number;
   description: string | null;
   active: boolean;
-};
+}
 
-type StripeCheckoutResponse = {
+interface StripeCheckoutResponse {
   orderId: number;
   checkoutUrl: string;
-};
+}
 
 const priceFormatter = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,

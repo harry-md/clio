@@ -12,10 +12,10 @@ import { Spinner } from "@/components/ui/spinner";
 import { useAuth } from "@/context/AuthContext";
 import { Api, getApiErrorMessage } from "@/lib/api";
 
-type LoginForm = {
+interface LoginForm {
   username: string;
   password: string;
-};
+}
 
 const initialForm: LoginForm = {
   username: "",
