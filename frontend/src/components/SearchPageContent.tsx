@@ -34,7 +34,6 @@ const getRequestFilters = (filters: SearchFilters): Record<string, string> => {
       params[key] = value;
     }
   }
-
   return params;
 };
 
@@ -212,7 +211,7 @@ export function SearchPageContent() {
     setError("");
     setLoading(true);
 
-    router.replace("/search?sort=createdAt%2Cdesc", {
+    router.replace("/search", {
       scroll: false,
     });
   };

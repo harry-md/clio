@@ -12,7 +12,5 @@ public interface BookService {
 
     Page<BookListResponse> getAllBooks(BookFilterRequest request, Pageable pageable);
 
-    BookDetailResponse getBookDetail(Integer bookId);
-
-    DownloadResponse downloadBook(Integer userId, Integer bookId, DownloadRequest request);
+    BookDetailResponse getBookDetail(int bookId);
 }

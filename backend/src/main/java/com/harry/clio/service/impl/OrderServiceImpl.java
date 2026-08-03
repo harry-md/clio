@@ -26,10 +26,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -129,6 +127,15 @@ public class OrderServiceImpl implements OrderService {
         return session;
     }
 
+    private void handleFailedPayment(Session session) {
+        Order order = orderRepository
+                .findByIdForUpdate(Integer.parseInt(session.getClientReferenceId()))
+                .orElseThrow(() -> new InvalidWebhookException("Không tìm thấy đơn hàng"));
+        if (order.getStatus() == OrderStatus.PENDING) {
+            order.setStatus(OrderStatus.CANCELED);
+        }
+    }
+
     private void handleSucceededPayment(Session session) {
         if (!"paid".equals(session.getPaymentStatus())) {
             return;
@@ -154,9 +161,11 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private void handleBookOrder(Order order, List<OrderDetail> orderDetails) {
+        User user = order.getUser();
         List<UserLibrary> userLibraries = new ArrayList<>(orderDetails.size());
 
         Map<Integer, BigDecimal> revenueByPublisher = new HashMap<>();
+        List<Integer> bookIds = new ArrayList<>();
         for (OrderDetail od : orderDetails) {
             Book book = od.getBook();
             Publisher publisher = book.getPublisher();
@@ -164,8 +173,9 @@ public class OrderServiceImpl implements OrderService {
                     od.getPrice().multiply(PUBLISHER_SHARE).setScale(2, RoundingMode.HALF_UP);
             revenueByPublisher.merge(publisher.getUserId(), publisherRevenue, BigDecimal::add);
 
+            bookIds.add(book.getId());
             userLibraries.add(UserLibrary.builder()
-                    .user(order.getUser())
+                    .user(user)
                     .book(od.getBook())
                     .type(UserLibraryType.PURCHASED)
                     .build());
@@ -178,6 +188,18 @@ public class OrderServiceImpl implements OrderService {
             }
         });
 
+        List<UserLibrary> existingLibraries =
+                userLibraryRepository.findAllByUserIdAndBookIdIn(user.getId(), bookIds);
+        Set<Integer> existingBookIds = existingLibraries.stream()
+                .map(library -> {
+                    if (library.getType() == UserLibraryType.SUBSCRIBED) {
+                        library.setType(UserLibraryType.PURCHASED);
+                    }
+                    return library.getBook().getId();
+                })
+                .collect(Collectors.toSet());
+
+        userLibraries.removeIf(ul -> existingBookIds.contains(ul.getBook().getId()));
         userLibraryRepository.saveAll(userLibraries);
     }
 
@@ -195,15 +217,6 @@ public class OrderServiceImpl implements OrderService {
                 subscription.getStartDate(),
                 subscription.getEndDate(),
                 order.getTotalAmount()));
-    }
-
-    private void handleFailedPayment(Session session) {
-        Order order = orderRepository
-                .findByIdForUpdate(Integer.parseInt(session.getClientReferenceId()))
-                .orElseThrow(() -> new InvalidWebhookException("Không tìm thấy đơn hàng"));
-        if (order.getStatus() == OrderStatus.PENDING) {
-            order.setStatus(OrderStatus.CANCELED);
-        }
     }
 
     private List<SubscriptionAllocation> allocateSubscription(

@@ -68,7 +68,8 @@ export default function HomePage() {
         });
 
         setBooks(data.content);
-        setTotalPages(data.totalPages);
+        setCurrentPage(data.page.number);
+        setTotalPages(data.page.totalPages);
       } catch (requestError) {
         if (!controller.signal.aborted) {
           setError(

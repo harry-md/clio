@@ -11,7 +11,6 @@ import com.harry.clio.repository.*;
 import com.harry.clio.repository.specification.BookSpecification;
 import com.harry.clio.service.BookProcessingQueue;
 import com.harry.clio.service.BookService;
-import com.harry.clio.service.CryptoService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,9 +23,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.time.ZoneId;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -48,13 +44,8 @@ public class BookServiceImpl implements BookService {
     private final PublisherRepository publisherRepository;
     private final R2Service r2Service;
     private final BookProcessingQueue bookProcessingQueue;
-    private final UserLibraryRepository userLibraryRepository;
-    private final SubscriptionRepository subscriptionRepository;
-    private final CryptoService cryptoService;
 
-    private record CreatedBook(Integer bookId, BookDetailResponse response) {}
-
-    private static final ZoneId SUBSCRIPTION_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
+    private record CreatedBook(int bookId, BookDetailResponse response) {}
 
     @Override
     public BookDetailResponse uploadBook(
@@ -152,7 +143,7 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public BookDetailResponse getBookDetail(Integer bookId) {
+    public BookDetailResponse getBookDetail(int bookId) {
         Book book = bookRepository
                 .findWithCategoryById(bookId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sách"));
@@ -160,39 +151,5 @@ public class BookServiceImpl implements BookService {
                 .findById(book.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thông tin sách"));
         return bookMapper.toDetailResponse(book, bookInfoMapper.toResponse(bookInfo));
-    }
-
-    @Override
-    public DownloadResponse downloadBook(Integer userId, Integer bookId, DownloadRequest request) {
-        UserLibrary library = userLibraryRepository
-                .findByUserIdAndBookId(userId, bookId)
-                .orElseThrow(() -> new BadRequestException("Chưa có sách này trong thư viện"));
-        Book book = library.getBook();
-
-        switch (library.getType()) {
-            case PURCHASED -> {
-                String downloadUrl = r2Service.getPresignedUrl(book.getEncryptedFileUrl());
-                Instant urlExpiredAt = Instant.now().plus(Duration.ofMinutes(5));
-                String license = cryptoService.createLicense(
-                        userId, bookId, book.getEncryptedContentKey(), request.publicKeySpki());
-                return new DownloadResponse(downloadUrl, urlExpiredAt, license);
-            }
-            case SUBSCRIBED -> {
-                Subscription sub = subscriptionRepository
-                        .findByUserIdAndStatus(userId, SubscriptionStatus.ACTIVE)
-                        .orElseThrow(() -> new BadRequestException("Chưa có gói đăng ký hợp lệ"));
-                String downloadUrl = r2Service.getPresignedUrl(book.getEncryptedFileUrl());
-                Instant urlExpiredAt = Instant.now().plus(Duration.ofMinutes(5));
-                String license = cryptoService.createLicense(
-                        userId,
-                        bookId,
-                        sub.getId(),
-                        sub.getEndDate().atStartOfDay(SUBSCRIPTION_ZONE).toInstant(),
-                        book.getEncryptedContentKey(),
-                        request.publicKeySpki());
-                return new DownloadResponse(downloadUrl, urlExpiredAt, license);
-            }
-        }
-        throw new BadRequestException("Sách không hợp lệ");
     }
 }

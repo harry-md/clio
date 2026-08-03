@@ -1,8 +1,8 @@
 import { cn } from "@/lib/utils";
 
-type SpinnerProps = {
+interface SpinnerProps {
   className?: string;
-};
+}
 
 const spokes = [
   { angle: 0, opacity: 1 },

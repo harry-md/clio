@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/native-select";
 import { Spinner } from "@/components/ui/spinner";
 
-export type SearchFilters = {
+export interface SearchFilters {
   title: string;
   authorFullname: string;
   fromPrice: string;
@@ -24,11 +24,11 @@ export type SearchFilters = {
   toRating: string;
   categoryId: string;
   authorId: string;
-};
+}
 
 type ScopedFilter = "author" | "category";
 
-type SearchFiltersFormProps = {
+interface SearchFiltersFormProps {
   filters: SearchFilters;
   sort: string;
   authorName: string;
@@ -39,9 +39,9 @@ type SearchFiltersFormProps = {
   onRemoveScopedFilterAction: (filter: ScopedFilter) => void;
   onSubmitAction: (event: SubmitEvent<HTMLFormElement>) => void;
   onClearAction: () => void;
-};
+}
 
-const RATING_OPTIONS = [0, 1, 2, 3, 4, 5] as const;
+const RATING_OPTIONS = [1, 2, 3, 4, 5] as const;
 
 export function SearchFiltersForm({
   filters,
@@ -128,7 +128,7 @@ export function SearchFiltersForm({
               name="fromPrice"
               type="number"
               min="0"
-              step="0.01"
+              step="10000"
               value={filters.fromPrice}
               onChange={(event) =>
                 onFilterChangeAction("fromPrice", event.target.value)
@@ -141,7 +141,7 @@ export function SearchFiltersForm({
               name="toPrice"
               type="number"
               min="0"
-              step="0.01"
+              step="10000"
               value={filters.toPrice}
               onChange={(event) =>
                 onFilterChangeAction("toPrice", event.target.value)

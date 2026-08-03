@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Api, getApiErrorMessage } from "@/lib/api";
 
-type RegisterForm = {
+interface RegisterForm {
   username: string;
   password: string;
   confirmPassword: string;
@@ -19,7 +19,7 @@ type RegisterForm = {
   lastName: string;
   email: string;
   avatar: File | null;
-};
+}
 
 const initialForm: RegisterForm = {
   username: "",

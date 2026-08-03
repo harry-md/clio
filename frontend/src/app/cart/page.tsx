@@ -15,10 +15,10 @@ import { useCart } from "@/context/CartContext";
 import { Api, getApiErrorMessage } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
-type StripeCheckoutResponse = {
+interface StripeCheckoutResponse {
   orderId: number;
   checkoutUrl: string;
-};
+}
 
 const priceFormatter = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,

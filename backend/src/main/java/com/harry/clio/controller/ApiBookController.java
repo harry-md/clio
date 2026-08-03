@@ -45,15 +45,7 @@ public class ApiBookController {
     }
 
     @GetMapping("/{bookId}")
-    public ResponseEntity<BookDetailResponse> getBookDetail(@PathVariable Integer bookId) {
+    public ResponseEntity<BookDetailResponse> retrieve(@PathVariable Integer bookId) {
         return ResponseEntity.ok(bookService.getBookDetail(bookId));
-    }
-
-    @PostMapping("/{bookId}/download")
-    public ResponseEntity<?> download(
-            @PathVariable Integer bookId,
-            @AuthenticationPrincipal CustomUser principal,
-            @Valid @RequestBody DownloadRequest request) {
-        return ResponseEntity.ok(bookService.downloadBook(principal.getId(), bookId, request));
     }
 }
