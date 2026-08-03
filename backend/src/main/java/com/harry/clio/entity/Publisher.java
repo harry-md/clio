@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.util.Set;
 
 @Builder
 @Getter
@@ -29,4 +30,7 @@ public class Publisher {
     @Builder.Default
     @Column(nullable = false, scale = 2, precision = 15)
     private BigDecimal balance = BigDecimal.ZERO;
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "publisher")
+    private Set<Book> books;
 }

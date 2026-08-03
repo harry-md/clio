@@ -1,12 +1,14 @@
 package com.harry.clio.service.impl;
 
 import com.harry.clio.dto.order.BookPurchaseRequest;
-import com.harry.clio.dto.order.StripeBookItem;
 import com.harry.clio.dto.order.StripeCheckoutResponse;
+import com.harry.clio.dto.order.StripeLineItem;
 import com.harry.clio.dto.order.StripeSessionInput;
+import com.harry.clio.dto.subscription.SubscriptionPlanRequest;
 import com.harry.clio.entity.*;
 import com.harry.clio.exception.BadRequestException;
 import com.harry.clio.exception.InvalidWebhookException;
+import com.harry.clio.exception.ResourceNotFoundException;
 import com.harry.clio.repository.*;
 import com.harry.clio.service.OrderService;
 import com.harry.clio.service.PaymentService;
@@ -15,18 +17,19 @@ import com.stripe.model.StripeObject;
 import com.stripe.model.checkout.Session;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
-@Slf4j
 @Service
 public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
@@ -35,17 +38,23 @@ public class OrderServiceImpl implements OrderService {
     private final UserRepository userRepository;
     private final UserLibraryRepository userLibraryRepository;
     private final PaymentService paymentService;
+    private final PublisherRepository publisherRepository;
     private final TransactionTemplate transactionTemplate;
+    private final SubscriptionRepository subscriptionRepository;
+    private final SubscriptionPlanRepository subscriptionPlanRepository;
+    private final SubscriptionAllocationRepository subscriptionAllocationRepository;
+
+    private static final BigDecimal PUBLISHER_SHARE = new BigDecimal("0.7");
 
     @Override
     public StripeCheckoutResponse createCheckout(Integer userId, BookPurchaseRequest request) {
         List<Integer> bookIds = request.bookIds();
         Order existingOrder = orderRepository
-                .findWithDetailsByUserIdAndBookIdsIn(userId, request.bookIds(), bookIds.size())
+                .findWithOrderDetailsByUserIdAndBookIdsIn(userId, request.bookIds(), bookIds.size())
                 .orElse(null);
 
         Integer orderId;
-        List<StripeBookItem> stripeItems;
+        List<StripeLineItem> stripeItems;
         if (existingOrder == null) {
             StripeSessionInput stripeSessionInput =
                     transactionTemplate.execute(status -> createPendingOrder(userId, request));
@@ -53,9 +62,9 @@ public class OrderServiceImpl implements OrderService {
             stripeItems = stripeSessionInput.items();
         } else {
             orderId = existingOrder.getId();
-            stripeItems = orderDetailRepository.findAllByOrderId(orderId).stream()
-                    .map(d ->
-                            new StripeBookItem(d.getBook().getId(), d.getBookTitle(), d.getPrice()))
+            stripeItems = orderDetailRepository.findAllWithItemByOrderId(orderId).stream()
+                    .map(d -> new StripeLineItem(
+                            d.getBook().getId(), d.getBook().getTitle(), d.getPrice()))
                     .toList();
         }
         Session session = paymentService.createCheckoutSession(orderId, stripeItems);
@@ -64,7 +73,8 @@ public class OrderServiceImpl implements OrderService {
 
     private StripeSessionInput createPendingOrder(Integer userId, BookPurchaseRequest request) {
         List<Integer> bookIds = request.bookIds().stream().toList();
-        if (userLibraryRepository.existsByUserIdAndBookIdIn(userId, bookIds)) {
+        if (userLibraryRepository.existsByUserIdAndBookIdInAndType(
+                userId, bookIds, UserLibraryType.PURCHASED)) {
             throw new BadRequestException("Bạn đã sở hữu sách trong danh sách mua!");
         }
 
@@ -78,16 +88,15 @@ public class OrderServiceImpl implements OrderService {
 
         BigDecimal totalAmount = BigDecimal.ZERO;
         List<OrderDetail> orderDetails = new ArrayList<>(books.size());
-        List<StripeBookItem> bookItems = new ArrayList<>(books.size());
+        List<StripeLineItem> bookItems = new ArrayList<>(books.size());
         for (Book book : books) {
             totalAmount = totalAmount.add(book.getPrice());
             orderDetails.add(OrderDetail.builder()
                     .order(order)
                     .book(book)
-                    .bookTitle(book.getTitle())
                     .price(book.getPrice())
                     .build());
-            bookItems.add(new StripeBookItem(book.getId(), book.getTitle(), book.getPrice()));
+            bookItems.add(new StripeLineItem(book.getId(), book.getTitle(), book.getPrice()));
         }
 
         order.setTotalAmount(totalAmount);
@@ -100,30 +109,34 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public void handleWebhook(String sigHeader, String payload) {
         Event event = paymentService.constructWebhookEvent(sigHeader, payload);
+        Session session = getSessionFromEvent(event);
+
         switch (event.getType()) {
-            case "checkout.session.completed" -> {
-                Session session = getSessionFromEvent(event);
-                handlePaymentSucceeded(session);
-            }
-            case "checkout.session.expired" -> {
-                Session session = getSessionFromEvent(event);
-                handlePaymentFailed(session);
-            }
-            default -> {}
+            case "checkout.session.completed" -> handleSucceededPayment(session);
+            case "checkout.session.expired" -> handleFailedPayment(session);
         }
     }
 
     private Session getSessionFromEvent(Event event) {
         StripeObject obj = event.getDataObjectDeserializer()
                 .getObject()
-                .orElseThrow(() -> new InvalidWebhookException("Lỗi deserialize webhook event"));
+                .orElseThrow(() -> new InvalidWebhookException("Lỗi lấy webhook event"));
         if (!(obj instanceof Session session)) {
             throw new InvalidWebhookException("Webhook event không phải là session");
         }
         return session;
     }
 
-    private void handlePaymentSucceeded(Session session) {
+    private void handleFailedPayment(Session session) {
+        Order order = orderRepository
+                .findByIdForUpdate(Integer.parseInt(session.getClientReferenceId()))
+                .orElseThrow(() -> new InvalidWebhookException("Không tìm thấy đơn hàng"));
+        if (order.getStatus() == OrderStatus.PENDING) {
+            order.setStatus(OrderStatus.CANCELED);
+        }
+    }
+
+    private void handleSucceededPayment(Session session) {
         if (!"paid".equals(session.getPaymentStatus())) {
             return;
         }
@@ -135,25 +148,155 @@ public class OrderServiceImpl implements OrderService {
             return;
         }
 
-        List<OrderDetail> orderDetails = orderDetailRepository.findAllByOrderId(order.getId());
-        List<UserLibrary> userLibraries = orderDetails.stream()
-                .map(od -> UserLibrary.builder()
-                        .user(order.getUser())
-                        .book(od.getBook())
-                        .type(UserLibraryType.PURCHASED)
-                        .build())
-                .toList();
-        userLibraryRepository.saveAll(userLibraries);
+        List<OrderDetail> orderDetails =
+                orderDetailRepository.findAllWithItemByOrderId(order.getId());
+        OrderDetailType type = orderDetails.getFirst().getType();
+        switch (type) {
+            case BOOK -> handleBookOrder(order, orderDetails);
+            case SUBSCRIPTION -> handleSubscriptionOrder(order, orderDetails.getFirst());
+        }
+
         order.setStripeSessionId(session.getId());
         order.setStatus(OrderStatus.PAID);
     }
 
-    private void handlePaymentFailed(Session session) {
-        Order order = orderRepository
-                .findByIdForUpdate(Integer.parseInt(session.getClientReferenceId()))
-                .orElseThrow(() -> new InvalidWebhookException("Không tìm thấy đơn hàng"));
-        if (order.getStatus() == OrderStatus.PENDING) {
-            order.setStatus(OrderStatus.CANCELED);
+    private void handleBookOrder(Order order, List<OrderDetail> orderDetails) {
+        User user = order.getUser();
+        List<UserLibrary> userLibraries = new ArrayList<>(orderDetails.size());
+
+        Map<Integer, BigDecimal> revenueByPublisher = new HashMap<>();
+        List<Integer> bookIds = new ArrayList<>();
+        for (OrderDetail od : orderDetails) {
+            Book book = od.getBook();
+            Publisher publisher = book.getPublisher();
+            BigDecimal publisherRevenue =
+                    od.getPrice().multiply(PUBLISHER_SHARE).setScale(2, RoundingMode.HALF_UP);
+            revenueByPublisher.merge(publisher.getUserId(), publisherRevenue, BigDecimal::add);
+
+            bookIds.add(book.getId());
+            userLibraries.add(UserLibrary.builder()
+                    .user(user)
+                    .book(od.getBook())
+                    .type(UserLibraryType.PURCHASED)
+                    .build());
         }
+
+        revenueByPublisher.forEach((publisherId, amount) -> {
+            int result = publisherRepository.increaseBalance(publisherId, amount);
+            if (result != 1) {
+                throw new RuntimeException("Lỗi chỉnh sửa số dư tài khoản cho publisher");
+            }
+        });
+
+        List<UserLibrary> existingLibraries =
+                userLibraryRepository.findAllByUserIdAndBookIdIn(user.getId(), bookIds);
+        Set<Integer> existingBookIds = existingLibraries.stream()
+                .map(library -> {
+                    if (library.getType() == UserLibraryType.SUBSCRIBED) {
+                        library.setType(UserLibraryType.PURCHASED);
+                    }
+                    return library.getBook().getId();
+                })
+                .collect(Collectors.toSet());
+
+        userLibraries.removeIf(ul -> existingBookIds.contains(ul.getBook().getId()));
+        userLibraryRepository.saveAll(userLibraries);
+    }
+
+    private void handleSubscriptionOrder(Order order, OrderDetail orderDetail) {
+        SubscriptionPlan plan = orderDetail.getSubscriptionPlan();
+        Subscription subscription = Subscription.builder()
+                .user(order.getUser())
+                .startDate(LocalDate.now())
+                .endDate(LocalDate.now().plusMonths(plan.getDuration()))
+                .build();
+        subscriptionRepository.save(subscription);
+
+        subscriptionAllocationRepository.saveAll(allocateSubscription(
+                subscription,
+                subscription.getStartDate(),
+                subscription.getEndDate(),
+                order.getTotalAmount()));
+    }
+
+    private List<SubscriptionAllocation> allocateSubscription(
+            Subscription subscription,
+            LocalDate startDate,
+            LocalDate endDate,
+            BigDecimal totalAmount) {
+        long totalDays = ChronoUnit.DAYS.between(startDate, endDate);
+        List<SubscriptionAllocation> allocations = new ArrayList<>();
+
+        LocalDate current = startDate;
+        BigDecimal allocatedAmount = BigDecimal.ZERO;
+        while (current.isBefore(endDate)) {
+            LocalDate nextMonth = current.withDayOfMonth(1).plusMonths(1);
+            LocalDate sliceEnd = nextMonth.isBefore(endDate) ? nextMonth : endDate;
+            long elapsedDays = ChronoUnit.DAYS.between(startDate, sliceEnd);
+            BigDecimal cumulativeAmount = sliceEnd.equals(endDate)
+                    ? totalAmount
+                    : totalAmount.multiply(BigDecimal.valueOf(elapsedDays)
+                            .divide(BigDecimal.valueOf(totalDays), 2, RoundingMode.HALF_UP));
+            BigDecimal sliceAmount = cumulativeAmount.subtract(allocatedAmount);
+
+            allocations.add(SubscriptionAllocation.builder()
+                    .subscription(subscription)
+                    .month(current.getMonthValue())
+                    .year(current.getYear())
+                    .grossAmount(sliceAmount)
+                    .startAllocateDate(current)
+                    .endAllocateDate(sliceEnd)
+                    .build());
+
+            allocatedAmount = cumulativeAmount;
+            current = sliceEnd;
+        }
+        return allocations;
+    }
+
+    @Override
+    public StripeCheckoutResponse createSubscriptionCheckout(
+            Integer userId, SubscriptionPlanRequest request) {
+        StripeSessionInput input = transactionTemplate.execute(status -> {
+            if (subscriptionRepository.existsByUserIdAndStatus(userId, SubscriptionStatus.ACTIVE)) {
+                throw new BadRequestException("Bạn đã có gói đã đăng ký");
+            }
+
+            Order existingOrder =
+                    orderRepository.findSubOrderWithOrderDetailByUserId(userId).orElse(null);
+            if (existingOrder == null) {
+                SubscriptionPlan plan = subscriptionPlanRepository
+                        .findByIdAndActiveTrue(request.planId())
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException("Không tìm thấy subscription plan"));
+                Order order = Order.builder()
+                        .user(userRepository.getReferenceById(userId))
+                        .totalAmount(plan.getPrice())
+                        .build();
+                orderRepository.save(order);
+
+                OrderDetail detail = OrderDetail.builder()
+                        .order(order)
+                        .subscriptionPlan(plan)
+                        .price(plan.getPrice())
+                        .type(OrderDetailType.SUBSCRIPTION)
+                        .build();
+                orderDetailRepository.save(detail);
+                return new StripeSessionInput(
+                        order.getId(),
+                        List.of(new StripeLineItem(plan.getId(), plan.getName(), plan.getPrice())));
+            } else {
+                OrderDetail detail = existingOrder.getDetails().stream()
+                        .findFirst()
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException("Không tìm thấy chi tiết đơn hàng"));
+                SubscriptionPlan plan = detail.getSubscriptionPlan();
+                return new StripeSessionInput(
+                        existingOrder.getId(),
+                        List.of(new StripeLineItem(plan.getId(), plan.getName(), plan.getPrice())));
+            }
+        });
+        Session session = paymentService.createCheckoutSession(input.orderId(), input.items());
+        return new StripeCheckoutResponse(input.orderId(), session.getUrl());
     }
 }

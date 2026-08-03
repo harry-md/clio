@@ -2,13 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  type ChangeEvent,
-  type SubmitEvent,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { type ChangeEvent, type SubmitEvent, useState } from "react";
 import { Header } from "@/components/Header";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -17,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Api, getApiErrorMessage } from "@/lib/api";
 
-type RegisterForm = {
+interface RegisterForm {
   username: string;
   password: string;
   confirmPassword: string;
@@ -25,7 +19,7 @@ type RegisterForm = {
   lastName: string;
   email: string;
   avatar: File | null;
-};
+}
 
 const initialForm: RegisterForm = {
   username: "",
@@ -80,36 +74,19 @@ const validateForm = (form: RegisterForm) => {
 
 export default function RegisterPage() {
   const router = useRouter();
-  const firstInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState(initialForm);
-  const [avatarPreview, setAvatarPreview] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    firstInputRef.current?.focus();
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (avatarPreview) {
-        URL.revokeObjectURL(avatarPreview);
-      }
-    };
-  }, [avatarPreview]);
 
   const handleAvatar = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null;
 
-    if (avatarPreview) {
-      URL.revokeObjectURL(avatarPreview);
-    }
-
-    setForm((current) => ({ ...current, avatar: file }));
-    setAvatarPreview(file ? URL.createObjectURL(file) : "");
+    setForm((current) => ({
+      ...current,
+      avatar: file,
+    }));
   };
-
   const handleSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
@@ -120,9 +97,8 @@ export default function RegisterPage() {
       return;
     }
 
-    setLoading(true);
-
     try {
+      setLoading(true);
       const payload = new FormData();
 
       payload.append("username", form.username.trim());
@@ -153,7 +129,7 @@ export default function RegisterPage() {
       <div className="mx-auto max-w-2xl px-5 py-14 lg:py-20">
         <section>
           <h2 className="font-serif text-5xl font-semibold text-foreground">
-            Tạo tài khoản
+            Đăng ký
           </h2>
 
           <form
@@ -164,7 +140,6 @@ export default function RegisterPage() {
               <FieldLabel htmlFor="lastName">Họ</FieldLabel>
 
               <Input
-                ref={firstInputRef}
                 id="lastName"
                 name="lastName"
                 required
@@ -281,29 +256,41 @@ export default function RegisterPage() {
             </Field>
 
             <Field className="sm:col-span-2">
-              <FieldLabel htmlFor="avatar">Ảnh đại diện</FieldLabel>
+              <FieldLabel htmlFor="avatar">Avatar</FieldLabel>
 
               <label
                 htmlFor="avatar"
                 className="flex min-h-24 cursor-pointer items-center gap-5 border border-dashed border-border-strong bg-card p-4 transition hover:border-ring"
               >
-                <div
-                  className="grid size-16 shrink-0 place-items-center border border-input bg-secondary bg-cover bg-center text-2xl text-muted-foreground"
-                  style={
-                    avatarPreview
-                      ? { backgroundImage: `url("${avatarPreview}")` }
-                      : undefined
-                  }
-                >
-                  {!avatarPreview && "＋"}
+                <div className="grid size-16 shrink-0 place-items-center border border-input bg-secondary text-2xl text-muted-foreground">
+                  <svg
+                    width="20px"
+                    height="20px"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M4 12H20M12 4V20"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="square"
+                      strokeLinejoin="inherit"
+                    />
+                  </svg>
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm font-semibold text-secondary-foreground">
                     Chọn ảnh
                   </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    PNG, JPEG hoặc WebP, tối đa 10 MB
+
+                  <p
+                    className="mt-1 truncate text-sm text-muted-foreground"
+                    title={form.avatar?.name}
+                  >
+                    {form.avatar?.name ?? "Chưa chọn ảnh"}
                   </p>
                 </div>
               </label>

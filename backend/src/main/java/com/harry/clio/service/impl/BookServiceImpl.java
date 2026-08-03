@@ -1,12 +1,10 @@
 package com.harry.clio.service.impl;
 
-import com.harry.clio.dto.book.BookDetailResponse;
-import com.harry.clio.dto.book.BookFilterRequest;
-import com.harry.clio.dto.book.BookListResponse;
-import com.harry.clio.dto.book.CreateBookMetadataRequest;
+import com.harry.clio.dto.book.*;
 import com.harry.clio.entity.*;
 import com.harry.clio.exception.BadRequestException;
 import com.harry.clio.exception.ResourceNotFoundException;
+import com.harry.clio.mapper.BookAuthorMapper;
 import com.harry.clio.mapper.BookInfoMapper;
 import com.harry.clio.mapper.BookMapper;
 import com.harry.clio.repository.*;
@@ -41,12 +39,13 @@ public class BookServiceImpl implements BookService {
     private final BookMapper bookMapper;
     private final BookInfoMapper bookInfoMapper;
     private final AuthorRepository authorRepository;
+    private final BookAuthorMapper bookAuthorMapper;
     private final CategoryRepository categoryRepository;
     private final PublisherRepository publisherRepository;
     private final R2Service r2Service;
     private final BookProcessingQueue bookProcessingQueue;
 
-    private record CreatedBook(Integer bookId, BookDetailResponse response) {}
+    private record CreatedBook(int bookId, BookDetailResponse response) {}
 
     @Override
     public BookDetailResponse uploadBook(
@@ -65,7 +64,7 @@ public class BookServiceImpl implements BookService {
             savedBook = transactionTemplate.execute(status -> {
                 Set<Category> categories =
                         new HashSet<>(categoryRepository.findAllById(request.categoryIds()));
-                List<BookAuthorJson> authorSnapshots = buildAuthorSnapshot(request.authors());
+                List<BookAuthorResponse> authorSnapshots = buildAuthorSnapshot(request.authors());
 
                 Book book = bookRepository.save(bookMapper.toEntity(
                         request,
@@ -95,22 +94,21 @@ public class BookServiceImpl implements BookService {
         return savedBook.response();
     }
 
-    private List<BookAuthorJson> buildAuthorSnapshot(List<BookAuthorJson> request) {
+    private List<BookAuthorResponse> buildAuthorSnapshot(List<BookAuthorResponse> request) {
         Set<Integer> authorIds =
-                request.stream().map(BookAuthorJson::authorId).collect(Collectors.toSet());
+                request.stream().map(BookAuthorResponse::authorId).collect(Collectors.toSet());
         Map<Integer, Author> authors = authorRepository.findAllById(authorIds).stream()
                 .collect(Collectors.toMap(Author::getId, author -> author));
         return request.stream()
                 .map(authorJson -> {
                     Author author = authors.get(authorJson.authorId());
                     if (author == null) throw new BadRequestException("Tác giả không hợp lệ");
-                    return new BookAuthorJson(
-                            author.getId(), author.getFullName(), authorJson.role());
+                    return bookAuthorMapper.toResponse(author, authorJson.role());
                 })
                 .toList();
     }
 
-    private List<BookAuthor> buildBookAuthors(Book book, List<BookAuthorJson> authorSnapshots) {
+    private List<BookAuthor> buildBookAuthors(Book book, List<BookAuthorResponse> authorSnapshots) {
         return authorSnapshots.stream()
                 .map(snapshot -> BookAuthor.builder()
                         .book(book)
@@ -145,9 +143,9 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public BookDetailResponse getBookDetail(Integer bookId) {
+    public BookDetailResponse getBookDetail(int bookId) {
         Book book = bookRepository
-                .findWithDetailById(bookId)
+                .findWithCategoryById(bookId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sách"));
         BookInfo bookInfo = bookInfoRepository
                 .findById(book.getId())

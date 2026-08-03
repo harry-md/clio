@@ -11,5 +11,6 @@ public record UserResponse(
         String email,
         String avatar,
         UserRole role,
+        boolean isSubscribed,
         Instant createdAt,
         Instant updatedAt) {}

@@ -19,13 +19,13 @@ import java.util.Date;
 @Component
 public class JwtUtil {
     @Value("${jwt.secret}")
-    private String JWT_SECRET;
+    private String jwtSecret;
 
     @Value("${jwt.expiration}")
-    private long JWT_EXPIRATION;
+    private long jwtExpiration;
 
     public String generateToken(CustomUser principal) throws JOSEException {
-        JWSSigner signer = new MACSigner(JWT_SECRET);
+        JWSSigner signer = new MACSigner(jwtSecret);
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .subject(principal.getUsername())
                 .claim("userId", principal.getId())
@@ -33,7 +33,7 @@ public class JwtUtil {
                 .claim("firstName", principal.getFirstName())
                 .claim("lastName", principal.getLastName())
                 .claim("avatar", principal.getAvatar())
-                .expirationTime(new Date(System.currentTimeMillis() + JWT_EXPIRATION))
+                .expirationTime(new Date(System.currentTimeMillis() + jwtExpiration))
                 .issueTime(new Date())
                 .build();
 
@@ -44,7 +44,7 @@ public class JwtUtil {
 
     private JWTClaimsSet validateToken(String token) throws Exception {
         SignedJWT signedJWT = SignedJWT.parse(token);
-        JWSVerifier verifier = new MACVerifier(JWT_SECRET);
+        JWSVerifier verifier = new MACVerifier(jwtSecret);
 
         if (signedJWT.verify(verifier)) {
             Date expiration = signedJWT.getJWTClaimsSet().getExpirationTime();

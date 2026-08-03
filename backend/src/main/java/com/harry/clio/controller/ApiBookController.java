@@ -1,10 +1,7 @@
 package com.harry.clio.controller;
 
 import com.harry.clio.dto.CustomUser;
-import com.harry.clio.dto.book.BookDetailResponse;
-import com.harry.clio.dto.book.BookFilterRequest;
-import com.harry.clio.dto.book.BookListResponse;
-import com.harry.clio.dto.book.CreateBookMetadataRequest;
+import com.harry.clio.dto.book.*;
 import com.harry.clio.service.BookService;
 
 import jakarta.validation.Valid;
@@ -48,7 +45,7 @@ public class ApiBookController {
     }
 
     @GetMapping("/{bookId}")
-    public ResponseEntity<BookDetailResponse> getBookDetail(@PathVariable Integer bookId) {
+    public ResponseEntity<BookDetailResponse> retrieve(@PathVariable Integer bookId) {
         return ResponseEntity.ok(bookService.getBookDetail(bookId));
     }
 }

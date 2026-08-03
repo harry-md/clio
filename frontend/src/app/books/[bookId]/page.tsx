@@ -1,6 +1,7 @@
 "use client";
 
-import { ArrowLeftIcon } from "lucide-react";
+import { ArrowLeftIcon, LibraryIcon, ShoppingCartIcon } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -9,17 +10,17 @@ import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { Rating } from "@/components/Rating";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { useAuth } from "@/context/AuthContext";
+import { useCart } from "@/context/CartContext";
 import { Api, getApiErrorMessage } from "@/lib/api";
 import type { BookDetail } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const priceFormatter = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "VND",
   maximumFractionDigits: 0,
 });
 
-const languageLabels: Record<string, string> = {
+const langMap = {
   VI: "Tiếng Việt",
   EN: "Tiếng Anh",
   FR: "Tiếng Pháp",
@@ -29,7 +30,7 @@ const languageLabels: Record<string, string> = {
   ZH: "Tiếng Trung",
   KO: "Tiếng Hàn",
   ES: "Tiếng Tây Ban Nha",
-};
+} as const;
 
 const formatFileSize = (bytes: number) => {
   if (!bytes) {
@@ -47,9 +48,13 @@ export default function BookDetailPage() {
   const params = useParams<{ bookId: string }>();
   const bookId = params.bookId;
 
+  const { user } = useAuth();
+  const { addBook, hasBook } = useCart();
   const [book, setBook] = useState<BookDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const bookInCart = book ? hasBook(book.id) : false;
 
   useEffect(() => {
     if (!bookId) {
@@ -79,10 +84,7 @@ export default function BookDetailPage() {
     ? [
         {
           label: "Ngôn ngữ",
-          value:
-            languageLabels[book.bookInfo?.language] ??
-            book.bookInfo?.language ??
-            "Chưa cập nhật",
+          value: langMap[book.bookInfo.language],
         },
         {
           label: "ISBN",
@@ -133,16 +135,24 @@ export default function BookDetailPage() {
         {!loading && book && (
           <>
             <section className="mt-10 grid gap-10 border-b border-border pb-14 lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-16">
-              <div
-                className="relative aspect-2/3 w-full max-w-75 border border-border-strong bg-muted bg-cover bg-center"
-                style={{
-                  backgroundImage: book.thumbnail
-                    ? `url("${book.thumbnail}")`
-                    : "linear-gradient(145deg, var(--cover-from), var(--cover-to))",
-                }}
-              >
-                {!book.thumbnail && (
-                  <div className="flex h-full flex-col justify-between p-7">
+              <div className="relative aspect-2/3 w-full max-w-75 overflow-hidden border border-border-strong bg-muted">
+                {book.thumbnail ? (
+                  <Image
+                    src={book.thumbnail}
+                    alt={`Sách ${book.title}`}
+                    loading="eager"
+                    fill
+                    sizes="300px"
+                    className="object-cover"
+                  />
+                ) : (
+                  <div
+                    className="flex h-full flex-col justify-between p-7"
+                    style={{
+                      background:
+                        "linear-gradient(145deg, var(--cover-from), var(--cover-to))",
+                    }}
+                  >
                     <span className="text-xs uppercase tracking-[0.25em] text-muted-foreground">
                       Clio edition
                     </span>
@@ -161,20 +171,23 @@ export default function BookDetailPage() {
 
                 <div className="flex flex-wrap gap-2 text-lg">
                   {book.authors?.length > 0 ? (
-                    book.authors.map((author) => (
-                      <Link
-                        key={author.authorId}
-                        href={{
-                          pathname: "/search",
-                          query: {
-                            authorId: String(author.authorId),
-                            authorName: author.authorFullname,
-                          },
-                        }}
-                        className="text-link transition hover:text-foreground hover:underline"
-                      >
-                        {author.authorFullname}
-                      </Link>
+                    book.authors.map((author, index) => (
+                      <span className="text-link" key={author.authorId}>
+                        <Link
+                          href={{
+                            pathname: "/search",
+                            query: {
+                              authorId: String(author.authorId),
+                              authorName: author.authorFullname,
+                            },
+                          }}
+                          className="text-link transition hover:text-foreground hover:underline"
+                        >
+                          {author.authorFullname}
+                        </Link>
+
+                        {index < book.authors.length - 1 && ", "}
+                      </span>
                     ))
                   ) : (
                     <span className="text-muted-foreground">
@@ -188,20 +201,34 @@ export default function BookDetailPage() {
                 </div>
 
                 <div className="mt-9 flex flex-wrap items-center gap-4 border-y border-border py-6">
-                  <span className="font-sans text-3xl font-semibold text-price">
-                    {Number(book.price) === 0
-                      ? "Miễn phí"
-                      : priceFormatter.format(Number(book.price))}
+                  <span className="text-3xl font-semibold text-price">
+                    {`${priceFormatter.format(Number(book.price))} VND`}
                   </span>
 
-                  <Button
-                    type="button"
-                    size="lg"
-                    disabled
-                    className="min-w-40 text-xl disabled:opacity-60"
-                  >
-                    Mua sách
-                  </Button>
+                  <div className="flex flex-wrap gap-3">
+                    <Button
+                      type="button"
+                      size="lg"
+                      disabled={bookInCart}
+                      onClick={() => addBook(book)}
+                      className="min-w-52"
+                    >
+                      <ShoppingCartIcon data-icon="inline-start" />
+                      {bookInCart ? "Đã có trong giỏ" : "Thêm vào giỏ"}
+                    </Button>
+
+                    {user?.isSubscribed && (
+                      <Button
+                        type="button"
+                        size="lg"
+                        variant="outline"
+                        className="min-w-48"
+                      >
+                        <LibraryIcon data-icon="inline-start" />
+                        Thêm vào thư viện
+                      </Button>
+                    )}
+                  </div>
                 </div>
 
                 {book.categories?.length > 0 && (
@@ -245,7 +272,7 @@ export default function BookDetailPage() {
               </div>
 
               <aside className="border-t border-border pt-6 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
-                <h3 className="font-sans text-3xl font-semibold text-foreground">
+                <h3 className="text-3xl font-semibold text-foreground">
                   Thông tin sách
                 </h3>
 

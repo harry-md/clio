@@ -27,6 +27,9 @@ public class SubscriptionPlan {
     @Column(nullable = false)
     private Integer duration = 1;
 
+    @Column(nullable = true, length = 500)
+    private String description;
+
     @Column(name = "is_active", nullable = false)
     private boolean active = true;
 }

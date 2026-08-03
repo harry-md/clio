@@ -9,9 +9,7 @@ const STAR_NUMBERS = [1, 2, 3, 4, 5] as const;
 
 export function Rating({ rating, count }: RatingProps): ReactElement {
   if (rating === null || count === 0) {
-    return (
-      <span className="text-sm text-muted-foreground">Chưa có đánh giá</span>
-    );
+    return <span className="text-muted-foreground">Chưa có đánh giá</span>;
   }
 
   const clampedRating = Math.max(0, Math.min(5, rating));

@@ -34,7 +34,6 @@ const getRequestFilters = (filters: SearchFilters): Record<string, string> => {
       params[key] = value;
     }
   }
-
   return params;
 };
 
@@ -71,7 +70,6 @@ export function SearchPageContent() {
 
   const [submittedSort, setSubmittedSort] = useState(sort);
   const [books, setBooks] = useState<Book[]>([]);
-  const [totalElements, setTotalElements] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -153,11 +151,11 @@ export function SearchPageContent() {
 
     const controller = new AbortController();
 
-    const loadBooks = async () => {
-      setLoading(true);
+    const fetchBooks = async () => {
       setError("");
 
       try {
+        setLoading(true);
         const { data } = await Api.get<PageResponse<Book>>("/books", {
           signal: controller.signal,
           params: {
@@ -169,7 +167,6 @@ export function SearchPageContent() {
         });
 
         setBooks(data.content);
-        setTotalElements(data.totalElements);
       } catch (requestError) {
         if (!controller.signal.aborted) {
           setError(
@@ -183,7 +180,7 @@ export function SearchPageContent() {
       }
     };
 
-    void loadBooks();
+    void fetchBooks();
 
     return () => {
       controller.abort();
@@ -214,7 +211,7 @@ export function SearchPageContent() {
     setError("");
     setLoading(true);
 
-    router.replace("/search?sort=createdAt%2Cdesc", {
+    router.replace("/search", {
       scroll: false,
     });
   };
@@ -235,7 +232,7 @@ export function SearchPageContent() {
       {loading && <LoadingOverlay />}
 
       <div className="border-b border-border pb-8">
-        <h1 className="mt-2 font-serif text-5xl font-bold text-foreground">
+        <h1 className="font-serif text-5xl font-bold text-foreground">
           Tìm kiếm sách
         </h1>
       </div>
@@ -254,15 +251,9 @@ export function SearchPageContent() {
       />
 
       <div className="flex items-center justify-between py-7">
-        <h2 className="font-sans text-2xl font-semibold text-foreground">
+        <h2 className="text-3xl font-semibold text-foreground">
           Kết quả tìm kiếm
         </h2>
-
-        {!loading && !error && (
-          <span className="text-sm text-subtle-foreground">
-            {totalElements} sách
-          </span>
-        )}
       </div>
 
       {error && (

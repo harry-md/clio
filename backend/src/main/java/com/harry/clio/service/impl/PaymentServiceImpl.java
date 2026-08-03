@@ -1,6 +1,6 @@
 package com.harry.clio.service.impl;
 
-import com.harry.clio.dto.order.StripeBookItem;
+import com.harry.clio.dto.order.StripeLineItem;
 import com.harry.clio.exception.InvalidWebhookException;
 import com.harry.clio.exception.PaymentException;
 import com.harry.clio.service.PaymentService;
@@ -19,49 +19,46 @@ import java.util.List;
 
 @Service
 public class PaymentServiceImpl implements PaymentService {
-    @Value("${stripe.public_key}")
-    private String STRIPE_PUBLIC_KEY;
+    @Value("${stripe.secret-key}")
+    private String stripeSecretKey;
 
-    @Value("${stripe.secret_key}")
-    private String STRIPE_SECRET_KEY;
+    @Value("${stripe.webhook-secret}")
+    private String stripeWebhookSecret;
 
-    @Value("${stripe.webhook_secret}")
-    private String STRIPE_WEBHOOK_SECRET;
+    @Value("${stripe.success-url}")
+    private String stripeSuccessUrl;
 
-    @Value("${stripe.success_url}")
-    private String STRIPE_SUCCESS_URL;
-
-    @Value("${stripe.cancel_url}")
-    private String STRIPE_CANCEL_URL;
+    @Value("${stripe.cancel-url}")
+    private String stripeCancelUrl;
 
     @Override
-    public Session createCheckoutSession(Integer orderId, List<StripeBookItem> items) {
+    public Session createCheckoutSession(Integer orderId, List<StripeLineItem> items) {
         try {
             List<SessionCreateParams.LineItem> lineItems =
                     items.stream().map(this::createLineItem).toList();
             SessionCreateParams params = SessionCreateParams.builder()
                     .setMode(SessionCreateParams.Mode.PAYMENT)
-                    .setSuccessUrl(STRIPE_SUCCESS_URL)
-                    .setCancelUrl(STRIPE_CANCEL_URL)
+                    .setSuccessUrl(stripeSuccessUrl)
+                    .setCancelUrl(stripeCancelUrl)
                     .setClientReferenceId(orderId.toString())
                     .putMetadata("orderId", orderId.toString())
                     .addAllLineItem(lineItems)
                     .build();
             RequestOptions requestOptions = RequestOptions.builder()
-                    .setApiKey(STRIPE_SECRET_KEY)
+                    .setApiKey(stripeSecretKey)
                     .setIdempotencyKey(orderId.toString())
                     .build();
             return Session.create(params, requestOptions);
         } catch (StripeException ex) {
-            throw new PaymentException("Không thể tạo phiên thanh toán!", ex);
+            throw new PaymentException("Không thể tạo phiên thanh toán", ex);
         }
     }
 
-    private SessionCreateParams.LineItem createLineItem(StripeBookItem item) {
+    private SessionCreateParams.LineItem createLineItem(StripeLineItem item) {
         SessionCreateParams.LineItem.PriceData.ProductData productData =
                 SessionCreateParams.LineItem.PriceData.ProductData.builder()
-                        .setName(item.bookTitle())
-                        .putMetadata("bookId", item.bookId().toString())
+                        .setName(item.itemName())
+                        .putMetadata("itemId", item.itemId().toString())
                         .build();
         SessionCreateParams.LineItem.PriceData priceData =
                 SessionCreateParams.LineItem.PriceData.builder()
@@ -78,9 +75,9 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public Event constructWebhookEvent(String sigHeader, String payload) {
         try {
-            return Webhook.constructEvent(payload, sigHeader, STRIPE_WEBHOOK_SECRET);
+            return Webhook.constructEvent(payload, sigHeader, stripeWebhookSecret);
         } catch (SignatureVerificationException ex) {
-            throw new InvalidWebhookException("Webhook không hợp lệ", ex);
+            throw new InvalidWebhookException("Webhook không hợp lệ");
         }
     }
 }

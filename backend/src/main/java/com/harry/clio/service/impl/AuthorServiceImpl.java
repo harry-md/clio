@@ -24,7 +24,7 @@ public class AuthorServiceImpl implements AuthorService {
 
     @Override
     public AuthorResponse getAuthorById(int authorId) {
-        return authorMapper.toDto(getAuthorOrThrow(authorId));
+        return authorMapper.toResponse(getAuthorOrThrow(authorId));
     }
 
     private Author getAuthorOrThrow(int authorId) {
@@ -45,7 +45,7 @@ public class AuthorServiceImpl implements AuthorService {
             author.setAvatar(avatarUrl);
         }
         try {
-            return authorMapper.toDto(authorRepository.save(author));
+            return authorMapper.toResponse(authorRepository.save(author));
         } catch (RuntimeException ex) {
             if (avatarUrl != null) {
                 cloudinaryService.delete(avatarUrl);
@@ -69,7 +69,7 @@ public class AuthorServiceImpl implements AuthorService {
 
         AuthorResponse res = null;
         try {
-            res = authorMapper.toDto(authorRepository.save(author));
+            res = authorMapper.toResponse(authorRepository.save(author));
         } catch (RuntimeException ex) {
             cloudinaryService.delete(newAvatarUrl);
             throw ex;

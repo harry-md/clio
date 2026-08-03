@@ -1,10 +1,10 @@
 import { cn } from "@/lib/utils";
 
-type EmptyStateProps = {
+interface EmptyStateProps {
   title: string;
   description?: string;
   className?: string;
-};
+}
 
 export function EmptyState({ title, description, className }: EmptyStateProps) {
   return (

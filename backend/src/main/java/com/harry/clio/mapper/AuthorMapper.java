@@ -11,7 +11,7 @@ import org.mapstruct.*;
 public interface AuthorMapper {
     Author toEntity(CreateAuthorRequest dto);
 
-    AuthorResponse toDto(Author entity);
+    AuthorResponse toResponse(Author entity);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateEntity(UpdateAuthorRequest dto, @MappingTarget Author entity);

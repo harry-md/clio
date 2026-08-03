@@ -1,9 +1,6 @@
 package com.harry.clio.service;
 
-import com.harry.clio.dto.book.BookDetailResponse;
-import com.harry.clio.dto.book.BookFilterRequest;
-import com.harry.clio.dto.book.BookListResponse;
-import com.harry.clio.dto.book.CreateBookMetadataRequest;
+import com.harry.clio.dto.book.*;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,5 +12,5 @@ public interface BookService {
 
     Page<BookListResponse> getAllBooks(BookFilterRequest request, Pageable pageable);
 
-    BookDetailResponse getBookDetail(Integer bookId);
+    BookDetailResponse getBookDetail(int bookId);
 }
