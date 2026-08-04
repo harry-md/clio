@@ -19,14 +19,14 @@ export const metadata: Metadata = {
     default: "Clio",
     template: "%s | Clio",
   },
-  description: "Nền tảng đọc và phân phối ebook Clio.",
+  description: "Nền tảng đọc và phân phối ebook.",
 };
 
-export default function RootLayout({
+const RootLayout = ({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) {
+}>) => {
   return (
     <html
       lang="vi"
@@ -39,4 +39,5 @@ export default function RootLayout({
       </body>
     </html>
   );
-}
+};
+export default RootLayout;

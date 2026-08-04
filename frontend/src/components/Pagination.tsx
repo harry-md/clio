@@ -1,13 +1,32 @@
-"use client";
-
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type PaginationProps = {
   currentPage: number;
   totalPages: number;
-  disabled?: boolean;
-  onPageChangeAction: (page: number) => void;
+  filterKey: string;
+  toSection?: string;
+};
+
+const buildPaginationUrl = (
+  filterKey: string,
+  page: number,
+  toSection: string = "book-list",
+) => {
+  const params = new URLSearchParams();
+
+  if (filterKey !== "newest") {
+    params.set("filter", filterKey);
+  }
+
+  if (page > 0) {
+    params.set("page", String(page));
+  }
+
+  const query = params.toString();
+
+  return `/${query ? `?${query}` : ""}#${toSection}`;
 };
 
 const buildPageItems = (
@@ -39,12 +58,12 @@ const buildPageItems = (
   return items;
 };
 
-export function Pagination({
+export const Pagination = ({
   currentPage,
   totalPages,
-  disabled = false,
-  onPageChangeAction,
-}: PaginationProps) {
+  filterKey,
+  toSection,
+}: PaginationProps) => {
   if (totalPages <= 1) {
     return null;
   }
@@ -56,14 +75,21 @@ export function Pagination({
       aria-label="Phân trang"
       className="mt-12 flex flex-wrap items-center justify-center gap-2 border-t border-border pt-8"
     >
-      <Button
-        type="button"
-        variant="outline"
-        disabled={disabled || currentPage === 0}
-        onClick={() => onPageChangeAction(currentPage - 1)}
+      <Link
+        href={buildPaginationUrl(
+          filterKey,
+          Math.max(0, currentPage - 1),
+          toSection,
+        )}
+        aria-disabled={currentPage === 0}
+        tabIndex={currentPage === 0 ? -1 : undefined}
+        className={cn(
+          buttonVariants({ variant: "outline" }),
+          currentPage === 0 && "pointer-events-none opacity-50",
+        )}
       >
         Trước
-      </Button>
+      </Link>
 
       {pageItems.map((item) => {
         if (typeof item === "string") {
@@ -81,33 +107,39 @@ export function Pagination({
         const isActive = item === currentPage;
 
         return (
-          <Button
+          <Link
             key={item}
-            type="button"
-            size="icon"
-            variant={isActive ? "secondary" : "outline"}
-            disabled={disabled}
+            href={buildPaginationUrl(filterKey, item)}
             aria-label={`Trang ${item + 1}`}
             aria-current={isActive ? "page" : undefined}
-            onClick={() => onPageChangeAction(item)}
             className={cn(
+              buttonVariants({
+                variant: isActive ? "secondary" : "outline",
+                size: "icon",
+              }),
               isActive &&
                 "border-ring bg-accent text-accent-foreground hover:bg-accent",
             )}
           >
             {item + 1}
-          </Button>
+          </Link>
         );
       })}
 
-      <Button
-        type="button"
-        variant="outline"
-        disabled={disabled || currentPage >= totalPages - 1}
-        onClick={() => onPageChangeAction(currentPage + 1)}
+      <Link
+        href={buildPaginationUrl(
+          filterKey,
+          Math.min(totalPages - 1, currentPage + 1),
+        )}
+        aria-disabled={currentPage >= totalPages - 1}
+        tabIndex={currentPage >= totalPages - 1 ? -1 : undefined}
+        className={cn(
+          buttonVariants({ variant: "outline" }),
+          currentPage >= totalPages - 1 && "pointer-events-none opacity-50",
+        )}
       >
         Sau
-      </Button>
+      </Link>
     </nav>
   );
-}
+};

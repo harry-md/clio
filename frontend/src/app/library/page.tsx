@@ -18,11 +18,11 @@ import { downloadBookForOffline, getDownloadedBookIds } from "@/lib/offline";
 import type { LibraryItem, PageResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-const libraryTypeMap = {
+const libraryType: Record<string, string> = {
   PURCHASED: "Đã mua",
   SUBSCRIBED: "Gói đọc",
   UPLOADED: "Đã tải lên",
-} as const;
+};
 
 interface LibraryCardProps {
   library: LibraryItem;
@@ -32,13 +32,13 @@ interface LibraryCardProps {
   onDownloadAction: (bookId: number) => void;
 }
 
-function LibraryCard({
+const LibraryCard = ({
   library,
   downloaded,
   downloading,
   downloadDisabled,
   onDownloadAction,
-}: LibraryCardProps) {
+}: LibraryCardProps) => {
   const authorNames =
     library.authors?.map((author) => author.authorFullname).join(", ") ||
     "Chưa cập nhật tác giả";
@@ -71,9 +71,7 @@ function LibraryCard({
                   "linear-gradient(145deg, var(--cover-from), var(--cover-to))",
               }}
             >
-              <span className="text-xs uppercase tracking-[0.25em] text-muted-foreground">
-                Clio edition
-              </span>
+              <span className="text-xs uppercase tracking-[0.25em] text-muted-foreground"></span>
 
               <p className="font-serif text-2xl leading-tight text-foreground">
                 {library.title}
@@ -86,7 +84,7 @@ function LibraryCard({
           {!downloaded && (
             <div className="absolute inset-0 flex items-end bg-background/35 p-3">
               <span className="border border-border-strong bg-overlay/90 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                {libraryTypeMap[library.type]}
+                {libraryType[library.type]}
               </span>
             </div>
           )}
@@ -127,9 +125,9 @@ function LibraryCard({
       </div>
     </article>
   );
-}
+};
 
-export default function LibraryPage() {
+const LibraryPage = () => {
   const router = useRouter();
   const { user, initialized } = useAuth();
 
@@ -213,10 +211,10 @@ export default function LibraryPage() {
         setCurrentPage(data.page.number);
         setTotalPages(data.page.totalPages);
         setTotalElements(data.page.totalElements);
-      } catch (requestError) {
+      } catch (error) {
         if (!controller.signal.aborted) {
           setError(
-            getApiErrorMessage(requestError, "Không thể tải thư viện của bạn."),
+            getApiErrorMessage(error, "Không thể tải thư viện của bạn."),
           );
         }
       } finally {
@@ -249,13 +247,11 @@ export default function LibraryPage() {
         next.add(bookId);
         return next;
       });
-    } catch (requestError) {
+    } catch (error) {
       setError(
         getApiErrorMessage(
-          requestError,
-          requestError instanceof Error
-            ? requestError.message
-            : "Không thể tải sách.",
+          error,
+          error instanceof Error ? error.message : "Không thể tải sách.",
         ),
       );
     } finally {
@@ -334,4 +330,5 @@ export default function LibraryPage() {
       </section>
     </main>
   );
-}
+};
+export default LibraryPage;

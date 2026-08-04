@@ -1,26 +1,15 @@
-"use client";
-
-import { ArrowLeftIcon, LibraryIcon, ShoppingCartIcon } from "lucide-react";
+import { ArrowLeftIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { BookActions } from "@/components/BookActions";
 import { Header } from "@/components/Header";
-import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { Rating } from "@/components/Rating";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { useAuth } from "@/context/AuthContext";
-import { useCart } from "@/context/CartContext";
-import { Api, getApiErrorMessage } from "@/lib/api";
+import { buttonVariants } from "@/components/ui/button";
 import type { BookDetail } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-const priceFormatter = new Intl.NumberFormat("en-US", {
-  maximumFractionDigits: 0,
-});
-
-const langMap = {
+const langMap: Record<string, string> = {
   VI: "Tiếng Việt",
   EN: "Tiếng Anh",
   FR: "Tiếng Pháp",
@@ -30,7 +19,17 @@ const langMap = {
   ZH: "Tiếng Trung",
   KO: "Tiếng Hàn",
   ES: "Tiếng Tây Ban Nha",
-} as const;
+};
+
+interface BookDetailPageProps {
+  params: Promise<{
+    bookId: string;
+  }>;
+}
+
+const priceFormatter = new Intl.NumberFormat("en-US", {
+  maximumFractionDigits: 0,
+});
 
 const formatFileSize = (bytes: number) => {
   if (!bytes) {
@@ -44,47 +43,48 @@ const formatFileSize = (bytes: number) => {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
-export default function BookDetailPage() {
-  const params = useParams<{ bookId: string }>();
-  const bookId = params.bookId;
+const fetchBookDetail = async (bookId: string): Promise<BookDetail | null> => {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/books/${bookId}`,
+      {
+        next: { revalidate: 3600 },
+      },
+    );
 
-  const { user } = useAuth();
-  const { addBook, hasBook } = useCart();
-  const [book, setBook] = useState<BookDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  const bookInCart = book ? hasBook(book.id) : false;
-
-  useEffect(() => {
-    if (!bookId) {
-      return;
+    if (res.status === 404) {
+      return null;
     }
 
-    const fetchBookDetail = async () => {
-      try {
-        setLoading(true);
-        setError("");
+    const json = await res.json();
+    return json.data || json;
+  } catch (error) {
+    console.error("Lỗi khi lấy thông tin chi tiết sách:", error);
+    throw new Error("Không thể tải thông tin sách.");
+  }
+};
 
-        const { data } = await Api.get<BookDetail>(`/books/${bookId}`);
-        setBook(data);
-      } catch (requestError) {
-        setError(
-          getApiErrorMessage(requestError, "Không thể tải thông tin sách."),
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
+const BookDetailPage = async ({ params }: BookDetailPageProps) => {
+  const { bookId } = await params;
 
-    void fetchBookDetail();
-  }, [bookId]);
+  let book: BookDetail | null = null;
+  let error = "";
+
+  try {
+    book = await fetchBookDetail(bookId);
+
+    if (!book) {
+      error = "Không tìm thấy sách.";
+    }
+  } catch (requestError: any) {
+    error = requestError.message || "Có lỗi xảy ra!";
+  }
 
   const metadataItems = book
     ? [
         {
           label: "Ngôn ngữ",
-          value: langMap[book.bookInfo.language],
+          value: langMap[book.bookInfo.language] || book.bookInfo.language,
         },
         {
           label: "ISBN",
@@ -122,9 +122,7 @@ export default function BookDetailPage() {
           Quay lại
         </Link>
 
-        {loading && <LoadingOverlay />}
-
-        {!loading && error && (
+        {error && (
           <Alert variant="destructive" className="mt-10">
             <AlertDescription className="text-center text-lg">
               {error}
@@ -132,7 +130,7 @@ export default function BookDetailPage() {
           </Alert>
         )}
 
-        {!loading && book && (
+        {book && (
           <>
             <section className="mt-10 grid gap-10 border-b border-border pb-14 lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-16">
               <div className="relative aspect-2/3 w-full max-w-75 overflow-hidden border border-border-strong bg-muted">
@@ -153,9 +151,7 @@ export default function BookDetailPage() {
                         "linear-gradient(145deg, var(--cover-from), var(--cover-to))",
                     }}
                   >
-                    <span className="text-xs uppercase tracking-[0.25em] text-muted-foreground">
-                      Clio edition
-                    </span>
+                    <span className="text-xs uppercase tracking-[0.25em] text-muted-foreground"></span>
 
                     <h2 className="font-serif text-3xl leading-tight text-foreground">
                       {book.title}
@@ -205,30 +201,7 @@ export default function BookDetailPage() {
                     {`${priceFormatter.format(Number(book.price))} VND`}
                   </span>
 
-                  <div className="flex flex-wrap gap-3">
-                    <Button
-                      type="button"
-                      size="lg"
-                      disabled={bookInCart}
-                      onClick={() => addBook(book)}
-                      className="min-w-52"
-                    >
-                      <ShoppingCartIcon data-icon="inline-start" />
-                      {bookInCart ? "Đã có trong giỏ" : "Thêm vào giỏ"}
-                    </Button>
-
-                    {user?.isSubscribed && (
-                      <Button
-                        type="button"
-                        size="lg"
-                        variant="outline"
-                        className="min-w-48"
-                      >
-                        <LibraryIcon data-icon="inline-start" />
-                        Thêm vào thư viện
-                      </Button>
-                    )}
-                  </div>
+                  <BookActions book={book} />
                 </div>
 
                 {book.categories?.length > 0 && (
@@ -261,7 +234,7 @@ export default function BookDetailPage() {
 
             <section className="grid gap-12 py-14 lg:grid-cols-[minmax(0,1fr)_300px]">
               <div>
-                <h2 className="font-serif text-5xl font-semibold text-foreground">
+                <h2 className="text-5xl font-semibold text-foreground">
                   Giới thiệu
                 </h2>
 
@@ -299,4 +272,5 @@ export default function BookDetailPage() {
       </div>
     </main>
   );
-}
+};
+export default BookDetailPage;

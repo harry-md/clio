@@ -1,114 +1,127 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { BookCard } from "@/components/BookCard";
 import { EmptyState } from "@/components/EmptyState";
 import { Header } from "@/components/Header";
-import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { Pagination } from "@/components/Pagination";
 import { Rating } from "@/components/Rating";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Api, getApiErrorMessage } from "@/lib/api";
+import { buttonVariants } from "@/components/ui/button";
 import type { Book, PageResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const filters = [
   {
+    key: "newest",
     label: "Mới phát hành",
     params: {
       sort: ["createdAt,desc", "id,desc"],
     },
   },
   {
+    key: "popular",
     label: "Phổ biến",
     params: {
       sort: ["ratingCount,desc", "id,desc"],
     },
   },
   {
+    key: "rating",
     label: "Đánh giá cao",
     params: {
       sort: ["rating,desc", "id,desc"],
     },
   },
-];
+] as const;
+
+const getFilter = (filterKey: string | undefined) => {
+  return filters.find((filter) => filter.key === filterKey) ?? filters[0];
+};
+
+const parsePage = (value: string | undefined) => {
+  const page = Number(value);
+
+  if (!Number.isInteger(page) || page < 0) {
+    return 0;
+  }
+
+  return page;
+};
+
+const buildHomeUrl = (filterKey: string, page: number) => {
+  const params = new URLSearchParams();
+
+  if (filterKey !== "newest") {
+    params.set("filter", filterKey);
+  }
+
+  if (page > 0) {
+    params.set("page", String(page));
+  }
+
+  const query = params.toString();
+
+  return `/${query ? `?${query}` : ""}#book-list`;
+};
 
 const priceFormatter = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,
 });
 
-export default function HomePage() {
-  const [books, setBooks] = useState<Book[]>([]);
-  const [activeFilter, setActiveFilter] = useState(0);
-  const [currentPage, setCurrentPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+const fetchBooks = async (
+  page: number,
+  sortParams: readonly string[],
+): Promise<PageResponse<Book>> => {
+  const params = new URLSearchParams();
+  params.append("page", String(page));
+  params.append("size", "12");
 
-  useEffect(() => {
-    const controller = new AbortController();
+  sortParams.forEach((s) => {
+    params.append("sort", s);
+  });
 
-    const fetchBooks = async () => {
-      setError("");
+  const url = `${process.env.NEXT_PUBLIC_API_URL}/books?${params.toString()}`;
+  const res = await fetch(url, {
+    next: { revalidate: 3600 },
+  });
 
-      try {
-        setLoading(true);
-        const selectedFilter = filters[activeFilter];
+  if (!res.ok) {
+    throw new Error(`Lỗi tải danh sách sách: ${res.status}`);
+  }
 
-        const { data } = await Api.get<PageResponse<Book>>("/books", {
-          signal: controller.signal,
-          params: {
-            page: currentPage,
-            size: 12,
-            ...selectedFilter.params,
-          },
-        });
+  const json = await res.json();
+  return json.data || json;
+};
 
-        setBooks(data.content);
-        setCurrentPage(data.page.number);
-        setTotalPages(data.page.totalPages);
-      } catch (requestError) {
-        if (!controller.signal.aborted) {
-          setError(
-            getApiErrorMessage(requestError, "Không thể tải danh sách sách."),
-          );
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setLoading(false);
-        }
-      }
-    };
+const HomePage = async ({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    filter?: string;
+    page?: string;
+  }>;
+}) => {
+  const params = await searchParams;
 
-    void fetchBooks();
+  const selectedFilter = getFilter(params.filter);
+  const currentPage = parsePage(params.page);
 
-    return () => {
-      controller.abort();
-    };
-  }, [activeFilter, currentPage]);
+  let books: Book[] = [];
+  let totalPages = 0;
+  let error = "";
 
-  const handlePageChange = (page: number) => {
-    if (page < 0 || page >= totalPages || page === currentPage) {
-      return;
-    }
-
-    setCurrentPage(page);
-
-    document.getElementById("book-list")?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-  };
+  try {
+    const data = await fetchBooks(currentPage, selectedFilter.params.sort);
+    books = data.content;
+    totalPages = data.page.totalPages;
+  } catch (requestError: any) {
+    error = requestError.message || "Không thể tải danh sách sách.";
+  }
 
   const featuredBook = books[0];
 
   return (
     <main className="min-h-screen bg-background">
-      {loading && <LoadingOverlay />}
-
       <Header />
 
       <section className="relative overflow-hidden border-b border-border bg-card">
@@ -132,7 +145,7 @@ export default function HomePage() {
 
         <div className="relative mx-auto grid min-h-120 max-w-360 items-center gap-12 px-5 py-16 md:grid-cols-[1fr_260px] lg:px-10">
           <div className="max-w-2xl">
-            <h1 className="font-serif text-5xl font-semibold leading-tight text-foreground sm:text-6xl lg:text-7xl">
+            <h1 className="font-serif text-4xl font-semibold leading-tight text-foreground lg:text-6xl">
               {featuredBook?.title ?? "Hệ thống đọc và phân phối ebook"}
             </h1>
 
@@ -148,10 +161,7 @@ export default function HomePage() {
                 <>
                   <Link
                     href={`/books/${featuredBook.id}`}
-                    className={cn(
-                      buttonVariants({ size: "lg" }),
-                      "min-w-36 text-xl",
-                    )}
+                    className={buttonVariants({ size: "lg" })}
                   >
                     Xem chi tiết
                   </Link>
@@ -207,31 +217,29 @@ export default function HomePage() {
         className="mx-auto max-w-360 scroll-mt-20 px-5 py-14 lg:px-10 lg:py-20"
       >
         <div className="flex flex-col justify-between gap-6 border-b border-border pb-7 md:flex-row md:items-end">
-          <h2 className="mt-2 text-5xl font-semibold text-foreground">
-            Khám phá thư viện
+          <h2 className="mt-2 text-3xl font-semibold text-foreground">
+            Khám phá sách
           </h2>
 
           <div className="flex flex-wrap gap-2">
-            {filters.map((filter, index) => {
-              const isActive = activeFilter === index;
+            {filters.map((filter) => {
+              const isActive = filter.key === selectedFilter.key;
 
               return (
-                <Button
-                  key={filter.label}
-                  type="button"
-                  variant={isActive ? "secondary" : "outline"}
-                  aria-pressed={isActive}
-                  onClick={() => {
-                    setActiveFilter(index);
-                    setCurrentPage(0);
-                  }}
+                <Link
+                  key={filter.key}
+                  href={buildHomeUrl(filter.key, 0)}
                   className={cn(
+                    buttonVariants({
+                      variant: isActive ? "secondary" : "outline",
+                    }),
                     isActive &&
                       "border-ring bg-accent text-accent-foreground hover:bg-accent",
                   )}
+                  aria-current={isActive ? "page" : undefined}
                 >
                   {filter.label}
-                </Button>
+                </Link>
               );
             })}
           </div>
@@ -249,7 +257,7 @@ export default function HomePage() {
               <BookCard key={book.id} book={book} />
             ))}
           </div>
-        ) : !loading && !error ? (
+        ) : !error ? (
           <EmptyState
             className="mt-8"
             title="Chưa tìm thấy sách phù hợp"
@@ -261,8 +269,7 @@ export default function HomePage() {
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
-            disabled={loading}
-            onPageChangeAction={handlePageChange}
+            filterKey={selectedFilter.key}
           />
         )}
       </section>
@@ -275,4 +282,5 @@ export default function HomePage() {
       </footer>
     </main>
   );
-}
+};
+export default HomePage;

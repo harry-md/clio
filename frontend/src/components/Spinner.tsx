@@ -19,7 +19,7 @@ const spokes = [
   { angle: 330, opacity: 0.12 },
 ] as const;
 
-export function Spinner({ className }: SpinnerProps) {
+export const Spinner = ({ className }: SpinnerProps) => {
   return (
     <output aria-label="Đang tải" className="inline-flex">
       <svg
@@ -47,4 +47,4 @@ export function Spinner({ className }: SpinnerProps) {
       </svg>
     </output>
   );
-}
+};

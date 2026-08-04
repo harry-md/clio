@@ -7,7 +7,7 @@ type RatingProps = {
 
 const STAR_NUMBERS = [1, 2, 3, 4, 5] as const;
 
-export function Rating({ rating, count }: RatingProps): ReactElement {
+export const Rating = ({ rating, count }: RatingProps): ReactElement => {
   if (rating === null || count === 0) {
     return <span className="text-muted-foreground">Chưa có đánh giá</span>;
   }
@@ -80,4 +80,4 @@ export function Rating({ rating, count }: RatingProps): ReactElement {
       </span>
     </div>
   );
-}
+};
