@@ -1,4 +1,5 @@
 import { ArrowLeftIcon } from "lucide-react";
+import { cacheLife } from "next/cache";
 import Image from "next/image";
 import Link from "next/link";
 import { BookActions } from "@/components/BookActions";
@@ -44,24 +45,20 @@ const formatFileSize = (bytes: number) => {
 };
 
 const fetchBookDetail = async (bookId: string): Promise<BookDetail | null> => {
-  try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/books/${bookId}`,
-      {
-        next: { revalidate: 3600 },
-      },
-    );
+  "use cache";
+  cacheLife({ revalidate: 300 });
 
-    if (res.status === 404) {
-      return null;
-    }
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/books/${bookId}`);
 
-    const json = await res.json();
-    return json.data || json;
-  } catch (error) {
-    console.error("Lỗi khi lấy thông tin chi tiết sách:", error);
+  if (res.status === 404) {
+    return null;
+  }
+  if (!res.ok) {
     throw new Error("Không thể tải thông tin sách.");
   }
+
+  const json = await res.json();
+  return json.data ?? json;
 };
 
 const BookDetailPage = async ({ params }: BookDetailPageProps) => {
@@ -76,8 +73,10 @@ const BookDetailPage = async ({ params }: BookDetailPageProps) => {
     if (!book) {
       error = "Không tìm thấy sách.";
     }
-  } catch (requestError: any) {
-    error = requestError.message || "Có lỗi xảy ra!";
+  } catch (requestError: unknown) {
+    if (requestError instanceof Error) {
+      error = requestError.message ?? "Có lỗi xảy ra!";
+    }
   }
 
   const metadataItems = book

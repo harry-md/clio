@@ -1,3 +1,4 @@
+import { cacheLife } from "next/cache";
 import { BookCard } from "@/components/BookCard";
 import { EmptyState } from "@/components/EmptyState";
 import {
@@ -5,7 +6,6 @@ import {
   SearchFiltersForm,
 } from "@/components/SearchFiltersForm";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Api, getApiErrorMessage } from "@/lib/api";
 import type { Book, PageResponse } from "@/lib/types";
 
 type SearchParams = Record<string, string | string[] | undefined>;
@@ -51,8 +51,30 @@ const isInvalidRange = (from: string, to: string) => {
   if (from === "" || to === "") {
     return false;
   }
-
   return Number(from) > Number(to);
+};
+
+const fetchSearchBooks = async (
+  filters: Record<string, string>,
+  sort: string,
+): Promise<PageResponse<Book>> => {
+  "use cache";
+  cacheLife({ revalidate: 300 });
+
+  const params = new URLSearchParams(filters);
+  params.append("page", "0");
+  params.append("sort", sort);
+  params.append("sort", "id,desc");
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/books?${params.toString()}`,
+  );
+  if (!res.ok) {
+    throw new Error("Không thể tìm kiếm sách.");
+  }
+
+  const json = await res.json();
+  return json.data ?? json;
 };
 
 export const SearchPageContent = async ({
@@ -76,18 +98,12 @@ export const SearchPageContent = async ({
     error = "Khoảng đánh giá không hợp lệ.";
   } else {
     try {
-      const { data } = await Api.get<PageResponse<Book>>("/books", {
-        params: {
-          ...getRequestFilters(filters),
-          page: 0,
-          size: 24,
-          sort: [sort, "id,desc"],
-        },
-      });
-
+      const data = await fetchSearchBooks(getRequestFilters(filters), sort);
       books = data.content;
-    } catch (requestError) {
-      error = getApiErrorMessage(requestError, "Không thể tìm kiếm sách.");
+    } catch (requestError: unknown) {
+      if (requestError instanceof Error) {
+        error = requestError.message ?? "Có lỗi khi tìm kiếm sách.";
+      }
     }
   }
 

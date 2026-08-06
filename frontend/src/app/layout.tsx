@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
-import { Geist, Lora } from "next/font/google";
+import { Merriweather, Montserrat } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
 
-const geist = Geist({
-  variable: "--font-geist",
-  subsets: ["latin"],
+const merriweather = Merriweather({
+  variable: "--font-merriweather",
+  subsets: ["latin", "vietnamese"],
 });
 
-const lora = Lora({
-  variable: "--font-lora",
+const montserrat = Montserrat({
+  variable: "--font-montserrat",
   subsets: ["latin", "vietnamese"],
 });
 
@@ -19,7 +19,6 @@ export const metadata: Metadata = {
     default: "Clio",
     template: "%s | Clio",
   },
-  description: "Nền tảng đọc và phân phối ebook.",
 };
 
 const RootLayout = ({
@@ -30,7 +29,7 @@ const RootLayout = ({
   return (
     <html
       lang="vi"
-      className={`${geist.variable} ${lora.variable} dark antialiased`}
+      className={`${montserrat.variable} ${merriweather.variable} dark antialiased`}
     >
       <body>
         <AuthProvider>

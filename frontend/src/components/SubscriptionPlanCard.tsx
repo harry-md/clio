@@ -73,8 +73,7 @@ export const SubscriptionPlanCard = ({ plan }: SubscriptionPlanCardProps) => {
     }
   };
 
-  const durationLabel =
-    plan.duration === 1 ? "1 tháng" : `${plan.duration} tháng`;
+  const durationLabel = `${plan.duration} tháng`;
 
   return (
     <article className="grid border border-border-strong bg-card lg:grid-cols-2">

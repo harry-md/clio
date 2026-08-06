@@ -1,6 +1,6 @@
 import { Api } from "@/lib/api";
 
-const DATABASE_NAME = "offline-storage";
+const DATABASE_NAME = "clio-offline";
 const DATABASE_VERSION = 1;
 
 const DEVICE_KEYS_STORE = "device-keys";
@@ -32,7 +32,7 @@ export interface OfflineBookRecord {
 let databasePromise: Promise<IDBDatabase> | null = null;
 let deviceKeyPromise: Promise<DeviceKeyRecord> | null = null;
 
-const requestToPromise = <T>(request: IDBRequest<T>): Promise<T> => {
+function requestToPromise<T>(request: IDBRequest<T>): Promise<T> {
   return new Promise((resolve, reject) => {
     request.onsuccess = () => {
       resolve(request.result);
@@ -44,9 +44,9 @@ const requestToPromise = <T>(request: IDBRequest<T>): Promise<T> => {
       );
     };
   });
-};
+}
 
-const transactionToPromise = (transaction: IDBTransaction): Promise<void> => {
+function transactionToPromise(transaction: IDBTransaction): Promise<void> {
   return new Promise((resolve, reject) => {
     transaction.oncomplete = () => {
       resolve();
@@ -60,9 +60,9 @@ const transactionToPromise = (transaction: IDBTransaction): Promise<void> => {
       reject(transaction.error ?? new Error("IndexedDB transaction bị hủy"));
     };
   });
-};
+}
 
-const openOfflineDatabase = (): Promise<IDBDatabase> => {
+function openOfflineDatabase(): Promise<IDBDatabase> {
   if (databasePromise) {
     return databasePromise;
   }
@@ -117,9 +117,9 @@ const openOfflineDatabase = (): Promise<IDBDatabase> => {
   });
 
   return databasePromise;
-};
+}
 
-const arrayBufferToBase64 = (buffer: ArrayBuffer): string => {
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer);
   let binary = "";
 
@@ -128,9 +128,9 @@ const arrayBufferToBase64 = (buffer: ArrayBuffer): string => {
   }
 
   return btoa(binary);
-};
+}
 
-const readDeviceKey = async (): Promise<DeviceKeyRecord | undefined> => {
+async function readDeviceKey(): Promise<DeviceKeyRecord | undefined> {
   const database = await openOfflineDatabase();
   const transaction = database.transaction(DEVICE_KEYS_STORE, "readonly");
 
@@ -142,9 +142,9 @@ const readDeviceKey = async (): Promise<DeviceKeyRecord | undefined> => {
   await transactionToPromise(transaction);
 
   return record;
-};
+}
 
-const createDeviceKey = async (): Promise<DeviceKeyRecord> => {
+async function createDeviceKey(): Promise<DeviceKeyRecord> {
   const keyPair = (await crypto.subtle.generateKey(
     {
       name: "RSA-OAEP",
@@ -175,9 +175,9 @@ const createDeviceKey = async (): Promise<DeviceKeyRecord> => {
   await transactionToPromise(transaction);
 
   return record;
-};
+}
 
-const loadOrCreateDeviceKey = async (): Promise<DeviceKeyRecord> => {
+async function loadOrCreateDeviceKey(): Promise<DeviceKeyRecord> {
   const existingKey = await readDeviceKey();
 
   if (existingKey) {
@@ -185,9 +185,9 @@ const loadOrCreateDeviceKey = async (): Promise<DeviceKeyRecord> => {
   }
 
   return createDeviceKey();
-};
+}
 
-export const ensureDeviceKey = (): Promise<DeviceKeyRecord> => {
+export function ensureDeviceKey(): Promise<DeviceKeyRecord> {
   if (!deviceKeyPromise) {
     deviceKeyPromise = loadOrCreateDeviceKey().catch((error: unknown) => {
       deviceKeyPromise = null;
@@ -196,25 +196,25 @@ export const ensureDeviceKey = (): Promise<DeviceKeyRecord> => {
   }
 
   return deviceKeyPromise;
-};
+}
 
-export const getDevicePrivateKey = async (): Promise<CryptoKey> => {
+export async function getDevicePrivateKey(): Promise<CryptoKey> {
   const deviceKey = await ensureDeviceKey();
   return deviceKey.privateKey;
-};
+}
 
-const storeOfflineBook = async (record: OfflineBookRecord): Promise<void> => {
+async function storeOfflineBook(record: OfflineBookRecord): Promise<void> {
   const database = await openOfflineDatabase();
   const transaction = database.transaction(OFFLINE_BOOKS_STORE, "readwrite");
 
   transaction.objectStore(OFFLINE_BOOKS_STORE).put(record);
 
   await transactionToPromise(transaction);
-};
+}
 
-export const getDownloadedBookIds = async (
+export async function getDownloadedBookIds(
   owner: string,
-): Promise<Set<number>> => {
+): Promise<Set<number>> {
   const database = await openOfflineDatabase();
   const transaction = database.transaction(OFFLINE_BOOKS_STORE, "readonly");
 
@@ -235,12 +235,12 @@ export const getDownloadedBookIds = async (
   });
 
   return new Set(bookIds);
-};
+}
 
-export const downloadBookForOffline = async (
+export async function downloadBookForOffline(
   owner: string,
   bookId: number,
-): Promise<OfflineBookRecord> => {
+): Promise<OfflineBookRecord> {
   const deviceKey = await ensureDeviceKey();
 
   const { data } = await Api.post<DownloadResponse>("/libraries/download", {
@@ -277,4 +277,4 @@ export const downloadBookForOffline = async (
   await storeOfflineBook(record);
 
   return record;
-};
+}

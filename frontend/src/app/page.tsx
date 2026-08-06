@@ -1,3 +1,4 @@
+import { cacheLife } from "next/cache";
 import Image from "next/image";
 import Link from "next/link";
 import { BookCard } from "@/components/BookCard";
@@ -12,7 +13,7 @@ import { cn } from "@/lib/utils";
 
 const filters = [
   {
-    key: "newest",
+    key: "latest",
     label: "Mới phát hành",
     params: {
       sort: ["createdAt,desc", "id,desc"],
@@ -51,7 +52,7 @@ const parsePage = (value: string | undefined) => {
 const buildHomeUrl = (filterKey: string, page: number) => {
   const params = new URLSearchParams();
 
-  if (filterKey !== "newest") {
+  if (filterKey !== "latest") {
     params.set("filter", filterKey);
   }
 
@@ -72,6 +73,9 @@ const fetchBooks = async (
   page: number,
   sortParams: readonly string[],
 ): Promise<PageResponse<Book>> => {
+  "use cache";
+  cacheLife({ revalidate: 300 });
+
   const params = new URLSearchParams();
   params.append("page", String(page));
   params.append("size", "12");
@@ -80,17 +84,16 @@ const fetchBooks = async (
     params.append("sort", s);
   });
 
-  const url = `${process.env.NEXT_PUBLIC_API_URL}/books?${params.toString()}`;
-  const res = await fetch(url, {
-    next: { revalidate: 3600 },
-  });
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/books?${params.toString()}`,
+  );
 
   if (!res.ok) {
     throw new Error(`Lỗi tải danh sách sách: ${res.status}`);
   }
 
   const json = await res.json();
-  return json.data || json;
+  return json.data ?? json;
 };
 
 const HomePage = async ({
@@ -114,8 +117,10 @@ const HomePage = async ({
     const data = await fetchBooks(currentPage, selectedFilter.params.sort);
     books = data.content;
     totalPages = data.page.totalPages;
-  } catch (requestError: any) {
-    error = requestError.message || "Không thể tải danh sách sách.";
+  } catch (requestError: unknown) {
+    if (requestError instanceof Error) {
+      error = requestError.message ?? "Không thể tải danh sách sách.";
+    }
   }
 
   const featuredBook = books[0];
@@ -267,6 +272,7 @@ const HomePage = async ({
 
         {books.length > 0 && (
           <Pagination
+            basePath="/"
             currentPage={currentPage}
             totalPages={totalPages}
             filterKey={selectedFilter.key}

@@ -1,3 +1,4 @@
+import { cacheLife } from "next/cache";
 import { EmptyState } from "@/components/EmptyState";
 import { Header } from "@/components/Header";
 import {
@@ -6,19 +7,21 @@ import {
 } from "@/components/SubscriptionPlanCard";
 
 const fetchSubscriptionPlans = async (): Promise<SubscriptionPlan[]> => {
+  "use cache";
+  cacheLife({ revalidate: 300 });
+
   try {
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/subscription-plans`,
-      {
-        next: { revalidate: 3600 },
-      },
     );
 
-    if (!res.ok) return [];
+    if (!res.ok) {
+      return [];
+    }
 
     return await res.json();
   } catch (error) {
-    console.error("Có lỗi khi lấy thong ", error);
+    console.error(error);
     return [];
   }
 };

@@ -5,18 +5,20 @@ import { cn } from "@/lib/utils";
 type PaginationProps = {
   currentPage: number;
   totalPages: number;
-  filterKey: string;
+  filterKey?: string;
+  basePath?: string;
   toSection?: string;
 };
 
 const buildPaginationUrl = (
-  filterKey: string,
+  basePath: string,
+  filterKey: string | undefined,
   page: number,
-  toSection: string = "book-list",
+  toSection = "book-list",
 ) => {
   const params = new URLSearchParams();
 
-  if (filterKey !== "newest") {
+  if (filterKey && filterKey !== "newest") {
     params.set("filter", filterKey);
   }
 
@@ -26,7 +28,7 @@ const buildPaginationUrl = (
 
   const query = params.toString();
 
-  return `/${query ? `?${query}` : ""}#${toSection}`;
+  return `${basePath}${query ? `?${query}` : ""}#${toSection}`;
 };
 
 const buildPageItems = (
@@ -62,6 +64,7 @@ export const Pagination = ({
   currentPage,
   totalPages,
   filterKey,
+  basePath = "/",
   toSection,
 }: PaginationProps) => {
   if (totalPages <= 1) {
@@ -77,6 +80,7 @@ export const Pagination = ({
     >
       <Link
         href={buildPaginationUrl(
+          basePath,
           filterKey,
           Math.max(0, currentPage - 1),
           toSection,
@@ -109,7 +113,7 @@ export const Pagination = ({
         return (
           <Link
             key={item}
-            href={buildPaginationUrl(filterKey, item)}
+            href={buildPaginationUrl(basePath, filterKey, item)}
             aria-label={`Trang ${item + 1}`}
             aria-current={isActive ? "page" : undefined}
             className={cn(
@@ -128,6 +132,7 @@ export const Pagination = ({
 
       <Link
         href={buildPaginationUrl(
+          basePath,
           filterKey,
           Math.min(totalPages - 1, currentPage + 1),
         )}

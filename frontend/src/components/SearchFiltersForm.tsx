@@ -86,6 +86,7 @@ export const SearchFiltersForm = ({
   };
 
   const removeScopedFilter = (filter: ScopedFilter) => {
+    handleClear();
     if (filter === "author") {
       updateFilter("authorId", "");
       setAuthorName("");
@@ -160,21 +161,69 @@ export const SearchFiltersForm = ({
         <div className="flex flex-wrap gap-2 border-b border-border py-5">
           {filters.authorId && (
             <Button
+              className="font-normal"
               type="button"
               size="sm"
               onClick={() => removeScopedFilter("author")}
             >
-              Tác giả: {authorName || `#${filters.authorId}`} ×
+              Tác giả: <span className="font-semibold">{authorName} </span>
+              <svg
+                width="800px"
+                height="800px"
+                viewBox="-0.5 0 25 25"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <path
+                  d="M3 21.32L21 3.32001"
+                  stroke="#000000"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M3 3.32001L21 21.32"
+                  stroke="#000000"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
             </Button>
           )}
 
           {filters.categoryId && (
             <Button
+              className="font-normal"
               type="button"
               size="sm"
               onClick={() => removeScopedFilter("category")}
             >
-              Danh mục: {categoryName || `#${filters.categoryId}`} ×
+              Danh mục: <span className="font-semibold">{categoryName} </span>
+              <svg
+                width="800px"
+                height="800px"
+                viewBox="-0.5 0 25 25"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <path
+                  d="M3 21.32L21 3.32001"
+                  stroke="#000000"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M3 3.32001L21 21.32"
+                  stroke="#000000"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
             </Button>
           )}
         </div>

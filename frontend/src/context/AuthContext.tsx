@@ -9,7 +9,6 @@ import {
   useState,
 } from "react";
 import { Api } from "@/lib/api";
-import { ensureDeviceKey } from "@/lib/offline";
 import type { AuthUser } from "@/lib/types";
 
 interface AuthContextValue {
@@ -39,13 +38,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setUser(currentUser);
     return currentUser;
   }, []);
-
-  useEffect(() => {
-    if (!user) {
-      return;
-    }
-    void ensureDeviceKey().catch();
-  }, [user]);
 
   useEffect(() => {
     let active = true;
