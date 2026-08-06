@@ -1,27 +1,36 @@
-"use client";
-
-import { useRouter, useSearchParams } from "next/navigation";
-import { type SubmitEvent, useCallback, useEffect, useState } from "react";
+import { cacheLife } from "next/cache";
 import { BookCard } from "@/components/BookCard";
 import { EmptyState } from "@/components/EmptyState";
-import { LoadingOverlay } from "@/components/LoadingOverlay";
 import {
   type SearchFilters,
   SearchFiltersForm,
 } from "@/components/SearchFiltersForm";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Api, getApiErrorMessage } from "@/lib/api";
 import type { Book, PageResponse } from "@/lib/types";
 
-const readFilters = (params: Pick<URLSearchParams, "get">): SearchFilters => ({
-  title: params.get("title") ?? "",
-  authorFullname: params.get("authorFullname") ?? "",
-  fromPrice: params.get("fromPrice") ?? "",
-  toPrice: params.get("toPrice") ?? "",
-  fromRating: params.get("fromRating") ?? "",
-  toRating: params.get("toRating") ?? "",
-  categoryId: params.get("categoryId") ?? "",
-  authorId: params.get("authorId") ?? "",
+type SearchParams = Record<string, string | string[] | undefined>;
+
+interface SearchPageContentProps {
+  searchParams: Promise<SearchParams>;
+}
+
+const getParam = (value: string | string[] | undefined) => {
+  if (Array.isArray(value)) {
+    return value[0] ?? "";
+  }
+
+  return value ?? "";
+};
+
+const readFilters = (params: SearchParams): SearchFilters => ({
+  title: getParam(params.title),
+  authorFullname: getParam(params.authorFullname),
+  fromPrice: getParam(params.fromPrice),
+  toPrice: getParam(params.toPrice),
+  fromRating: getParam(params.fromRating),
+  toRating: getParam(params.toRating),
+  categoryId: getParam(params.categoryId),
+  authorId: getParam(params.authorId),
 });
 
 const getRequestFilters = (filters: SearchFilters): Record<string, string> => {
@@ -34,6 +43,7 @@ const getRequestFilters = (filters: SearchFilters): Record<string, string> => {
       params[key] = value;
     }
   }
+
   return params;
 };
 
@@ -41,196 +51,64 @@ const isInvalidRange = (from: string, to: string) => {
   if (from === "" || to === "") {
     return false;
   }
-
   return Number(from) > Number(to);
 };
 
-export function SearchPageContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+const fetchSearchBooks = async (
+  filters: Record<string, string>,
+  sort: string,
+): Promise<PageResponse<Book>> => {
+  "use cache";
+  cacheLife({ revalidate: 300 });
 
-  const [filters, setFilters] = useState<SearchFilters>(() =>
-    readFilters(searchParams),
+  const params = new URLSearchParams(filters);
+  params.append("page", "0");
+  params.append("sort", sort);
+  params.append("sort", "id,desc");
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/books?${params.toString()}`,
   );
+  if (!res.ok) {
+    throw new Error("Không thể tìm kiếm sách.");
+  }
 
-  const [submittedFilters, setSubmittedFilters] =
-    useState<SearchFilters>(filters);
+  const json = await res.json();
+  return json.data ?? json;
+};
 
-  const [authorName, setAuthorName] = useState(
-    () => searchParams.get("authorName") ?? "",
-  );
+export const SearchPageContent = async ({
+  searchParams,
+}: SearchPageContentProps) => {
+  const params = await searchParams;
 
-  const [categoryName, setCategoryName] = useState(
-    () => searchParams.get("categoryName") ?? "",
-  );
+  const filters = readFilters(params);
 
-  const [sort, setSort] = useState(
-    () => searchParams.get("sort") ?? "createdAt,desc",
-  );
+  const authorName = getParam(params.authorName);
+  const categoryName = getParam(params.categoryName);
 
-  const [submittedSort, setSubmittedSort] = useState(sort);
-  const [books, setBooks] = useState<Book[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const sort = getParam(params.sort) || "createdAt,desc";
 
-  const updateFilter = useCallback(
-    (field: keyof SearchFilters, value: string) => {
-      setFilters((current) => {
-        if (current[field] === value) {
-          return current;
-        }
+  let books: Book[] = [];
+  let error = "";
 
-        return {
-          ...current,
-          [field]: value,
-        };
-      });
-    },
-    [],
-  );
-
-  const handleSearch = (event: SubmitEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    if (isInvalidRange(filters.fromPrice, filters.toPrice)) {
-      setError("Khoảng giá không hợp lệ.");
-      return;
-    }
-
-    if (isInvalidRange(filters.fromRating, filters.toRating)) {
-      setError("Khoảng đánh giá không hợp lệ.");
-      return;
-    }
-
-    setError("");
-
-    const nextSubmittedFilters = {
-      ...filters,
-    };
-
-    setSubmittedFilters(nextSubmittedFilters);
-    setSubmittedSort(sort);
-
-    const nextParams = new URLSearchParams();
-
-    for (const [key, value] of Object.entries(nextSubmittedFilters)) {
-      if (value.trim() !== "") {
-        nextParams.set(key, value.trim());
+  if (isInvalidRange(filters.fromPrice, filters.toPrice)) {
+    error = "Khoảng giá không hợp lệ.";
+  } else if (isInvalidRange(filters.fromRating, filters.toRating)) {
+    error = "Khoảng đánh giá không hợp lệ.";
+  } else {
+    try {
+      const data = await fetchSearchBooks(getRequestFilters(filters), sort);
+      books = data.content;
+    } catch (requestError: unknown) {
+      if (requestError instanceof Error) {
+        error = requestError.message ?? "Có lỗi khi tìm kiếm sách.";
       }
     }
-
-    if (nextSubmittedFilters.authorId && authorName) {
-      nextParams.set("authorName", authorName);
-    }
-
-    if (nextSubmittedFilters.categoryId && categoryName) {
-      nextParams.set("categoryName", categoryName);
-    }
-
-    nextParams.set("sort", sort);
-
-    router.replace(`/search?${nextParams.toString()}`, {
-      scroll: false,
-    });
-  };
-
-  useEffect(() => {
-    if (isInvalidRange(submittedFilters.fromPrice, submittedFilters.toPrice)) {
-      setLoading(false);
-      setError("Khoảng giá không hợp lệ.");
-      return;
-    }
-
-    if (
-      isInvalidRange(submittedFilters.fromRating, submittedFilters.toRating)
-    ) {
-      setLoading(false);
-      setError("Khoảng đánh giá không hợp lệ.");
-      return;
-    }
-
-    const controller = new AbortController();
-
-    const fetchBooks = async () => {
-      setError("");
-
-      try {
-        setLoading(true);
-        const { data } = await Api.get<PageResponse<Book>>("/books", {
-          signal: controller.signal,
-          params: {
-            ...getRequestFilters(submittedFilters),
-            page: 0,
-            size: 24,
-            sort: [submittedSort, "id,desc"],
-          },
-        });
-
-        setBooks(data.content);
-      } catch (requestError) {
-        if (!controller.signal.aborted) {
-          setError(
-            getApiErrorMessage(requestError, "Không thể tìm kiếm sách."),
-          );
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    void fetchBooks();
-
-    return () => {
-      controller.abort();
-    };
-  }, [submittedFilters, submittedSort]);
-
-  const clearFilters = () => {
-    const clearedFilters: SearchFilters = {
-      title: "",
-      authorFullname: "",
-      fromPrice: "",
-      toPrice: "",
-      fromRating: "",
-      toRating: "",
-      categoryId: "",
-      authorId: "",
-    };
-
-    setFilters(clearedFilters);
-    setSubmittedFilters({ ...clearedFilters });
-
-    setAuthorName("");
-    setCategoryName("");
-
-    setSort("createdAt,desc");
-    setSubmittedSort("createdAt,desc");
-
-    setError("");
-    setLoading(true);
-
-    router.replace("/search", {
-      scroll: false,
-    });
-  };
-
-  const removeScopedFilter = (filter: "author" | "category") => {
-    if (filter === "author") {
-      updateFilter("authorId", "");
-      setAuthorName("");
-      return;
-    }
-
-    updateFilter("categoryId", "");
-    setCategoryName("");
-  };
+  }
 
   return (
     <section className="mx-auto max-w-360 px-5 py-12 lg:px-10 lg:py-16">
-      {loading && <LoadingOverlay />}
-
       <div className="border-b border-border pb-8">
         <h1 className="font-serif text-5xl font-bold text-foreground">
           Tìm kiếm sách
@@ -238,16 +116,16 @@ export function SearchPageContent() {
       </div>
 
       <SearchFiltersForm
-        filters={filters}
-        sort={sort}
-        authorName={authorName}
-        categoryName={categoryName}
-        loading={loading}
-        onFilterChangeAction={updateFilter}
-        onSortChangeAction={setSort}
-        onRemoveScopedFilterAction={removeScopedFilter}
-        onSubmitAction={handleSearch}
-        onClearAction={clearFilters}
+        key={JSON.stringify({
+          filters,
+          sort,
+          authorName,
+          categoryName,
+        })}
+        initialFilters={filters}
+        initialSort={sort}
+        initialAuthorName={authorName}
+        initialCategoryName={categoryName}
       />
 
       <div className="flex items-center justify-between py-7">
@@ -268,9 +146,9 @@ export function SearchPageContent() {
             <BookCard key={book.id} book={book} />
           ))}
         </div>
-      ) : !loading && !error ? (
+      ) : !error ? (
         <EmptyState title="Không tìm thấy sách phù hợp" />
       ) : null}
     </section>
   );
-}
+};

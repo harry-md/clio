@@ -10,7 +10,7 @@ const priceFormatter = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,
 });
 
-export function BookCard({ book }: BookCardProps) {
+export const BookCard = ({ book }: BookCardProps) => {
   const authorNames =
     book.authors?.map((author) => author.authorFullname).join(", ") ||
     "Chưa cập nhật tác giả";
@@ -25,7 +25,7 @@ export function BookCard({ book }: BookCardProps) {
               alt={`Bìa sách ${book.title}`}
               fill
               sizes="(min-width: 1280px) 16vw, (min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
-              className="object-cover transition duration-300 group-hover:scale-[1.025] group-hover:opacity-90"
+              className="object-cover transition duration-300 group-hover:scale-[1.05] group-hover:opacity-90"
             />
           ) : (
             <div
@@ -74,4 +74,4 @@ export function BookCard({ book }: BookCardProps) {
       </div>
     </article>
   );
-}
+};

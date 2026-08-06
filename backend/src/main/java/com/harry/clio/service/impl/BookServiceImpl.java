@@ -145,7 +145,7 @@ public class BookServiceImpl implements BookService {
     @Override
     public BookDetailResponse getBookDetail(int bookId) {
         Book book = bookRepository
-                .findWithCategoryById(bookId)
+                .findWithCategoryById(bookId, BookType.SYSTEM)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sách"));
         BookInfo bookInfo = bookInfoRepository
                 .findById(book.getId())

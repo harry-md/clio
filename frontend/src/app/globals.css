@@ -121,9 +121,9 @@
   --color-auth-warm-overlay: var(--auth-warm-overlay);
   --color-auth-cool-overlay: var(--auth-cool-overlay);
 
-  --font-sans: var(--font-geist);
-  --font-serif: var(--font-lora);
-  --font-heading: var(--font-lora);
+  --font-sans: var(--font-montserrat);
+  --font-serif: var(--font-merriweather);
+  --font-heading: var(--font-merriweather);
 
   --radius-sm: var(--radius);
   --radius-md: var(--radius);
@@ -145,7 +145,7 @@
     margin: 0;
     background: var(--background);
     color: var(--foreground);
-    font-family: var(--font-geist), Arial, sans-serif;
+    font-family: var(--font-montserrat), Arial, sans-serif;
   }
 
   button,

@@ -11,7 +11,7 @@ import {
 } from "react";
 import type { Book } from "@/lib/types";
 
-const CART_STORAGE_KEY = "clio-cart";
+const CART_STORAGE_KEY = "cart";
 
 interface CartContextValue {
   books: Book[];
@@ -27,7 +27,7 @@ interface CartProviderProps {
 
 const CartContext = createContext<CartContextValue | undefined>(undefined);
 
-export function CartProvider({ children }: CartProviderProps) {
+export const CartProvider = ({ children }: CartProviderProps) => {
   const [books, setBooks] = useState<Book[]>([]);
   const [cartReady, setCartReady] = useState(false);
 
@@ -85,9 +85,9 @@ export function CartProvider({ children }: CartProviderProps) {
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
-}
+};
 
-export function useCart() {
+export const useCart = () => {
   const context = useContext(CartContext);
 
   if (context === undefined) {
@@ -95,4 +95,4 @@ export function useCart() {
   }
 
   return context;
-}
+};

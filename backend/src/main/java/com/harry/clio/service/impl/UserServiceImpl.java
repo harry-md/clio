@@ -7,7 +7,7 @@ import com.harry.clio.dto.user.UserResponse;
 import com.harry.clio.entity.SubscriptionStatus;
 import com.harry.clio.entity.User;
 import com.harry.clio.entity.UserRole;
-import com.harry.clio.exception.DuplicateResourceException;
+import com.harry.clio.exception.BadRequestException;
 import com.harry.clio.exception.ResourceNotFoundException;
 import com.harry.clio.mapper.UserMapper;
 import com.harry.clio.repository.SubscriptionRepository;
@@ -72,7 +72,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
         if (userRepository.existsByUsername(request.username())) {
             if (avatarUrl != null) cloudinaryService.delete(avatarUrl);
-            throw new DuplicateResourceException("Username này đã tồn tại");
+            throw new BadRequestException("Username này đã tồn tại");
         }
 
         User user = userMapper.toEntity(request);
