@@ -1,25 +1,8 @@
-"use client";
-
 import { CircleXIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { PaymentCancelHandler } from "@/components/PaymentCancelHandler";
 import { Spinner } from "@/components/ui/spinner";
 
-export default function PaymentCancelPage() {
-  const router = useRouter();
-
-  useEffect(() => {
-    window.sessionStorage.removeItem("clio-pending-book-checkout");
-
-    const timer = window.setTimeout(() => {
-      router.replace("/");
-    }, 2500);
-
-    return () => {
-      window.clearTimeout(timer);
-    };
-  }, [router]);
-
+const PaymentCancelPage = () => {
   return (
     <main className="grid min-h-screen place-items-center bg-background px-5">
       <section className="w-full max-w-xl border border-destructive bg-destructive-surface p-10 text-center">
@@ -37,7 +20,10 @@ export default function PaymentCancelPage() {
         </p>
 
         <Spinner className="mx-auto mt-8 size-6 text-destructive-foreground" />
+
+        <PaymentCancelHandler />
       </section>
     </main>
   );
-}
+};
+export default PaymentCancelPage;

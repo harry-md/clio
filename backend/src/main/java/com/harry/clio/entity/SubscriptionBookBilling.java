@@ -2,19 +2,25 @@ package com.harry.clio.entity;
 
 import jakarta.persistence.*;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
 
+@Builder
 @Getter
 @Setter
+@AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "subscription_book_billings")
+@Table(
+        name = "subscription_book_billings",
+        uniqueConstraints = {
+            @UniqueConstraint(
+                    name = "uq_sub_book_billings_user_book",
+                    columnNames = {"user_id", "book_id"})
+        })
 public class SubscriptionBookBilling {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,6 +37,7 @@ public class SubscriptionBookBilling {
     @Column(nullable = false)
     private Long pageCount = 0L;
 
+    @Builder.Default
     @Column(name = "is_computed", nullable = false)
     private boolean computed = false;
 

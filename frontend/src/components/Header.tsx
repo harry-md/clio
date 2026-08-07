@@ -28,7 +28,7 @@ const navigationItems = [
   },
 ] as const;
 
-export function Header() {
+export const Header = () => {
   const router = useRouter();
   const pathname = usePathname();
   const { user, initialized, setUser } = useAuth();
@@ -184,4 +184,4 @@ export function Header() {
       </header>
     </>
   );
-}
+};

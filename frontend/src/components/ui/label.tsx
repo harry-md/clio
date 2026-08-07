@@ -3,12 +3,12 @@
 import type * as React from "react";
 import { cn } from "@/lib/utils";
 
-function Label({
+export const Label = ({
   className,
   htmlFor,
   children,
   ...props
-}: React.ComponentProps<"label">) {
+}: React.ComponentProps<"label">) => {
   return (
     <label
       htmlFor={htmlFor}
@@ -22,6 +22,4 @@ function Label({
       {children}
     </label>
   );
-}
-
-export { Label };
+};

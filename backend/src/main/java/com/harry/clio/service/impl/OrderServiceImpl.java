@@ -50,7 +50,8 @@ public class OrderServiceImpl implements OrderService {
     public StripeCheckoutResponse createCheckout(Integer userId, BookPurchaseRequest request) {
         List<Integer> bookIds = request.bookIds();
         Order existingOrder = orderRepository
-                .findWithOrderDetailsByUserIdAndBookIdsIn(userId, request.bookIds(), bookIds.size())
+                .findWithDetailsByUserIdAndBookIdsIn(
+                        userId, request.bookIds(), OrderStatus.PENDING, bookIds.size())
                 .orElse(null);
 
         Integer orderId;
@@ -78,9 +79,11 @@ public class OrderServiceImpl implements OrderService {
             throw new BadRequestException("Bạn đã sở hữu sách trong danh sách mua!");
         }
 
-        List<Book> books = bookRepository.findAllPurchasableByIdIn(bookIds);
+        List<Book> books = bookRepository.findAllPurchasableByIdIn(
+                bookIds, BookStatus.COMPLETED, BookType.SYSTEM);
+
         if (books.size() != bookIds.size()) {
-            throw new BadRequestException("Có sách không thể mua!");
+            throw new BadRequestException("Có sách không thể mua");
         }
 
         User user = userRepository.getReferenceById(userId);
@@ -129,7 +132,7 @@ public class OrderServiceImpl implements OrderService {
 
     private void handleFailedPayment(Session session) {
         Order order = orderRepository
-                .findByIdForUpdate(Integer.parseInt(session.getClientReferenceId()))
+                .findById(Integer.parseInt(session.getClientReferenceId()))
                 .orElseThrow(() -> new InvalidWebhookException("Không tìm thấy đơn hàng"));
         if (order.getStatus() == OrderStatus.PENDING) {
             order.setStatus(OrderStatus.CANCELED);
@@ -142,7 +145,7 @@ public class OrderServiceImpl implements OrderService {
         }
         Integer orderId = Integer.parseInt(session.getClientReferenceId());
         Order order = orderRepository
-                .findByIdForUpdate(orderId)
+                .findById(orderId)
                 .orElseThrow(() -> new InvalidWebhookException("Không tìm thấy đơn hàng"));
         if (order.getStatus() != OrderStatus.PENDING) {
             return;
@@ -233,6 +236,7 @@ public class OrderServiceImpl implements OrderService {
             LocalDate nextMonth = current.withDayOfMonth(1).plusMonths(1);
             LocalDate sliceEnd = nextMonth.isBefore(endDate) ? nextMonth : endDate;
             long elapsedDays = ChronoUnit.DAYS.between(startDate, sliceEnd);
+
             BigDecimal cumulativeAmount = sliceEnd.equals(endDate)
                     ? totalAmount
                     : totalAmount.multiply(BigDecimal.valueOf(elapsedDays)
@@ -262,8 +266,11 @@ public class OrderServiceImpl implements OrderService {
                 throw new BadRequestException("Bạn đã có gói đã đăng ký");
             }
 
-            Order existingOrder =
-                    orderRepository.findSubOrderWithOrderDetailByUserId(userId).orElse(null);
+            Order existingOrder = orderRepository
+                    .findSubOrderWithDetailByUserId(
+                            userId, OrderStatus.PENDING, OrderDetailType.SUBSCRIPTION)
+                    .orElse(null);
+
             if (existingOrder == null) {
                 SubscriptionPlan plan = subscriptionPlanRepository
                         .findByIdAndActiveTrue(request.planId())

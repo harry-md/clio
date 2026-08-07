@@ -50,7 +50,6 @@ public class ApiSecurityConfig {
                             res.setStatus(HttpStatus.FORBIDDEN.value());
                             res.setContentType(MediaType.APPLICATION_JSON_VALUE);
                             res.setCharacterEncoding("UTF-8");
-
                             res.getWriter().write("""
                                 {"message": "Không có quyền truy cập"}
                                 """);

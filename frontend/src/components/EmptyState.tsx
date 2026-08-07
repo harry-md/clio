@@ -6,7 +6,11 @@ interface EmptyStateProps {
   className?: string;
 }
 
-export function EmptyState({ title, description, className }: EmptyStateProps) {
+export const EmptyState = ({
+  title,
+  description,
+  className,
+}: EmptyStateProps) => {
   return (
     <div className={cn("border-y border-border py-20 text-center", className)}>
       <p className="text-xl text-secondary-foreground">{title}</p>
@@ -18,4 +22,4 @@ export function EmptyState({ title, description, className }: EmptyStateProps) {
       )}
     </div>
   );
-}
+};

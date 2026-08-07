@@ -1,6 +1,8 @@
 "use client";
 
-import type { SubmitEvent } from "react";
+import { useRouter } from "next/navigation";
+import { type SubmitEvent, useState, useTransition } from "react";
+
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -29,60 +31,206 @@ export interface SearchFilters {
 type ScopedFilter = "author" | "category";
 
 interface SearchFiltersFormProps {
-  filters: SearchFilters;
-  sort: string;
-  authorName: string;
-  categoryName: string;
-  loading: boolean;
-  onFilterChangeAction: (field: keyof SearchFilters, value: string) => void;
-  onSortChangeAction: (value: string) => void;
-  onRemoveScopedFilterAction: (filter: ScopedFilter) => void;
-  onSubmitAction: (event: SubmitEvent<HTMLFormElement>) => void;
-  onClearAction: () => void;
+  initialFilters: SearchFilters;
+  initialSort: string;
+  initialAuthorName: string;
+  initialCategoryName: string;
 }
 
 const RATING_OPTIONS = [1, 2, 3, 4, 5] as const;
 
-export function SearchFiltersForm({
-  filters,
-  sort,
-  authorName,
-  categoryName,
-  loading,
-  onFilterChangeAction,
-  onSortChangeAction,
-  onRemoveScopedFilterAction,
-  onSubmitAction,
-  onClearAction,
-}: SearchFiltersFormProps) {
+const EMPTY_FILTERS: SearchFilters = {
+  title: "",
+  authorFullname: "",
+  fromPrice: "",
+  toPrice: "",
+  fromRating: "",
+  toRating: "",
+  categoryId: "",
+  authorId: "",
+};
+
+const isInvalidRange = (from: string, to: string) => {
+  if (from === "" || to === "") {
+    return false;
+  }
+
+  return Number(from) > Number(to);
+};
+
+export const SearchFiltersForm = ({
+  initialFilters,
+  initialSort,
+  initialAuthorName,
+  initialCategoryName,
+}: SearchFiltersFormProps) => {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [filters, setFilters] = useState<SearchFilters>(initialFilters);
+  const [sort, setSort] = useState(initialSort);
+  const [authorName, setAuthorName] = useState(initialAuthorName);
+  const [categoryName, setCategoryName] = useState(initialCategoryName);
+  const [error, setError] = useState("");
+
+  const updateFilter = (field: keyof SearchFilters, value: string) => {
+    setFilters((current) => {
+      if (current[field] === value) {
+        return current;
+      }
+
+      return {
+        ...current,
+        [field]: value,
+      };
+    });
+  };
+
+  const removeScopedFilter = (filter: ScopedFilter) => {
+    handleClear();
+    if (filter === "author") {
+      updateFilter("authorId", "");
+      setAuthorName("");
+      return;
+    }
+
+    updateFilter("categoryId", "");
+    setCategoryName("");
+  };
+
+  const handleSearch = (event: SubmitEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (isInvalidRange(filters.fromPrice, filters.toPrice)) {
+      setError("Khoảng giá không hợp lệ.");
+      return;
+    }
+
+    if (isInvalidRange(filters.fromRating, filters.toRating)) {
+      setError("Khoảng đánh giá không hợp lệ.");
+      return;
+    }
+
+    setError("");
+
+    const nextParams = new URLSearchParams();
+
+    for (const [key, value] of Object.entries(filters)) {
+      if (value.trim() !== "") {
+        nextParams.set(key, value.trim());
+      }
+    }
+
+    if (filters.authorId && authorName) {
+      nextParams.set("authorName", authorName);
+    }
+
+    if (filters.categoryId && categoryName) {
+      nextParams.set("categoryName", categoryName);
+    }
+
+    nextParams.set("sort", sort);
+
+    startTransition(() => {
+      router.replace(`/search?${nextParams.toString()}`, {
+        scroll: false,
+      });
+    });
+  };
+
+  const handleClear = () => {
+    setFilters({
+      ...EMPTY_FILTERS,
+    });
+
+    setAuthorName("");
+    setCategoryName("");
+
+    setSort("createdAt,desc");
+    setError("");
+
+    startTransition(() => {
+      router.replace("/search", {
+        scroll: false,
+      });
+    });
+  };
+
   return (
     <>
       {(filters.authorId || filters.categoryId) && (
         <div className="flex flex-wrap gap-2 border-b border-border py-5">
           {filters.authorId && (
             <Button
+              className="font-normal"
               type="button"
               size="sm"
-              onClick={() => onRemoveScopedFilterAction("author")}
+              onClick={() => removeScopedFilter("author")}
             >
-              Tác giả: {authorName || `#${filters.authorId}`} ×
+              Tác giả: <span className="font-semibold">{authorName} </span>
+              <svg
+                width="800px"
+                height="800px"
+                viewBox="-0.5 0 25 25"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <path
+                  d="M3 21.32L21 3.32001"
+                  stroke="#000000"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M3 3.32001L21 21.32"
+                  stroke="#000000"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
             </Button>
           )}
 
           {filters.categoryId && (
             <Button
+              className="font-normal"
               type="button"
               size="sm"
-              onClick={() => onRemoveScopedFilterAction("category")}
+              onClick={() => removeScopedFilter("category")}
             >
-              Danh mục: {categoryName || `#${filters.categoryId}`} ×
+              Danh mục: <span className="font-semibold">{categoryName} </span>
+              <svg
+                width="800px"
+                height="800px"
+                viewBox="-0.5 0 25 25"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <path
+                  d="M3 21.32L21 3.32001"
+                  stroke="#000000"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M3 3.32001L21 21.32"
+                  stroke="#000000"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
             </Button>
           )}
         </div>
       )}
 
       <form
-        onSubmit={onSubmitAction}
+        onSubmit={handleSearch}
         className="grid gap-5 border-b border-border py-8 md:grid-cols-2 xl:grid-cols-4"
       >
         <Field className="md:col-span-2">
@@ -93,9 +241,7 @@ export function SearchFiltersForm({
             name="title"
             type="text"
             value={filters.title}
-            onChange={(event) =>
-              onFilterChangeAction("title", event.target.value)
-            }
+            onChange={(event) => updateFilter("title", event.target.value)}
             placeholder="Nhập tên sách..."
           />
         </Field>
@@ -109,7 +255,7 @@ export function SearchFiltersForm({
             type="text"
             value={filters.authorFullname}
             onChange={(event) =>
-              onFilterChangeAction("authorFullname", event.target.value)
+              updateFilter("authorFullname", event.target.value)
             }
             placeholder="Nhập tên tác giả..."
           />
@@ -131,7 +277,7 @@ export function SearchFiltersForm({
               step="10000"
               value={filters.fromPrice}
               onChange={(event) =>
-                onFilterChangeAction("fromPrice", event.target.value)
+                updateFilter("fromPrice", event.target.value)
               }
               placeholder="Giá thấp nhất"
               aria-label="Giá thấp nhất"
@@ -143,9 +289,7 @@ export function SearchFiltersForm({
               min="0"
               step="10000"
               value={filters.toPrice}
-              onChange={(event) =>
-                onFilterChangeAction("toPrice", event.target.value)
-              }
+              onChange={(event) => updateFilter("toPrice", event.target.value)}
               placeholder="Giá cao nhất"
               aria-label="Giá cao nhất"
             />
@@ -165,7 +309,7 @@ export function SearchFiltersForm({
               name="fromRating"
               value={filters.fromRating}
               onChange={(event) =>
-                onFilterChangeAction("fromRating", event.target.value)
+                updateFilter("fromRating", event.target.value)
               }
               aria-label="Điểm thấp nhất"
             >
@@ -181,9 +325,7 @@ export function SearchFiltersForm({
             <NativeSelect
               name="toRating"
               value={filters.toRating}
-              onChange={(event) =>
-                onFilterChangeAction("toRating", event.target.value)
-              }
+              onChange={(event) => updateFilter("toRating", event.target.value)}
               aria-label="Điểm cao nhất"
             >
               <NativeSelectOption value="">Đến điểm</NativeSelectOption>
@@ -204,7 +346,7 @@ export function SearchFiltersForm({
             id="search-sort"
             name="sort"
             value={sort}
-            onChange={(event) => onSortChangeAction(event.target.value)}
+            onChange={(event) => setSort(event.target.value)}
           >
             <NativeSelectOption value="createdAt,desc">
               Mới phát hành
@@ -232,17 +374,25 @@ export function SearchFiltersForm({
           </NativeSelect>
         </Field>
 
+        {error && (
+          <div className="md:col-span-2">
+            <p className="text-sm text-destructive">{error}</p>
+          </div>
+        )}
+
         <div className="flex items-end gap-3 md:col-span-2">
-          <Button type="submit" size="lg" disabled={loading}>
-            {loading && <Spinner data-icon="inline-start" />}
-            {loading ? "Đang tìm..." : "Tìm kiếm"}
+          <Button type="submit" size="lg" disabled={isPending}>
+            {isPending && <Spinner data-icon="inline-start" />}
+
+            {isPending ? "Đang tìm..." : "Tìm kiếm"}
           </Button>
 
           <Button
             type="button"
             size="lg"
             variant="outline"
-            onClick={onClearAction}
+            disabled={isPending}
+            onClick={handleClear}
           >
             Xóa bộ lọc
           </Button>
@@ -250,4 +400,4 @@ export function SearchFiltersForm({
       </form>
     </>
   );
-}
+};

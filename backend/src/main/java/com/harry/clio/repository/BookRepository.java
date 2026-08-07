@@ -2,6 +2,7 @@ package com.harry.clio.repository;
 
 import com.harry.clio.entity.Book;
 import com.harry.clio.entity.BookStatus;
+import com.harry.clio.entity.BookType;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -19,16 +20,20 @@ public interface BookRepository
         SELECT b
         FROM Book b
         JOIN FETCH b.categories c
-        WHERE b.id = :bookId AND b.active = true AND b.type = 'SYSTEM'
+        WHERE b.id = :bookId AND b.active = true AND b.type = :type
         """)
-    Optional<Book> findWithCategoryById(@Param(value = "bookId") Integer bookId);
+    Optional<Book> findWithCategoryById(
+            @Param(value = "bookId") Integer bookId, @Param("type") BookType type);
 
     @Query("""
         SELECT b
         FROM Book b
-        WHERE b.active = true AND b.status = 'COMPLETED' AND b.type = 'SYSTEM' AND b.id IN :bookIds
+        WHERE b.active = true AND b.status = :status AND b.type = :type AND b.id IN :bookIds
         """)
-    List<Book> findAllPurchasableByIdIn(List<Integer> bookIds);
+    List<Book> findAllPurchasableByIdIn(
+            List<Integer> bookIds,
+            @Param("status") BookStatus status,
+            @Param("type") BookType type);
 
     @Transactional
     @Modifying
@@ -42,7 +47,10 @@ public interface BookRepository
     @Query("""
         SELECT b
         FROM Book b
-        WHERE b.active = true AND b.status = 'COMPLETED' AND b.type = 'SYSTEM' AND b.id = :bookId
+        WHERE b.active = true AND b.status = :status AND b.type = :type AND b.id = :bookId
         """)
-    Optional<Book> findAddableBookById(Integer bookId);
+    Optional<Book> findAddableBookById(
+            @Param("bookId") Integer bookId,
+            @Param("status") BookStatus status,
+            @Param("type") BookType type);
 }

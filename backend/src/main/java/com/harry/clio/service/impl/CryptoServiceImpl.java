@@ -217,7 +217,7 @@ public class CryptoServiceImpl implements CryptoService {
             signedJWT.sign(signer);
             return signedJWT.serialize();
         } catch (JOSEException | IllegalArgumentException ex) {
-            throw new CryptoException("Lỗi ký wrappedContentKey", ex);
+            throw new CryptoException("Lỗi ký license", ex);
         }
     }
 
