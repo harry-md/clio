@@ -1,5 +1,7 @@
 package com.harry.clio.service;
 
 public interface BookProcessingService {
-    void process(Integer bookId);
+    void process(int bookId);
+
+    void handleBookFailed(int bookId);
 }

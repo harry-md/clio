@@ -5,6 +5,7 @@ import com.harry.clio.entity.UserRole;
 import java.time.Instant;
 
 public record UserResponse(
+        Integer id,
         String username,
         String firstName,
         String lastName,

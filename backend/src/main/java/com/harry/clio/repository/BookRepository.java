@@ -53,4 +53,12 @@ public interface BookRepository
             @Param("bookId") Integer bookId,
             @Param("status") BookStatus status,
             @Param("type") BookType type);
+
+    @Transactional
+    @Modifying
+    @Query("""
+        DELETE FROM Book b
+        WHERE b.status = :status
+        """)
+    int deleteFailedBooks(@Param("status") BookStatus status);
 }
