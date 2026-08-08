@@ -91,7 +91,6 @@ public class CloudinaryService {
             cloudinary.uploader().destroy(publicId, ObjectUtils.asMap("resource_type", "auto"));
         } catch (IOException ex) {
             log.error("Lỗi khi xóa ảnh Cloudinary {}", url, ex);
-            throw new CloudinaryException("Lỗi khi xóa ảnh");
         }
     }
 }

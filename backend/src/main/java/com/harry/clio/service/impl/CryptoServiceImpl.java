@@ -178,7 +178,7 @@ public class CryptoServiceImpl implements CryptoService {
                     "SHA-256", "MGF1", MGF1ParameterSpec.SHA256, PSource.PSpecified.DEFAULT);
 
             Cipher cipher = Cipher.getInstance("RSA/ECB/OAEPPadding");
-            cipher.init(Cipher.ENCRYPT_MODE, publicKey, oaepParameterSpec);
+            cipher.init(Cipher.WRAP_MODE, publicKey, oaepParameterSpec);
 
             byte[] wrappedKey = cipher.doFinal(contentKey.getEncoded());
             return Base64.getUrlEncoder().withoutPadding().encodeToString(wrappedKey);

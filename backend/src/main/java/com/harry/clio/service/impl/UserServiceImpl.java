@@ -2,7 +2,6 @@ package com.harry.clio.service.impl;
 
 import com.harry.clio.dto.CustomUser;
 import com.harry.clio.dto.user.CreateUserRequest;
-import com.harry.clio.dto.user.UserOption;
 import com.harry.clio.dto.user.UserResponse;
 import com.harry.clio.entity.SubscriptionStatus;
 import com.harry.clio.entity.User;
@@ -25,7 +24,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Set;
 
 @RequiredArgsConstructor
@@ -95,12 +93,5 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         boolean isSubscribed =
                 subscriptionRepository.existsByUserIdAndStatus(id, SubscriptionStatus.ACTIVE);
         return userMapper.toDto(getUserOrThrow(id), isSubscribed);
-    }
-
-    @Override
-    public List<UserOption> getUserOptions() {
-        return userRepository.findAllByRole(UserRole.READER).stream()
-                .map(userMapper::toUserOption)
-                .toList();
     }
 }

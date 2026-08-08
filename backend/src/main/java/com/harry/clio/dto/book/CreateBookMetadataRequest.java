@@ -29,4 +29,6 @@ public record CreateBookMetadataRequest(
         String description,
 
         @Size(max = 20, message = "ISBN vượt quá độ dài cho phép")
-        String isbn) {}
+        String isbn,
+
+        @NotBlank(message = "Object key không được trống") String objectKey) {}

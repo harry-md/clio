@@ -72,6 +72,7 @@ stripe:
 clio:
   master-key: ${CLIO_MASTER_KEY}
   license-key: ${CLIO_LICENSE_KEY}
+  book-workers: 2
 #logging:
 #  level:
 #    org:
