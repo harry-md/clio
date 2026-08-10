@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import { Api } from "@/lib/api";
+import { getOrCreateKey } from "@/lib/offline";
 import type { AuthUser } from "@/lib/types";
 
 interface AuthContextValue {
@@ -66,6 +67,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+    void getOrCreateKey(user.id);
+  }, [user]);
 
   return (
     <AuthContext.Provider

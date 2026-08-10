@@ -1,151 +1,57 @@
-import { Api } from "@/lib/api";
+import { type DBSchema, type IDBPDatabase, openDB } from "idb";
 
-const DATABASE_NAME = "clio-offline";
-const DATABASE_VERSION = 1;
+const DB_NAME = "offline";
+const DB_VERSION = 1;
+const KEY_STORE = "device-keys";
 
-const DEVICE_KEYS_STORE = "device-keys";
-const OFFLINE_BOOKS_STORE = "offline-books";
-const OFFLINE_BOOK_OWNER_INDEX = "owner";
-
-const DEVICE_KEY_ID = "browser-device-key";
-
-interface DeviceKeyRecord {
-  id: string;
+interface AccountKey {
+  id: number;
   privateKey: CryptoKey;
   publicKeySpki: string;
+  createdAt: string;
 }
 
-interface DownloadResponse {
-  downloadUrl: string;
-  urlExpiredAt: string;
-  license: string;
+interface CryptoDB extends DBSchema {
+  "device-keys": {
+    key: number;
+    value: AccountKey;
+  };
 }
 
-export interface OfflineBookRecord {
-  owner: string;
-  bookId: number;
-  encryptedFile: Blob;
-  license: string;
-  downloadedAt: string;
-}
+let dbPromise: Promise<IDBPDatabase<CryptoDB>> | null = null;
 
-let databasePromise: Promise<IDBDatabase> | null = null;
-let deviceKeyPromise: Promise<DeviceKeyRecord> | null = null;
-
-function requestToPromise<T>(request: IDBRequest<T>): Promise<T> {
-  return new Promise((resolve, reject) => {
-    request.onsuccess = () => {
-      resolve(request.result);
-    };
-
-    request.onerror = () => {
-      reject(
-        request.error ?? new Error("Không thể thực hiện thao tác IndexedDB"),
-      );
-    };
-  });
-}
-
-function transactionToPromise(transaction: IDBTransaction): Promise<void> {
-  return new Promise((resolve, reject) => {
-    transaction.oncomplete = () => {
-      resolve();
-    };
-
-    transaction.onerror = () => {
-      reject(transaction.error ?? new Error("IndexedDB transaction thất bại"));
-    };
-
-    transaction.onabort = () => {
-      reject(transaction.error ?? new Error("IndexedDB transaction bị hủy"));
-    };
-  });
-}
-
-function openOfflineDatabase(): Promise<IDBDatabase> {
-  if (databasePromise) {
-    return databasePromise;
-  }
-
-  if (!globalThis.indexedDB) {
+const getDatabase = (): Promise<IDBPDatabase<CryptoDB>> => {
+  if (typeof globalThis.indexedDB === "undefined") {
     return Promise.reject(new Error("Trình duyệt không hỗ trợ IndexedDB"));
   }
 
-  databasePromise = new Promise((resolve, reject) => {
-    const request = indexedDB.open(DATABASE_NAME, DATABASE_VERSION);
-
-    request.onupgradeneeded = () => {
-      const database = request.result;
-
-      if (!database.objectStoreNames.contains(DEVICE_KEYS_STORE)) {
-        database.createObjectStore(DEVICE_KEYS_STORE, {
-          keyPath: "id",
-        });
-      }
-
-      if (!database.objectStoreNames.contains(OFFLINE_BOOKS_STORE)) {
-        const offlineBooksStore = database.createObjectStore(
-          OFFLINE_BOOKS_STORE,
-          {
-            keyPath: ["owner", "bookId"],
-          },
-        );
-
-        offlineBooksStore.createIndex(OFFLINE_BOOK_OWNER_INDEX, "owner", {
-          unique: false,
-        });
-      }
-    };
-
-    request.onsuccess = () => {
-      const database = request.result;
-
-      database.onversionchange = () => {
-        database.close();
-      };
-
-      resolve(database);
-    };
-
-    request.onerror = () => {
-      reject(request.error ?? new Error("Không thể mở IndexedDB"));
-    };
-
-    request.onblocked = () => {
-      reject(new Error("IndexedDB đang bị khóa bởi một tab khác"));
-    };
-  });
-
-  return databasePromise;
-}
-
-function arrayBufferToBase64(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer);
-  let binary = "";
-
-  for (const byte of bytes) {
-    binary += String.fromCharCode(byte);
+  if (dbPromise === null) {
+    dbPromise = openDB<CryptoDB>(DB_NAME, DB_VERSION, {
+      upgrade(db) {
+        if (!db.objectStoreNames.contains(KEY_STORE)) {
+          db.createObjectStore(KEY_STORE);
+        }
+      },
+    }).catch((error: unknown) => {
+      dbPromise = null;
+      throw error;
+    });
   }
+  return dbPromise;
+};
 
-  return btoa(binary);
-}
+const saveKey = async (accountKey: AccountKey): Promise<void> => {
+  const db = await getDatabase();
+  await db.add(KEY_STORE, accountKey, accountKey.id);
+};
 
-async function readDeviceKey(): Promise<DeviceKeyRecord | undefined> {
-  const database = await openOfflineDatabase();
-  const transaction = database.transaction(DEVICE_KEYS_STORE, "readonly");
+const getKey = async (userId: number): Promise<AccountKey | undefined> => {
+  const db = await getDatabase();
+  return await db.get(KEY_STORE, userId);
+};
 
-  const request = transaction
-    .objectStore(DEVICE_KEYS_STORE)
-    .get(DEVICE_KEY_ID) as IDBRequest<DeviceKeyRecord | undefined>;
-
-  const record = await requestToPromise(request);
-  await transactionToPromise(transaction);
-
-  return record;
-}
-
-async function createDeviceKey(): Promise<DeviceKeyRecord> {
-  const keyPair = (await crypto.subtle.generateKey(
+const generateKey = async (userId: number): Promise<AccountKey> => {
+  const keyPair: CryptoKeyPair = await crypto.subtle.generateKey(
     {
       name: "RSA-OAEP",
       modulusLength: 2048,
@@ -153,128 +59,32 @@ async function createDeviceKey(): Promise<DeviceKeyRecord> {
       hash: "SHA-256",
     },
     false,
-    ["encrypt", "decrypt"],
-  )) as CryptoKeyPair;
-
-  const publicKeySpkiBuffer = await crypto.subtle.exportKey(
-    "spki",
-    keyPair.publicKey,
+    ["wrapKey", "unwrapKey"],
   );
 
-  const record: DeviceKeyRecord = {
-    id: DEVICE_KEY_ID,
+  const publicKeySpki = btoa(
+    String.fromCharCode(
+      ...new Uint8Array(
+        await crypto.subtle.exportKey("spki", keyPair.publicKey),
+      ),
+    ),
+  );
+
+  return {
+    id: userId,
     privateKey: keyPair.privateKey,
-    publicKeySpki: arrayBufferToBase64(publicKeySpkiBuffer),
+    publicKeySpki: publicKeySpki,
+    createdAt: new Date().toISOString(),
   };
+};
 
-  const database = await openOfflineDatabase();
-  const transaction = database.transaction(DEVICE_KEYS_STORE, "readwrite");
-
-  transaction.objectStore(DEVICE_KEYS_STORE).put(record);
-
-  await transactionToPromise(transaction);
-
-  return record;
-}
-
-async function loadOrCreateDeviceKey(): Promise<DeviceKeyRecord> {
-  const existingKey = await readDeviceKey();
-
-  if (existingKey) {
-    return existingKey;
+export const getOrCreateKey = async (userId: number): Promise<AccountKey> => {
+  const key = await getKey(userId);
+  if (key !== undefined) {
+    return key;
   }
 
-  return createDeviceKey();
-}
-
-export function ensureDeviceKey(): Promise<DeviceKeyRecord> {
-  if (!deviceKeyPromise) {
-    deviceKeyPromise = loadOrCreateDeviceKey().catch((error: unknown) => {
-      deviceKeyPromise = null;
-      throw error;
-    });
-  }
-
-  return deviceKeyPromise;
-}
-
-export async function getDevicePrivateKey(): Promise<CryptoKey> {
-  const deviceKey = await ensureDeviceKey();
-  return deviceKey.privateKey;
-}
-
-async function storeOfflineBook(record: OfflineBookRecord): Promise<void> {
-  const database = await openOfflineDatabase();
-  const transaction = database.transaction(OFFLINE_BOOKS_STORE, "readwrite");
-
-  transaction.objectStore(OFFLINE_BOOKS_STORE).put(record);
-
-  await transactionToPromise(transaction);
-}
-
-export async function getDownloadedBookIds(
-  owner: string,
-): Promise<Set<number>> {
-  const database = await openOfflineDatabase();
-  const transaction = database.transaction(OFFLINE_BOOKS_STORE, "readonly");
-
-  const index = transaction
-    .objectStore(OFFLINE_BOOKS_STORE)
-    .index(OFFLINE_BOOK_OWNER_INDEX);
-
-  const keys = await requestToPromise(index.getAllKeys(owner));
-
-  await transactionToPromise(transaction);
-
-  const bookIds = keys.flatMap((key) => {
-    if (Array.isArray(key) && typeof key[1] === "number") {
-      return [key[1]];
-    }
-
-    return [];
-  });
-
-  return new Set(bookIds);
-}
-
-export async function downloadBookForOffline(
-  owner: string,
-  bookId: number,
-): Promise<OfflineBookRecord> {
-  const deviceKey = await ensureDeviceKey();
-
-  const { data } = await Api.post<DownloadResponse>("/libraries/download", {
-    bookId,
-    publicKeySpki: deviceKey.publicKeySpki,
-  });
-
-  const urlExpiration = Date.parse(data.urlExpiredAt);
-
-  if (Number.isNaN(urlExpiration) || urlExpiration <= Date.now()) {
-    throw new Error("Đường dẫn tải sách đã hết hạn");
-  }
-
-  const response = await fetch(data.downloadUrl);
-
-  if (!response.ok) {
-    throw new Error(`Không thể tải file sách (${response.status})`);
-  }
-
-  const encryptedFile = await response.blob();
-
-  if (encryptedFile.size === 0) {
-    throw new Error("File sách tải về bị rỗng");
-  }
-
-  const record: OfflineBookRecord = {
-    owner,
-    bookId,
-    encryptedFile,
-    license: data.license,
-    downloadedAt: new Date().toISOString(),
-  };
-
-  await storeOfflineBook(record);
-
-  return record;
-}
+  const accountKey = await generateKey(userId);
+  await saveKey(accountKey);
+  return accountKey;
+};

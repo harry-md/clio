@@ -146,6 +146,7 @@ public class CryptoServiceImpl implements CryptoService {
         try {
             KeySpec keySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(publicKeySpki));
             PublicKey publicKey = KeyFactory.getInstance("RSA").generatePublic(keySpec);
+
             if (!(publicKey instanceof RSAPublicKey rsaPublicKey)
                     || rsaPublicKey.getModulus().bitLength() < 2048) {
                 throw new BadRequestException("Public key không hợp lệ");
@@ -160,6 +161,7 @@ public class CryptoServiceImpl implements CryptoService {
         byte[] decoded = Base64.getDecoder().decode(encryptedContentKey);
         byte[] nonce = Arrays.copyOf(decoded, GCM_NONCE_LENGTH);
         byte[] cipherText = Arrays.copyOfRange(decoded, GCM_NONCE_LENGTH, decoded.length);
+
         try {
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
             cipher.init(
@@ -180,7 +182,7 @@ public class CryptoServiceImpl implements CryptoService {
             Cipher cipher = Cipher.getInstance("RSA/ECB/OAEPPadding");
             cipher.init(Cipher.WRAP_MODE, publicKey, oaepParameterSpec);
 
-            byte[] wrappedKey = cipher.doFinal(contentKey.getEncoded());
+            byte[] wrappedKey = cipher.wrap(contentKey);
             return Base64.getUrlEncoder().withoutPadding().encodeToString(wrappedKey);
         } catch (GeneralSecurityException ex) {
             throw new CryptoException("Lỗi wrap contentKey", ex);

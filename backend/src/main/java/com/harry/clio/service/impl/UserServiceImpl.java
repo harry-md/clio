@@ -46,7 +46,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             throws UsernameNotFoundException {
         User user = userRepository
                 .findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy user"));
+                .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy user"));
+
         Set<GrantedAuthority> authorities =
                 Set.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
 

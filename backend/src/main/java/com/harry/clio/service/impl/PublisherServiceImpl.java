@@ -73,8 +73,8 @@ public class PublisherServiceImpl implements PublisherService {
         User user = userRepository
                 .findById(publisherForm.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
-
         user.setRole(UserRole.PUBLISHER);
+
         Publisher publisher = Publisher.builder()
                 .user(user)
                 .bankAccountNumber(publisherForm.getBankAccountNumber())

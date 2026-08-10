@@ -88,7 +88,6 @@ export const LoginForm = () => {
           id="username"
           name="username"
           required
-          autoComplete="username"
           placeholder="Nhập tên đăng nhập"
           value={form.username}
           onChange={(event) =>
@@ -108,7 +107,6 @@ export const LoginForm = () => {
           name="password"
           type="password"
           required
-          autoComplete="current-password"
           placeholder="Nhập mật khẩu"
           value={form.password}
           onChange={(event) =>
