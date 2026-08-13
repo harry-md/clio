@@ -47,7 +47,7 @@ public class R2Service {
                 .build();
 
         PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
-                .signatureDuration(Duration.ofMinutes(30))
+                .signatureDuration(Duration.ofMinutes(5))
                 .putObjectRequest(req)
                 .build();
 

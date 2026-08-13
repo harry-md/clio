@@ -44,8 +44,6 @@ public class BookServiceImpl implements BookService {
     private final PublisherRepository publisherRepository;
     private final BookProcessingQueue bookProcessingQueue;
 
-    private record CreatedBook(int bookId, BookDetailResponse response) {}
-
     @Transactional
     @Override
     public BookDetailResponse uploadBook(int publisherId, CreateBookMetadataRequest request) {
@@ -66,48 +64,13 @@ public class BookServiceImpl implements BookService {
         BookInfo bookInfo = bookInfoRepository.save(BookInfo.builder()
                 .book(book)
                 .isbn(request.isbn())
+                .language(request.language())
                 .description(request.description())
                 .build());
 
-        CreatedBook savedBook = new CreatedBook(
-                book.getId(),
-                bookMapper.toDetailResponse(book, bookInfoMapper.toResponse(bookInfo)));
-
-        bookProcessingQueue.enqueue(savedBook.bookId());
-        return savedBook.response();
+        bookProcessingQueue.enqueue(book.getId());
+        return bookMapper.toDetailResponse(book, bookInfoMapper.toResponse(bookInfo));
     }
-
-    //    @Override
-    //    public BookDetailResponse uploadBook(int publisherId, CreateBookMetadataRequest request) {
-    //        CreatedBook savedBook = transactionTemplate.execute(status -> {
-    //            Set<Category> categories =
-    //                    new HashSet<>(categoryRepository.findAllById(request.categoryIds()));
-    //
-    //            List<BookAuthorResponse> authorSnapshots = buildAuthorSnapshot(request.authors());
-    //
-    //            Book book = bookRepository.save(bookMapper.toEntity(
-    //                    request,
-    //                    publisherRepository.getReferenceById(publisherId),
-    //                    request.objectKey(),
-    //                    authorSnapshots,
-    //                    categories));
-    //
-    //            bookAuthorRepository.saveAll(buildBookAuthors(book, authorSnapshots));
-    //
-    //            BookInfo bookInfo = bookInfoRepository.save(BookInfo.builder()
-    //                    .book(book)
-    //                    .isbn(request.isbn())
-    //                    .description(request.description())
-    //                    .build());
-    //
-    //            return new CreatedBook(
-    //                    book.getId(),
-    //                    bookMapper.toDetailResponse(book, bookInfoMapper.toResponse(bookInfo)));
-    //        });
-    //
-    //        bookProcessingQueue.enqueue(savedBook.bookId());
-    //        return savedBook.response();
-    //    }
 
     private List<BookAuthorResponse> buildAuthorSnapshot(List<BookAuthorResponse> request) {
         Set<Integer> authorIds =

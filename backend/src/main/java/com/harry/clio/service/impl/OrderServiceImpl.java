@@ -169,6 +169,7 @@ public class OrderServiceImpl implements OrderService {
 
         Map<Integer, BigDecimal> revenueByPublisher = new HashMap<>();
         List<Integer> bookIds = new ArrayList<>();
+
         for (OrderDetail od : orderDetails) {
             Book book = od.getBook();
             Publisher publisher = book.getPublisher();
@@ -232,15 +233,18 @@ public class OrderServiceImpl implements OrderService {
 
         LocalDate current = startDate;
         BigDecimal allocatedAmount = BigDecimal.ZERO;
+
         while (current.isBefore(endDate)) {
             LocalDate nextMonth = current.withDayOfMonth(1).plusMonths(1);
             LocalDate sliceEnd = nextMonth.isBefore(endDate) ? nextMonth : endDate;
+
             long elapsedDays = ChronoUnit.DAYS.between(startDate, sliceEnd);
 
             BigDecimal cumulativeAmount = sliceEnd.equals(endDate)
                     ? totalAmount
                     : totalAmount.multiply(BigDecimal.valueOf(elapsedDays)
                             .divide(BigDecimal.valueOf(totalDays), 2, RoundingMode.HALF_UP));
+
             BigDecimal sliceAmount = cumulativeAmount.subtract(allocatedAmount);
 
             allocations.add(SubscriptionAllocation.builder()

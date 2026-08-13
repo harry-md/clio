@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { EmptyState } from "@/components/EmptyState";
 import { Header } from "@/components/Header";
-import { LibraryBooksClient } from "@/components/LibraryBooksClient";
+import { LibraryBooks } from "@/components/LibraryBooks";
 import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { Pagination } from "@/components/Pagination";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -126,7 +126,7 @@ const LibraryPageContent = async ({ searchParams }: LibraryPageProps) => {
 
       {data.content.length > 0 ? (
         <>
-          <LibraryBooksClient libraries={data.content} />
+          <LibraryBooks libraries={data.content} />
 
           <Pagination
             currentPage={data.page.number}
