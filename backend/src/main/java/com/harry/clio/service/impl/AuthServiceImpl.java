@@ -4,7 +4,7 @@ import com.harry.clio.dto.CustomUser;
 import com.harry.clio.dto.login.AuthResponse;
 import com.harry.clio.dto.login.LoginRequest;
 import com.harry.clio.dto.login.LoginResult;
-import com.harry.clio.exception.AuthenticationFailedException;
+import com.harry.clio.exception.BadRequestException;
 import com.harry.clio.service.AuthService;
 import com.harry.clio.util.JwtUtil;
 import com.nimbusds.jose.JOSEException;
@@ -12,6 +12,7 @@ import com.nimbusds.jose.JOSEException;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -24,11 +25,12 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public LoginResult login(LoginRequest request) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.username(), request.password()));
-        CustomUser principal = (CustomUser) authentication.getPrincipal();
-
         try {
+            Authentication authentication =
+                    authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                            request.username(), request.password()));
+            CustomUser principal = (CustomUser) authentication.getPrincipal();
+
             String token = jwtUtil.generateToken(principal);
             AuthResponse authResponse = new AuthResponse(
                     principal.getUsername(),
@@ -37,9 +39,10 @@ public class AuthServiceImpl implements AuthService {
                     principal.getAvatar(),
                     principal.getRole());
             return new LoginResult(token, authResponse);
-
+        } catch (BadCredentialsException ex) {
+            throw new BadRequestException("Tên đăng nhập hoặc mật khẩu không chính xác!");
         } catch (JOSEException ex) {
-            throw new AuthenticationFailedException("Lỗi đăng nhập");
+            throw new RuntimeException("Có lỗi xảy ra");
         }
     }
 }

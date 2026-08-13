@@ -16,8 +16,11 @@ export const BookCard = ({ book }: BookCardProps) => {
     "Chưa cập nhật tác giả";
 
   return (
-    <article className="group min-w-0">
-      <Link href={`/books/${book.id}`} className="block">
+    <Link
+      href={`/books/${book.id}`}
+      className="group block min-w-0 cursor-pointer"
+    >
+      <article>
         <div className="relative aspect-2/3 overflow-hidden border border-border bg-muted">
           {book.thumbnail ? (
             <Image
@@ -25,7 +28,7 @@ export const BookCard = ({ book }: BookCardProps) => {
               alt={`Bìa sách ${book.title}`}
               fill
               sizes="(min-width: 1280px) 16vw, (min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
-              className="object-cover transition duration-300 group-hover:scale-[1.05] group-hover:opacity-90"
+              className="object-cover transition duration-300 group-hover:scale-[1.03] group-hover:opacity-90"
             />
           ) : (
             <div
@@ -47,31 +50,30 @@ export const BookCard = ({ book }: BookCardProps) => {
             </div>
           )}
         </div>
-      </Link>
 
-      <div className="pt-4">
-        <Link
-          href={`/books/${book.id}`}
-          className="line-clamp-2 text-xl font-semibold leading-snug text-foreground transition hover:text-link"
-        >
-          {book.title}
-        </Link>
+        <div className="pt-4">
+          <h3 className="line-clamp-2 text-xl font-semibold leading-snug text-foreground transition group-hover:text-link">
+            {book.title}
+          </h3>
 
-        <p className="mt-1 truncate text-muted-foreground">{authorNames}</p>
+          <p className="mt-1 truncate text-muted-foreground transition group-hover:text-link">
+            {authorNames}
+          </p>
 
-        <div className="mt-3 flex items-center justify-between gap-3 border-t border-border pt-3">
-          <span className="font-semibold text-price">
-            {`${priceFormatter.format(Number(book.price))} VND`}
-          </span>
-
-          {book.rating !== null && (
-            <span className="text-muted-foreground">
-              <span className="text-rating">★</span> {book.rating.toFixed(1)} (
-              {book.ratingCount})
+          <div className="mt-3 flex items-center justify-between gap-3 border-t border-border pt-3">
+            <span className="font-semibold text-price">
+              {`${priceFormatter.format(Number(book.price))} VND`}
             </span>
-          )}
+
+            {book.rating !== null && (
+              <span className="text-muted-foreground">
+                <span className="text-rating">★</span> {book.rating.toFixed(1)}{" "}
+                ({book.ratingCount})
+              </span>
+            )}
+          </div>
         </div>
-      </div>
-    </article>
+      </article>
+    </Link>
   );
 };

@@ -36,6 +36,7 @@ public class PaymentServiceImpl implements PaymentService {
         try {
             List<SessionCreateParams.LineItem> lineItems =
                     items.stream().map(this::createLineItem).toList();
+
             SessionCreateParams params = SessionCreateParams.builder()
                     .setMode(SessionCreateParams.Mode.PAYMENT)
                     .setSuccessUrl(stripeSuccessUrl)
@@ -44,6 +45,7 @@ public class PaymentServiceImpl implements PaymentService {
                     .putMetadata("orderId", orderId.toString())
                     .addAllLineItem(lineItems)
                     .build();
+
             RequestOptions requestOptions = RequestOptions.builder()
                     .setApiKey(stripeSecretKey)
                     .setIdempotencyKey(orderId.toString())
@@ -60,12 +62,14 @@ public class PaymentServiceImpl implements PaymentService {
                         .setName(item.itemName())
                         .putMetadata("itemId", item.itemId().toString())
                         .build();
+
         SessionCreateParams.LineItem.PriceData priceData =
                 SessionCreateParams.LineItem.PriceData.builder()
                         .setCurrency("vnd")
                         .setUnitAmount(item.price().longValueExact())
                         .setProductData(productData)
                         .build();
+
         return SessionCreateParams.LineItem.builder()
                 .setQuantity(1L)
                 .setPriceData(priceData)

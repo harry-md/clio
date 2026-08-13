@@ -1,6 +1,7 @@
 package com.harry.clio.dto.book;
 
 import com.harry.clio.entity.BookAuthorResponse;
+import com.harry.clio.entity.Language;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
@@ -30,5 +31,7 @@ public record CreateBookMetadataRequest(
 
         @Size(max = 20, message = "ISBN vượt quá độ dài cho phép")
         String isbn,
+
+        Language language,
 
         @NotBlank(message = "Object key không được trống") String objectKey) {}

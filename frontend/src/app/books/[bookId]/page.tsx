@@ -233,11 +233,11 @@ const BookDetailPage = async ({ params }: BookDetailPageProps) => {
 
             <section className="grid gap-12 py-14 lg:grid-cols-[minmax(0,1fr)_300px]">
               <div>
-                <h2 className="text-5xl font-semibold text-foreground">
+                <h2 className="text-4xl font-semibold text-foreground">
                   Giới thiệu
                 </h2>
 
-                <div className="mt-6 max-w-3xl whitespace-pre-line text-2xl leading-9 text-foreground">
+                <div className="mt-6 whitespace-pre-line text-xl leading-9 text-foreground">
                   {book.bookInfo?.description ||
                     "Chưa có phần giới thiệu cho sách này."}
                 </div>

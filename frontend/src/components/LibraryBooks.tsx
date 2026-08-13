@@ -8,6 +8,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { useAuth } from "@/context/AuthContext";
+import { Api, getApiErrorMessage } from "@/lib/api";
+import { getBooksByUser, getOrCreateKey, storeBook } from "@/lib/offline";
 import type { LibraryItem, UserLibraryType } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -97,9 +99,7 @@ const LibraryCard = ({
         <p className="mt-1 truncate text-muted-foreground">{authorNames}</p>
 
         <div className="mt-3 border-t border-border pt-3">
-          {downloaded ? (
-            <p className="text-sm font-semibold text-link">Đã tải xuống</p>
-          ) : (
+          {!downloaded && (
             <Button
               type="button"
               size="sm"
@@ -127,13 +127,18 @@ const LibraryCard = ({
   );
 };
 
-interface LibraryBooksClientProps {
+interface LibraryBooksProps {
   libraries: LibraryItem[];
 }
+interface DownloadResponse {
+  downloadUrl: string;
+  urlExpiredAt: string;
+  license: string;
+}
 
-export const LibraryBooksClient = ({ libraries }: LibraryBooksClientProps) => {
+export const LibraryBooks = ({ libraries }: LibraryBooksProps) => {
   const { user, initialized } = useAuth();
-  const owner = user?.username;
+  const userId = user?.id;
 
   const [downloadedBookIds, setDownloadedBookIds] = useState<Set<number>>(
     new Set(),
@@ -145,20 +150,75 @@ export const LibraryBooksClient = ({ libraries }: LibraryBooksClientProps) => {
   );
   const [error, setError] = useState("");
 
+  const handleDownload = async (bookId: number): Promise<void> => {
+    if (!user) {
+      return;
+    }
+
+    try {
+      setDownloadingBookId(bookId);
+      setError("");
+
+      const accountKey = await getOrCreateKey(user.id);
+
+      const { data } = await Api.post<DownloadResponse>("/libraries/download", {
+        bookId: bookId,
+        publicKeySpki: accountKey.publicKeySpki,
+      });
+
+      await storeBook(user.id, bookId, data.license, data.downloadUrl);
+
+      setDownloadedBookIds((current) => {
+        const bookIds = new Set(current);
+        bookIds.add(bookId);
+        return bookIds;
+      });
+    } catch (error: unknown) {
+      setError(getApiErrorMessage(error));
+    } finally {
+      setDownloadingBookId(null);
+    }
+  };
+
   useEffect(() => {
     setDownloadedBookIds(new Set());
     setOfflineDataReady(false);
+    setError("");
 
-    if (!initialized || !owner) {
+    if (!initialized || userId === undefined) {
       return;
     }
 
     let active = true;
 
+    const loadOfflineBooks = async () => {
+      try {
+        const books = await getBooksByUser(userId);
+
+        if (!active) {
+          return;
+        }
+
+        setDownloadedBookIds(new Set(books.map((book) => book.bookId)));
+      } catch (error: unknown) {
+        if (active) {
+          setError(
+            error instanceof Error ? error.message : "Lỗi kiểm tra sách đã tải",
+          );
+        }
+      } finally {
+        if (active) {
+          setOfflineDataReady(true);
+        }
+      }
+    };
+
+    void loadOfflineBooks();
+
     return () => {
       active = false;
     };
-  }, [initialized, owner]);
+  }, [initialized, userId]);
 
   return (
     <>
@@ -174,10 +234,11 @@ export const LibraryBooksClient = ({ libraries }: LibraryBooksClientProps) => {
             key={library.id}
             library={library}
             downloaded={downloadedBookIds.has(library.bookId)}
+            onDownloadAction={handleDownload}
             checkingOfflineData={!offlineDataReady}
             downloading={downloadingBookId === library.bookId}
             downloadDisabled={
-              !owner || !offlineDataReady || downloadingBookId !== null
+              !userId || !offlineDataReady || downloadingBookId !== null
             }
           />
         ))}

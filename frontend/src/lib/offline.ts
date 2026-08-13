@@ -1,151 +1,103 @@
-import { Api } from "@/lib/api";
+import {
+  type DBSchema,
+  type IDBPDatabase,
+  openDB,
+  type StoreKey,
+  type StoreNames,
+  type StoreValue,
+} from "idb";
 
-const DATABASE_NAME = "clio-offline";
-const DATABASE_VERSION = 1;
+const DB_NAME = "offline";
+const DB_VERSION = 2;
+const KEY_STORE = "device-keys";
+const BOOK_STORE = "offline-books";
 
-const DEVICE_KEYS_STORE = "device-keys";
-const OFFLINE_BOOKS_STORE = "offline-books";
-const OFFLINE_BOOK_OWNER_INDEX = "owner";
-
-const DEVICE_KEY_ID = "browser-device-key";
-
-interface DeviceKeyRecord {
-  id: string;
+export interface AccountKey {
+  id: number;
   privateKey: CryptoKey;
   publicKeySpki: string;
+  createdAt: string;
 }
 
-interface DownloadResponse {
-  downloadUrl: string;
-  urlExpiredAt: string;
-  license: string;
-}
-
-export interface OfflineBookRecord {
-  owner: string;
+export interface BookData {
+  userId: number;
   bookId: number;
-  encryptedFile: Blob;
   license: string;
+  encryptedFile: Blob;
   downloadedAt: string;
 }
 
-let databasePromise: Promise<IDBDatabase> | null = null;
-let deviceKeyPromise: Promise<DeviceKeyRecord> | null = null;
-
-function requestToPromise<T>(request: IDBRequest<T>): Promise<T> {
-  return new Promise((resolve, reject) => {
-    request.onsuccess = () => {
-      resolve(request.result);
-    };
-
-    request.onerror = () => {
-      reject(
-        request.error ?? new Error("Không thể thực hiện thao tác IndexedDB"),
-      );
-    };
-  });
+interface MyDB extends DBSchema {
+  "device-keys": {
+    key: number;
+    value: AccountKey;
+  };
+  "offline-books": {
+    key: [number, number];
+    value: BookData;
+  };
 }
 
-function transactionToPromise(transaction: IDBTransaction): Promise<void> {
-  return new Promise((resolve, reject) => {
-    transaction.oncomplete = () => {
-      resolve();
-    };
+let dbPromise: Promise<IDBPDatabase<MyDB>> | null = null;
 
-    transaction.onerror = () => {
-      reject(transaction.error ?? new Error("IndexedDB transaction thất bại"));
-    };
-
-    transaction.onabort = () => {
-      reject(transaction.error ?? new Error("IndexedDB transaction bị hủy"));
-    };
-  });
-}
-
-function openOfflineDatabase(): Promise<IDBDatabase> {
-  if (databasePromise) {
-    return databasePromise;
-  }
-
-  if (!globalThis.indexedDB) {
+const getDatabase = (): Promise<IDBPDatabase<MyDB>> => {
+  if (typeof globalThis.indexedDB === "undefined") {
     return Promise.reject(new Error("Trình duyệt không hỗ trợ IndexedDB"));
   }
 
-  databasePromise = new Promise((resolve, reject) => {
-    const request = indexedDB.open(DATABASE_NAME, DATABASE_VERSION);
+  if (dbPromise === null) {
+    dbPromise = openDB<MyDB>(DB_NAME, DB_VERSION, {
+      upgrade(db) {
+        if (!db.objectStoreNames.contains(KEY_STORE)) {
+          db.createObjectStore(KEY_STORE);
+        }
+        if (!db.objectStoreNames.contains(BOOK_STORE)) {
+          db.createObjectStore(BOOK_STORE);
+        }
+      },
+    }).catch((error: unknown) => {
+      dbPromise = null;
+      throw error;
+    });
+  }
+  return dbPromise;
+};
 
-    request.onupgradeneeded = () => {
-      const database = request.result;
+export const get = async <StoreName extends StoreNames<MyDB>>(
+  objectKey: StoreName,
+  key: StoreKey<MyDB, StoreName>,
+): Promise<StoreValue<MyDB, StoreName> | undefined> => {
+  const db = await getDatabase();
 
-      if (!database.objectStoreNames.contains(DEVICE_KEYS_STORE)) {
-        database.createObjectStore(DEVICE_KEYS_STORE, {
-          keyPath: "id",
-        });
-      }
+  return db.get(objectKey, key);
+};
 
-      if (!database.objectStoreNames.contains(OFFLINE_BOOKS_STORE)) {
-        const offlineBooksStore = database.createObjectStore(
-          OFFLINE_BOOKS_STORE,
-          {
-            keyPath: ["owner", "bookId"],
-          },
-        );
+const save = async <StoreName extends StoreNames<MyDB>>(
+  objectKey: StoreName,
+  value: StoreValue<MyDB, StoreName>,
+): Promise<void> => {
+  const db = await getDatabase();
 
-        offlineBooksStore.createIndex(OFFLINE_BOOK_OWNER_INDEX, "owner", {
-          unique: false,
-        });
-      }
-    };
-
-    request.onsuccess = () => {
-      const database = request.result;
-
-      database.onversionchange = () => {
-        database.close();
-      };
-
-      resolve(database);
-    };
-
-    request.onerror = () => {
-      reject(request.error ?? new Error("Không thể mở IndexedDB"));
-    };
-
-    request.onblocked = () => {
-      reject(new Error("IndexedDB đang bị khóa bởi một tab khác"));
-    };
-  });
-
-  return databasePromise;
-}
-
-function arrayBufferToBase64(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer);
-  let binary = "";
-
-  for (const byte of bytes) {
-    binary += String.fromCharCode(byte);
+  if (objectKey === KEY_STORE) {
+    const accountKey = value as AccountKey;
+    await db.add(KEY_STORE, accountKey, accountKey.id);
+    return;
   }
 
-  return btoa(binary);
-}
+  const bookData = value as BookData;
+  await db.put(BOOK_STORE, bookData, [bookData.userId, bookData.bookId]);
+};
 
-async function readDeviceKey(): Promise<DeviceKeyRecord | undefined> {
-  const database = await openOfflineDatabase();
-  const transaction = database.transaction(DEVICE_KEYS_STORE, "readonly");
+export const del = async <StoreName extends StoreNames<MyDB>>(
+  objectKey: StoreName,
+  key: StoreKey<MyDB, StoreName>,
+): Promise<void> => {
+  const db = await getDatabase();
+  await db.delete(objectKey, key);
+};
 
-  const request = transaction
-    .objectStore(DEVICE_KEYS_STORE)
-    .get(DEVICE_KEY_ID) as IDBRequest<DeviceKeyRecord | undefined>;
-
-  const record = await requestToPromise(request);
-  await transactionToPromise(transaction);
-
-  return record;
-}
-
-async function createDeviceKey(): Promise<DeviceKeyRecord> {
-  const keyPair = (await crypto.subtle.generateKey(
+const generateKey = async (userId: number): Promise<AccountKey> => {
+  const keyPair: CryptoKeyPair = await crypto.subtle.generateKey(
     {
       name: "RSA-OAEP",
       modulusLength: 2048,
@@ -153,128 +105,76 @@ async function createDeviceKey(): Promise<DeviceKeyRecord> {
       hash: "SHA-256",
     },
     false,
-    ["encrypt", "decrypt"],
-  )) as CryptoKeyPair;
-
-  const publicKeySpkiBuffer = await crypto.subtle.exportKey(
-    "spki",
-    keyPair.publicKey,
+    ["wrapKey", "unwrapKey"],
   );
 
-  const record: DeviceKeyRecord = {
-    id: DEVICE_KEY_ID,
+  const publicKeySpki = btoa(
+    String.fromCharCode(
+      ...new Uint8Array(
+        await crypto.subtle.exportKey("spki", keyPair.publicKey),
+      ),
+    ),
+  );
+
+  return {
+    id: userId,
     privateKey: keyPair.privateKey,
-    publicKeySpki: arrayBufferToBase64(publicKeySpkiBuffer),
+    publicKeySpki: publicKeySpki,
+    createdAt: new Date().toISOString(),
   };
+};
 
-  const database = await openOfflineDatabase();
-  const transaction = database.transaction(DEVICE_KEYS_STORE, "readwrite");
-
-  transaction.objectStore(DEVICE_KEYS_STORE).put(record);
-
-  await transactionToPromise(transaction);
-
-  return record;
-}
-
-async function loadOrCreateDeviceKey(): Promise<DeviceKeyRecord> {
-  const existingKey = await readDeviceKey();
-
-  if (existingKey) {
-    return existingKey;
+export const getOrCreateKey = async (userId: number): Promise<AccountKey> => {
+  const key = await get(KEY_STORE, userId);
+  if (key !== undefined) {
+    return key;
   }
 
-  return createDeviceKey();
-}
+  const accountKey = await generateKey(userId);
+  await save(KEY_STORE, accountKey);
+  return accountKey;
+};
 
-export function ensureDeviceKey(): Promise<DeviceKeyRecord> {
-  if (!deviceKeyPromise) {
-    deviceKeyPromise = loadOrCreateDeviceKey().catch((error: unknown) => {
-      deviceKeyPromise = null;
-      throw error;
-    });
-  }
+export const getBooksByUser = async (userId: number): Promise<BookData[]> => {
+  const db = await getDatabase();
 
-  return deviceKeyPromise;
-}
+  const range = IDBKeyRange.bound(
+    [userId, 0],
+    [userId, Number.MAX_SAFE_INTEGER],
+  );
+  return db.getAll(BOOK_STORE, range);
+};
 
-export async function getDevicePrivateKey(): Promise<CryptoKey> {
-  const deviceKey = await ensureDeviceKey();
-  return deviceKey.privateKey;
-}
-
-async function storeOfflineBook(record: OfflineBookRecord): Promise<void> {
-  const database = await openOfflineDatabase();
-  const transaction = database.transaction(OFFLINE_BOOKS_STORE, "readwrite");
-
-  transaction.objectStore(OFFLINE_BOOKS_STORE).put(record);
-
-  await transactionToPromise(transaction);
-}
-
-export async function getDownloadedBookIds(
-  owner: string,
-): Promise<Set<number>> {
-  const database = await openOfflineDatabase();
-  const transaction = database.transaction(OFFLINE_BOOKS_STORE, "readonly");
-
-  const index = transaction
-    .objectStore(OFFLINE_BOOKS_STORE)
-    .index(OFFLINE_BOOK_OWNER_INDEX);
-
-  const keys = await requestToPromise(index.getAllKeys(owner));
-
-  await transactionToPromise(transaction);
-
-  const bookIds = keys.flatMap((key) => {
-    if (Array.isArray(key) && typeof key[1] === "number") {
-      return [key[1]];
-    }
-
-    return [];
-  });
-
-  return new Set(bookIds);
-}
-
-export async function downloadBookForOffline(
-  owner: string,
+export const storeBook = async (
+  userId: number,
   bookId: number,
-): Promise<OfflineBookRecord> {
-  const deviceKey = await ensureDeviceKey();
-
-  const { data } = await Api.post<DownloadResponse>("/libraries/download", {
-    bookId,
-    publicKeySpki: deviceKey.publicKeySpki,
+  license: string,
+  downloadUrl: string,
+): Promise<void> => {
+  const res = await fetch(downloadUrl, {
+    credentials: "omit",
+    cache: "no-store",
   });
-
-  const urlExpiration = Date.parse(data.urlExpiredAt);
-
-  if (Number.isNaN(urlExpiration) || urlExpiration <= Date.now()) {
-    throw new Error("Đường dẫn tải sách đã hết hạn");
+  if (!res.ok) {
+    throw new Error("Lỗi tải file");
   }
 
-  const response = await fetch(data.downloadUrl);
-
-  if (!response.ok) {
-    throw new Error(`Không thể tải file sách (${response.status})`);
-  }
-
-  const encryptedFile = await response.blob();
-
+  const encryptedFile = await res.blob();
   if (encryptedFile.size === 0) {
-    throw new Error("File sách tải về bị rỗng");
+    throw new Error("File bị lỗi");
   }
 
-  const record: OfflineBookRecord = {
-    owner,
-    bookId,
-    encryptedFile,
-    license: data.license,
+  if (license.trim() === "") {
+    throw new Error("License không hợp lệ");
+  }
+
+  const bookData: BookData = {
+    userId: userId,
+    bookId: bookId,
+    license: license,
+    encryptedFile: encryptedFile,
     downloadedAt: new Date().toISOString(),
   };
 
-  await storeOfflineBook(record);
-
-  return record;
-}
+  await save(BOOK_STORE, bookData);
+};

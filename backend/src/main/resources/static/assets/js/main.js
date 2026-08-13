@@ -44,14 +44,7 @@
     }
 
     function getPreferredTheme(storageAvailable) {
-        const savedTheme = storageAvailable
-            ? window.localStorage.getItem(themeStorageKey)
-            : "";
-
-        if (savedTheme === "dark" || savedTheme === "light") {
-            return savedTheme;
-        }
-        return "dark";
+        return "light";
     }
 
     onReady(function () {

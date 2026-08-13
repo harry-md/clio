@@ -53,7 +53,9 @@ public class UserLibraryServiceImpl implements UserLibraryService {
                 .findAddableBookById(bookId, BookStatus.COMPLETED, BookType.SYSTEM)
                 .orElseThrow(
                         () -> new ResourceNotFoundException("Sách không thể thêm vào thư viện"));
+
         User user = userRepository.getReferenceById(userId);
+
         UserLibrary library = UserLibrary.builder()
                 .user(user)
                 .book(book)
@@ -67,13 +69,16 @@ public class UserLibraryServiceImpl implements UserLibraryService {
         BookInfo info = bookInfoRepository
                 .findById(bookId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thông tin sách"));
+
         double pageCount = Math.ceil((double) info.getWordCount() / 250);
+
         SubscriptionBookBilling billing = SubscriptionBookBilling.builder()
                 .user(user)
                 .book(book)
                 .pageCount((long) pageCount)
                 .build();
         subscriptionBookBillingRepository.save(billing);
+
         return userLibraryMapper.toResponse(userLibraryRepository.save(library));
     }
 
@@ -90,6 +95,7 @@ public class UserLibraryServiceImpl implements UserLibraryService {
         UserLibrary library = userLibraryRepository
                 .findByUserIdAndBookId(userId, bookId)
                 .orElseThrow(() -> new BadRequestException("Chưa có sách này trong thư viện"));
+
         Book book = library.getBook();
 
         String license;
@@ -102,6 +108,7 @@ public class UserLibraryServiceImpl implements UserLibraryService {
                 Subscription sub = subscriptionRepository
                         .findByUserIdAndStatus(userId, SubscriptionStatus.ACTIVE)
                         .orElseThrow(() -> new BadRequestException("Chưa có gói đăng ký hợp lệ"));
+
                 license = cryptoService.createLicense(
                         userId,
                         bookId,
@@ -114,7 +121,6 @@ public class UserLibraryServiceImpl implements UserLibraryService {
             }
             default -> throw new BadRequestException("Sách không hợp lệ");
         }
-
         String downloadUrl = r2Service.getPresignedUrl(book.getEncryptedFileUrl());
         Instant urlExpiredAt = Instant.now().plus(Duration.ofMinutes(5));
         return new DownloadResponse(downloadUrl, urlExpiredAt, license);

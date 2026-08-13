@@ -126,6 +126,7 @@ public class BookProcessingServiceImpl implements BookProcessingService {
         try (InputStream inputStream = Files.newInputStream(path)) {
             nl.siegmann.epublib.domain.Book book = new EpubReader().readEpub(inputStream);
             long wordCount = 0;
+
             for (Resource resource : book.getContents()) {
                 String htmlContent = new String(resource.getData(), StandardCharsets.UTF_8);
                 String content = Jsoup.parse(htmlContent).text();

@@ -20,7 +20,6 @@ import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequ
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -48,7 +47,7 @@ public class R2Service {
                 .build();
 
         PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
-                .signatureDuration(Duration.ofMinutes(30))
+                .signatureDuration(Duration.ofMinutes(5))
                 .putObjectRequest(req)
                 .build();
 
@@ -67,8 +66,8 @@ public class R2Service {
                     .bucket(r2BucketName)
                     .key(objectKey)
                     .build();
-            s3Client.getObject(req, tmpFile);
 
+            s3Client.getObject(req, tmpFile);
             return tmpFile;
         } catch (IOException | RuntimeException ex) {
             if (tmpFile != null) {
@@ -86,6 +85,7 @@ public class R2Service {
                     .key(objectKey)
                     .contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE)
                     .build();
+
             s3Client.putObject(req, RequestBody.fromFile(file));
             return objectKey;
         } catch (RuntimeException ex) {
@@ -113,10 +113,12 @@ public class R2Service {
     public String getPresignedUrl(String objectKey) {
         GetObjectRequest objectRequest =
                 GetObjectRequest.builder().bucket(r2BucketName).key(objectKey).build();
+
         GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
                 .signatureDuration(Duration.ofMinutes(30))
                 .getObjectRequest(objectRequest)
                 .build();
+
         PresignedGetObjectRequest presignedRequest = s3Presigner.presignGetObject(presignRequest);
         return presignedRequest.url().toExternalForm();
     }
@@ -137,16 +139,6 @@ public class R2Service {
                 Files.deleteIfExists(tmpFile);
             } catch (IOException ex) {
                 log.error("Lỗi xóa file tạm {}", tmpFile.getFileName().toString(), ex);
-            }
-        }
-    }
-
-    private void deleteTmpFile(File tmpFile) {
-        if (tmpFile != null) {
-            try {
-                Files.deleteIfExists(tmpFile.toPath());
-            } catch (IOException ex) {
-                log.error("Lỗi xóa file tạm {}", tmpFile.getName(), ex);
             }
         }
     }

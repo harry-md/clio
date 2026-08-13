@@ -23,7 +23,7 @@ const priceFormatter = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,
 });
 
-export const CartClient = () => {
+export const Cart = () => {
   const router = useRouter();
   const { user, initialized } = useAuth();
   const { books, removeBook } = useCart();
