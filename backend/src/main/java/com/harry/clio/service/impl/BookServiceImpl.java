@@ -20,8 +20,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashSet;
 import java.util.List;
@@ -42,63 +42,43 @@ public class BookServiceImpl implements BookService {
     private final BookAuthorMapper bookAuthorMapper;
     private final CategoryRepository categoryRepository;
     private final PublisherRepository publisherRepository;
-    private final R2Service r2Service;
     private final BookProcessingQueue bookProcessingQueue;
 
-    private record CreatedBook(int bookId, BookDetailResponse response) {}
-
+    @Transactional
     @Override
-    public BookDetailResponse uploadBook(
-            int publisherId, CreateBookMetadataRequest request, MultipartFile file) {
-        if (categoryRepository.countByIdIn(request.categoryIds())
-                != request.categoryIds().size()) {
-            throw new BadRequestException("Danh mục không hợp lệ");
-        }
+    public BookDetailResponse uploadBook(int publisherId, CreateBookMetadataRequest request) {
+        Set<Category> categories =
+                new HashSet<>(categoryRepository.findAllById(request.categoryIds()));
 
-        String fileUrl = null;
-        CreatedBook savedBook;
-        try {
-            fileUrl = r2Service.uploadOriginEbook(file);
-            final String finalFileUrl = fileUrl;
+        List<BookAuthorResponse> authorSnapshots = buildAuthorSnapshot(request.authors());
 
-            savedBook = transactionTemplate.execute(status -> {
-                Set<Category> categories =
-                        new HashSet<>(categoryRepository.findAllById(request.categoryIds()));
-                List<BookAuthorResponse> authorSnapshots = buildAuthorSnapshot(request.authors());
+        Book book = bookRepository.save(bookMapper.toEntity(
+                request,
+                publisherRepository.getReferenceById(publisherId),
+                request.objectKey(),
+                authorSnapshots,
+                categories));
 
-                Book book = bookRepository.save(bookMapper.toEntity(
-                        request,
-                        publisherRepository.getReferenceById(publisherId),
-                        finalFileUrl,
-                        authorSnapshots,
-                        categories));
+        bookAuthorRepository.saveAll(buildBookAuthors(book, authorSnapshots));
 
-                bookAuthorRepository.saveAll(buildBookAuthors(book, authorSnapshots));
+        BookInfo bookInfo = bookInfoRepository.save(BookInfo.builder()
+                .book(book)
+                .isbn(request.isbn())
+                .language(request.language())
+                .description(request.description())
+                .build());
 
-                BookInfo bookInfo = bookInfoRepository.save(BookInfo.builder()
-                        .book(book)
-                        .isbn(request.isbn())
-                        .description(request.description())
-                        .fileSize(file.getSize())
-                        .build());
-
-                return new CreatedBook(
-                        book.getId(),
-                        bookMapper.toDetailResponse(book, bookInfoMapper.toResponse(bookInfo)));
-            });
-        } catch (RuntimeException ex) {
-            if (fileUrl != null) r2Service.delete(fileUrl);
-            throw ex;
-        }
-        bookProcessingQueue.enqueue(savedBook.bookId());
-        return savedBook.response();
+        bookProcessingQueue.enqueue(book.getId());
+        return bookMapper.toDetailResponse(book, bookInfoMapper.toResponse(bookInfo));
     }
 
     private List<BookAuthorResponse> buildAuthorSnapshot(List<BookAuthorResponse> request) {
         Set<Integer> authorIds =
                 request.stream().map(BookAuthorResponse::authorId).collect(Collectors.toSet());
+
         Map<Integer, Author> authors = authorRepository.findAllById(authorIds).stream()
                 .collect(Collectors.toMap(Author::getId, author -> author));
+
         return request.stream()
                 .map(authorJson -> {
                     Author author = authors.get(authorJson.authorId());
@@ -151,5 +131,10 @@ public class BookServiceImpl implements BookService {
                 .findById(book.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thông tin sách"));
         return bookMapper.toDetailResponse(book, bookInfoMapper.toResponse(bookInfo));
+    }
+
+    @Override
+    public int deleteFailedBooks() {
+        return bookRepository.deleteFailedBooks(BookStatus.FAILED);
     }
 }

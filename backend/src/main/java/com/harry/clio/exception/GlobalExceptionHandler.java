@@ -19,13 +19,6 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(AuthenticationFailedException.class)
-    public ResponseEntity<ErrorResponse> handleAuthenticationFailedException(
-            AuthenticationFailedException ex) {
-        ErrorResponse error = new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), ex.getMessage());
-        return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
-    }
-
     @ExceptionHandler(CloudinaryException.class)
     public ResponseEntity<ErrorResponse> handleCloudinaryException(CloudinaryException ex) {
         ErrorResponse error = new ErrorResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage());

@@ -44,6 +44,7 @@ public class AuthorServiceImpl implements AuthorService {
         if (avatarUrl != null) {
             author.setAvatar(avatarUrl);
         }
+
         try {
             return authorMapper.toResponse(authorRepository.save(author));
         } catch (RuntimeException ex) {
@@ -84,7 +85,9 @@ public class AuthorServiceImpl implements AuthorService {
     public void deleteAuthor(int authorId) {
         Author author = getAuthorOrThrow(authorId);
         String avatarUrl = author.getAvatar();
+
         authorRepository.delete(author);
+
         cloudinaryService.delete(avatarUrl);
     }
 }

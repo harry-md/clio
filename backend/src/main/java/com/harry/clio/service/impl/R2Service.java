@@ -1,7 +1,8 @@
 package com.harry.clio.service.impl;
 
 import com.adobe.epubcheck.api.EpubCheck;
-import com.harry.clio.exception.BadRequestException;
+import com.harry.clio.dto.book.PresignedUpload;
+import com.harry.clio.exception.InvalidEbookException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -9,18 +10,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.*;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -31,31 +30,30 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Service
 public class R2Service {
-    private static final long MAX_FILE_SIZE = 100 * 1024 * 1024;
     private static final int EPUBCHECK_FATAL = 4;
 
     @Value("${r2.bucket-name}")
-    private String R2_BUCKET_NAME;
+    private String r2BucketName;
 
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
 
-    public String uploadOriginEbook(MultipartFile file) {
-        File tmpFile = validateEbook(file);
+    public PresignedUpload createOriginUploadUrl() {
         String objectKey = "books/origin/" + UUID.randomUUID() + ".epub";
+        PutObjectRequest req = PutObjectRequest.builder()
+                .bucket(r2BucketName)
+                .key(objectKey)
+                .contentType("application/epub+zip")
+                .build();
 
-        try {
-            PutObjectRequest req = PutObjectRequest.builder()
-                    .bucket(R2_BUCKET_NAME)
-                    .key(objectKey)
-                    .contentType("application/epub+zip")
-                    .contentLength(file.getSize())
-                    .build();
-            s3Client.putObject(req, RequestBody.fromFile(tmpFile));
-            return objectKey;
-        } finally {
-            deleteTmpFile(tmpFile);
-        }
+        PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
+                .signatureDuration(Duration.ofMinutes(5))
+                .putObjectRequest(req)
+                .build();
+
+        PresignedPutObjectRequest presignedRequest = s3Presigner.presignPutObject(presignRequest);
+        return new PresignedUpload(
+                objectKey, presignedRequest.url().toExternalForm(), "application/epub+zip");
     }
 
     public Path downloadToTemp(String objectKey) {
@@ -65,11 +63,11 @@ public class R2Service {
             Files.deleteIfExists(tmpFile);
 
             GetObjectRequest req = GetObjectRequest.builder()
-                    .bucket(R2_BUCKET_NAME)
+                    .bucket(r2BucketName)
                     .key(objectKey)
                     .build();
-            s3Client.getObject(req, tmpFile);
 
+            s3Client.getObject(req, tmpFile);
             return tmpFile;
         } catch (IOException | RuntimeException ex) {
             if (tmpFile != null) {
@@ -83,10 +81,11 @@ public class R2Service {
         String objectKey = "books/encrypted/" + UUID.randomUUID();
         try {
             PutObjectRequest req = PutObjectRequest.builder()
-                    .bucket(R2_BUCKET_NAME)
+                    .bucket(r2BucketName)
                     .key(objectKey)
                     .contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE)
                     .build();
+
             s3Client.putObject(req, RequestBody.fromFile(file));
             return objectKey;
         } catch (RuntimeException ex) {
@@ -102,7 +101,7 @@ public class R2Service {
 
         try {
             DeleteObjectRequest req = DeleteObjectRequest.builder()
-                    .bucket(R2_BUCKET_NAME)
+                    .bucket(r2BucketName)
                     .key(objectKey)
                     .build();
             s3Client.deleteObject(req);
@@ -113,41 +112,24 @@ public class R2Service {
 
     public String getPresignedUrl(String objectKey) {
         GetObjectRequest objectRequest =
-                GetObjectRequest.builder().bucket(R2_BUCKET_NAME).key(objectKey).build();
+                GetObjectRequest.builder().bucket(r2BucketName).key(objectKey).build();
+
         GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
-                .signatureDuration(Duration.ofMinutes(5))
+                .signatureDuration(Duration.ofMinutes(30))
                 .getObjectRequest(objectRequest)
                 .build();
+
         PresignedGetObjectRequest presignedRequest = s3Presigner.presignGetObject(presignRequest);
         return presignedRequest.url().toExternalForm();
     }
 
-    private File validateEbook(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new BadRequestException("File không được để trống");
-        }
-        if (file.getSize() > MAX_FILE_SIZE) {
-            throw new BadRequestException("File vượt quá kích thước tối đa");
-        }
+    public void validateEbook(Path path) {
+        EpubCheck epubCheck = new EpubCheck(path.toFile());
+        int result = epubCheck.doValidate();
 
-        File tmpFile = null;
-        try {
-            tmpFile = File.createTempFile(UUID.randomUUID().toString(), ".epub");
-            file.transferTo(tmpFile);
-
-            EpubCheck epubCheck = new EpubCheck(tmpFile);
-            int result = epubCheck.doValidate();
-            boolean hasFatal = (result & EPUBCHECK_FATAL) != 0;
-            if (hasFatal) {
-                throw new BadRequestException("File Ebook có lỗi");
-            }
-            return tmpFile;
-        } catch (IOException ex) {
-            deleteTmpFile(tmpFile);
-            throw new BadRequestException("Lỗi đọc file ebook");
-        } catch (RuntimeException ex) {
-            deleteTmpFile(tmpFile);
-            throw ex;
+        boolean isFatal = (result & EPUBCHECK_FATAL) != 0;
+        if (isFatal) {
+            throw new InvalidEbookException("File ebook có lỗi");
         }
     }
 
@@ -157,16 +139,6 @@ public class R2Service {
                 Files.deleteIfExists(tmpFile);
             } catch (IOException ex) {
                 log.error("Lỗi xóa file tạm {}", tmpFile.getFileName().toString(), ex);
-            }
-        }
-    }
-
-    private void deleteTmpFile(File tmpFile) {
-        if (tmpFile != null) {
-            try {
-                Files.deleteIfExists(tmpFile.toPath());
-            } catch (IOException ex) {
-                log.error("Lỗi xóa file tạm {}", tmpFile.getName(), ex);
             }
         }
     }

@@ -14,7 +14,6 @@ public interface BookInfoMapper {
     @Mapping(target = "book", source = "book")
     @Mapping(target = "description", source = "request.description")
     @Mapping(target = "isbn", source = "request.isbn")
-    @Mapping(target = "language", expression = "java(Language.EN)")
     @Mapping(target = "fileSize", source = "fileSize")
     @Mapping(target = "wordCount", expression = "java(0L)")
     BookInfo toEntity(Book book, CreateBookMetadataRequest request, Long fileSize);
