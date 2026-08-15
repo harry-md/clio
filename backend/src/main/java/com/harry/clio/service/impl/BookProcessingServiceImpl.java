@@ -1,10 +1,10 @@
 package com.harry.clio.service.impl;
 
-import com.harry.clio.entity.Book;
-import com.harry.clio.entity.BookInfo;
-import com.harry.clio.entity.BookStatus;
 import com.harry.clio.exception.InvalidEbookException;
 import com.harry.clio.exception.ResourceNotFoundException;
+import com.harry.clio.model.Book;
+import com.harry.clio.model.BookInfo;
+import com.harry.clio.model.BookStatus;
 import com.harry.clio.repository.BookInfoRepository;
 import com.harry.clio.repository.BookRepository;
 import com.harry.clio.service.BookProcessingService;

@@ -1,7 +1,7 @@
 package com.harry.clio.repository;
 
-import com.harry.clio.entity.Subscription;
-import com.harry.clio.entity.SubscriptionStatus;
+import com.harry.clio.model.Subscription;
+import com.harry.clio.model.SubscriptionStatus;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;

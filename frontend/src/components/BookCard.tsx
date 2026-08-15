@@ -28,7 +28,7 @@ export const BookCard = ({ book }: BookCardProps) => {
               alt={`Bìa sách ${book.title}`}
               fill
               sizes="(min-width: 1280px) 16vw, (min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
-              className="object-cover transition duration-300 group-hover:scale-[1.03] group-hover:opacity-90"
+              className="object-cover group-hover:opacity-70"
             />
           ) : (
             <div
@@ -52,17 +52,17 @@ export const BookCard = ({ book }: BookCardProps) => {
         </div>
 
         <div className="pt-4">
-          <h3 className="line-clamp-2 text-xl font-semibold leading-snug text-foreground transition group-hover:text-link">
+          <h3 className="line-clamp-2 font-semibold leading-snug text-foreground transition group-hover:text-link">
             {book.title}
           </h3>
 
-          <p className="mt-1 truncate text-muted-foreground transition group-hover:text-link">
+          <p className="mt-1 text-sm truncate text-muted-foreground transition group-hover:text-link">
             {authorNames}
           </p>
 
-          <div className="mt-3 flex items-center justify-between gap-3 border-t border-border pt-3">
+          <div className="mt-3 font flex items-center justify-between gap-3 border-t border-border pt-3">
             <span className="font-semibold text-price">
-              {`${priceFormatter.format(Number(book.price))} VND`}
+              {priceFormatter.format(Number(book.price))}đ
             </span>
 
             {book.rating !== null && (

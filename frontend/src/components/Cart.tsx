@@ -155,7 +155,7 @@ export const Cart = () => {
                     </div>
 
                     <p className="mt-5 text-lg font-semibold text-price">
-                      {`${priceFormatter.format(Number(book.price))} VND`}
+                      {priceFormatter.format(Number(book.price))}đ
                     </p>
                   </div>
 
@@ -182,7 +182,7 @@ export const Cart = () => {
             <div className="mt-7 flex items-center justify-between border-y border-border py-5">
               <span className="text-lg text-muted-foreground">Tổng cộng</span>
               <span className="text-3xl font-semibold text-price">
-                {`${priceFormatter.format(totalPrice)} VND`}
+                {priceFormatter.format(totalPrice)}đ
               </span>
             </div>
 

@@ -1,0 +1,51 @@
+###
+# group: Author
+# @name Get Author
+
+GET http://localhost:8080/api/authors/1
+
+###
+# group: Author
+# @name Create Author
+
+POST http://localhost:8080/api/authors
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="fullName"
+
+Test Delete
+--WebAppBoundary
+Content-Disposition: form-data; name="biography"
+
+hehe
+--WebAppBoundary
+Content-Disposition: form-data; name="avatarFile"
+
+
+--WebAppBoundary
+
+###
+# group: Author
+# @name Update Author
+
+PATCH http://localhost:8080/api/authors/21
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="fullName"
+
+Aleksandr Sergeyevich Pushkin
+
+--WebAppBoundary
+Content-Disposition: form-data; name="verified"
+true
+
+
+--WebAppBoundary
+
+###
+# group: Author
+# @name Delete Author
+
+DELETE http://localhost:8080/api/authors/22

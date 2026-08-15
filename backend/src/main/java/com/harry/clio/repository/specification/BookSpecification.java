@@ -1,9 +1,9 @@
 package com.harry.clio.repository.specification;
 
 import com.harry.clio.dto.book.BookFilterRequest;
-import com.harry.clio.entity.Book;
-import com.harry.clio.entity.BookType;
-import com.harry.clio.entity.Category;
+import com.harry.clio.model.Book;
+import com.harry.clio.model.BookType;
+import com.harry.clio.model.Category;
 
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;

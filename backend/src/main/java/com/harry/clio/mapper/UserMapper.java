@@ -3,7 +3,7 @@ package com.harry.clio.mapper;
 import com.harry.clio.dto.user.CreateUserRequest;
 import com.harry.clio.dto.user.UserOption;
 import com.harry.clio.dto.user.UserResponse;
-import com.harry.clio.entity.User;
+import com.harry.clio.model.User;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

@@ -6,11 +6,12 @@ import {
   type StoreNames,
   type StoreValue,
 } from "idb";
+import { base64url, importSPKI, jwtVerify } from "jose";
 
 const DB_NAME = "offline";
 const DB_VERSION = 2;
 const KEY_STORE = "device-keys";
-const BOOK_STORE = "offline-books";
+export const BOOK_STORE = "offline-books";
 
 export interface AccountKey {
   id: number;
@@ -67,7 +68,7 @@ export const get = async <StoreName extends StoreNames<MyDB>>(
   objectKey: StoreName,
   key: StoreKey<MyDB, StoreName>,
 ): Promise<StoreValue<MyDB, StoreName> | undefined> => {
-  const db = await getDatabase();
+  const db: IDBPDatabase<MyDB> = await getDatabase();
 
   return db.get(objectKey, key);
 };
@@ -76,7 +77,7 @@ const save = async <StoreName extends StoreNames<MyDB>>(
   objectKey: StoreName,
   value: StoreValue<MyDB, StoreName>,
 ): Promise<void> => {
-  const db = await getDatabase();
+  const db: IDBPDatabase<MyDB> = await getDatabase();
 
   if (objectKey === KEY_STORE) {
     const accountKey = value as AccountKey;
@@ -92,7 +93,7 @@ export const del = async <StoreName extends StoreNames<MyDB>>(
   objectKey: StoreName,
   key: StoreKey<MyDB, StoreName>,
 ): Promise<void> => {
-  const db = await getDatabase();
+  const db: IDBPDatabase<MyDB> = await getDatabase();
   await db.delete(objectKey, key);
 };
 
@@ -108,7 +109,7 @@ const generateKey = async (userId: number): Promise<AccountKey> => {
     ["wrapKey", "unwrapKey"],
   );
 
-  const publicKeySpki = btoa(
+  const publicKeySpki: string = btoa(
     String.fromCharCode(
       ...new Uint8Array(
         await crypto.subtle.exportKey("spki", keyPair.publicKey),
@@ -136,7 +137,7 @@ export const getOrCreateKey = async (userId: number): Promise<AccountKey> => {
 };
 
 export const getBooksByUser = async (userId: number): Promise<BookData[]> => {
-  const db = await getDatabase();
+  const db: IDBPDatabase<MyDB> = await getDatabase();
 
   const range = IDBKeyRange.bound(
     [userId, 0],
@@ -151,7 +152,7 @@ export const storeBook = async (
   license: string,
   downloadUrl: string,
 ): Promise<void> => {
-  const res = await fetch(downloadUrl, {
+  const res: Response = await fetch(downloadUrl, {
     credentials: "omit",
     cache: "no-store",
   });
@@ -159,7 +160,7 @@ export const storeBook = async (
     throw new Error("Lỗi tải file");
   }
 
-  const encryptedFile = await res.blob();
+  const encryptedFile: Blob = await res.blob();
   if (encryptedFile.size === 0) {
     throw new Error("File bị lỗi");
   }
@@ -177,4 +178,122 @@ export const storeBook = async (
   };
 
   await save(BOOK_STORE, bookData);
+};
+
+interface BaseLibraryLicense {
+  userId: number;
+  bookId: number;
+  wrappedContentKey: string;
+  iat: number;
+}
+
+export type LibraryLicense =
+  | (BaseLibraryLicense & { licenseType: "PURCHASED" })
+  | (BaseLibraryLicense & {
+      licenseType: "SUBSCRIPTION";
+      subId: number;
+      offlineUntil: number;
+      exp: number;
+    });
+
+export const verifyLicense = async (
+  license: string,
+  expectedUserId: number,
+  expectedBookId: number,
+): Promise<LibraryLicense> => {
+  const publicKeyBase64 = process.env.NEXT_PUBLIC_PUBLIC_LICENSE_KEY;
+  if (!publicKeyBase64) {
+    throw new Error("Không tìm thấy license public key");
+  }
+
+  const publicKeyPem = atob(publicKeyBase64);
+
+  const publicKey = await importSPKI(publicKeyPem, "RS256");
+
+  const { payload } = await jwtVerify(license, publicKey, {
+    algorithms: ["RS256"],
+  });
+
+  if (
+    payload.sub !== String(expectedUserId) ||
+    typeof payload.bookId !== "number" ||
+    payload.bookId !== expectedBookId
+  ) {
+    throw new Error("License không thuộc tài khoản hoặc sách");
+  }
+
+  if (
+    typeof payload.wrappedContentKey !== "string" ||
+    typeof payload.iat !== "number"
+  ) {
+    throw new Error("License có field sai kiểu dữ liệu");
+  }
+
+  const baseLicense: BaseLibraryLicense = {
+    userId: Number(payload.sub),
+    bookId: payload.bookId,
+    wrappedContentKey: payload.wrappedContentKey,
+    iat: payload.iat,
+  };
+
+  if (payload.licenseType === "PURCHASED") {
+    return {
+      ...baseLicense,
+      licenseType: "PURCHASED",
+    };
+  }
+  if (payload.licenseType !== "SUBSCRIPTION") {
+    throw new Error("Loại license không hợp lệ");
+  }
+
+  if (
+    typeof payload.subId !== "number" ||
+    typeof payload.offlineUntil !== "number" ||
+    typeof payload.exp !== "number"
+  ) {
+    throw new Error("License có field sai kiểu dữ liệu");
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+  if (payload.offlineUntil <= now || payload.exp <= now) {
+    throw new Error("Subscription license đã hết hạn");
+  }
+
+  return {
+    ...baseLicense,
+    licenseType: "SUBSCRIPTION",
+    subId: payload.subId,
+    offlineUntil: payload.offlineUntil,
+    exp: payload.exp,
+  };
+};
+
+export const decryptFile = async (
+  userId: number,
+  wrappedContentKey: string,
+  encryptedFile: Blob,
+): Promise<ArrayBuffer> => {
+  const accountKey = await getOrCreateKey(userId);
+
+  const wrappedKey = new Uint8Array(base64url.decode(wrappedContentKey));
+
+  const contentKey = await crypto.subtle.unwrapKey(
+    "raw",
+    wrappedKey,
+    accountKey.privateKey,
+    { name: "RSA-OAEP" },
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["decrypt"],
+  );
+
+  const data = await encryptedFile.arrayBuffer();
+  const nonce = data.slice(0, 12);
+  const ciphertext = data.slice(12);
+
+  return await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv: nonce, tagLength: 128 },
+    contentKey,
+    ciphertext,
+  );
 };

@@ -172,7 +172,7 @@ const HomePage = async ({
                   </Link>
 
                   <span className="border-l border-border-strong pl-5 text-2xl font-semibold text-price">
-                    {`${priceFormatter.format(Number(featuredBook.price))} VND`}
+                    {priceFormatter.format(Number(featuredBook.price))}đ
                   </span>
                 </>
               ) : (

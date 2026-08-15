@@ -1,6 +1,6 @@
 package com.harry.clio.repository;
 
-import com.harry.clio.entity.SubscriptionAllocation;
+import com.harry.clio.model.SubscriptionAllocation;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

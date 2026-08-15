@@ -1,7 +1,7 @@
 package com.harry.clio.repository;
 
-import com.harry.clio.entity.UserLibrary;
-import com.harry.clio.entity.UserLibraryType;
+import com.harry.clio.model.UserLibrary;
+import com.harry.clio.model.UserLibraryType;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

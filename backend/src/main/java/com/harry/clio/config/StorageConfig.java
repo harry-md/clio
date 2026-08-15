@@ -2,9 +2,12 @@ package com.harry.clio.config;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.harry.clio.config.properties.CloudinaryProperties;
+import com.harry.clio.config.properties.R2Properties;
+
+import lombok.RequiredArgsConstructor;
 
 import org.apache.tika.Tika;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -17,35 +20,21 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
 import java.net.URI;
 
+@RequiredArgsConstructor
 @Configuration
 public class StorageConfig {
-    @Value("${cloudinary.cloud-name}")
-    private String CLOUDINARY_CLOUD_NAME;
-
-    @Value("${cloudinary.api-key}")
-    private String CLOUDINARY_API_KEY;
-
-    @Value("${cloudinary.api-secret}")
-    private String CLOUDINARY_API_SECRET;
-
-    @Value("${r2.account-id}")
-    private String R2_ACCOUNT_ID;
-
-    @Value("${r2.access-key}")
-    private String R2_ACCESS_KEY;
-
-    @Value("${r2.secret-key}")
-    private String R2_SECRET_KEY;
+    private final CloudinaryProperties cloudinaryProperties;
+    private final R2Properties r2Properties;
 
     @Bean
     public Cloudinary cloudinary() {
         return new Cloudinary(ObjectUtils.asMap(
                 "cloud_name",
-                CLOUDINARY_CLOUD_NAME,
+                cloudinaryProperties.cloudName(),
                 "api_key",
-                CLOUDINARY_API_KEY,
+                cloudinaryProperties.apiKey(),
                 "api_secret",
-                CLOUDINARY_API_SECRET,
+                cloudinaryProperties.apiSecret(),
                 "secure",
                 true));
     }
@@ -58,10 +47,10 @@ public class StorageConfig {
     @Bean
     public S3Client s3Client() {
         return S3Client.builder()
-                .endpointOverride(
-                        URI.create("https://" + R2_ACCOUNT_ID + ".r2.cloudflarestorage.com"))
-                .credentialsProvider(StaticCredentialsProvider.create(
-                        AwsBasicCredentials.create(R2_ACCESS_KEY, R2_SECRET_KEY)))
+                .endpointOverride(URI.create(
+                        "https://" + r2Properties.accountId() + ".r2.cloudflarestorage.com"))
+                .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(
+                        r2Properties.accessKey(), r2Properties.secretKey())))
                 .region(Region.of("auto"))
                 .serviceConfiguration(S3Configuration.builder()
                         .chunkedEncodingEnabled(false)
@@ -73,10 +62,10 @@ public class StorageConfig {
     @Bean
     public S3Presigner s3Presigner() {
         return S3Presigner.builder()
-                .endpointOverride(
-                        URI.create("https://" + R2_ACCOUNT_ID + ".r2.cloudflarestorage.com"))
-                .credentialsProvider(StaticCredentialsProvider.create(
-                        AwsBasicCredentials.create(R2_ACCESS_KEY, R2_SECRET_KEY)))
+                .endpointOverride(URI.create(
+                        "https://" + r2Properties.accountId() + ".r2.cloudflarestorage.com"))
+                .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(
+                        r2Properties.accessKey(), r2Properties.secretKey())))
                 .region(Region.of("auto"))
                 .serviceConfiguration(S3Configuration.builder()
                         .chunkedEncodingEnabled(false)

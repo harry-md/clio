@@ -1,5 +1,6 @@
 package com.harry.clio.service.impl;
 
+import com.harry.clio.config.properties.StripeProperties;
 import com.harry.clio.dto.order.StripeLineItem;
 import com.harry.clio.exception.InvalidWebhookException;
 import com.harry.clio.exception.PaymentException;
@@ -12,24 +13,16 @@ import com.stripe.net.RequestOptions;
 import com.stripe.net.Webhook;
 import com.stripe.param.checkout.SessionCreateParams;
 
-import org.springframework.beans.factory.annotation.Value;
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@RequiredArgsConstructor
 @Service
 public class PaymentServiceImpl implements PaymentService {
-    @Value("${stripe.secret-key}")
-    private String stripeSecretKey;
-
-    @Value("${stripe.webhook-secret}")
-    private String stripeWebhookSecret;
-
-    @Value("${stripe.success-url}")
-    private String stripeSuccessUrl;
-
-    @Value("${stripe.cancel-url}")
-    private String stripeCancelUrl;
+    private final StripeProperties stripeProperties;
 
     @Override
     public Session createCheckoutSession(Integer orderId, List<StripeLineItem> items) {
@@ -39,15 +32,15 @@ public class PaymentServiceImpl implements PaymentService {
 
             SessionCreateParams params = SessionCreateParams.builder()
                     .setMode(SessionCreateParams.Mode.PAYMENT)
-                    .setSuccessUrl(stripeSuccessUrl)
-                    .setCancelUrl(stripeCancelUrl)
+                    .setSuccessUrl(stripeProperties.successUrl())
+                    .setCancelUrl(stripeProperties.cancelUrl())
                     .setClientReferenceId(orderId.toString())
                     .putMetadata("orderId", orderId.toString())
                     .addAllLineItem(lineItems)
                     .build();
 
             RequestOptions requestOptions = RequestOptions.builder()
-                    .setApiKey(stripeSecretKey)
+                    .setApiKey(stripeProperties.secretKey())
                     .setIdempotencyKey(orderId.toString())
                     .build();
             return Session.create(params, requestOptions);
@@ -79,7 +72,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public Event constructWebhookEvent(String sigHeader, String payload) {
         try {
-            return Webhook.constructEvent(payload, sigHeader, stripeWebhookSecret);
+            return Webhook.constructEvent(payload, sigHeader, stripeProperties.webhookSecret());
         } catch (SignatureVerificationException ex) {
             throw new InvalidWebhookException("Webhook không hợp lệ");
         }

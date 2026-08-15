@@ -1,7 +1,7 @@
 package com.harry.clio.dto.library;
 
-import com.harry.clio.entity.BookAuthorResponse;
-import com.harry.clio.entity.UserLibraryType;
+import com.harry.clio.model.BookAuthorResponse;
+import com.harry.clio.model.UserLibraryType;
 
 import java.util.List;
 

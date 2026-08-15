@@ -3,9 +3,9 @@ package com.harry.clio.service.impl;
 import com.harry.clio.dto.author.AuthorResponse;
 import com.harry.clio.dto.author.CreateAuthorRequest;
 import com.harry.clio.dto.author.UpdateAuthorRequest;
-import com.harry.clio.entity.Author;
 import com.harry.clio.exception.ResourceNotFoundException;
 import com.harry.clio.mapper.AuthorMapper;
+import com.harry.clio.model.Author;
 import com.harry.clio.repository.AuthorRepository;
 import com.harry.clio.service.AuthorService;
 

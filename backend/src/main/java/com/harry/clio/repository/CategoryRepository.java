@@ -1,6 +1,6 @@
 package com.harry.clio.repository;
 
-import com.harry.clio.entity.Category;
+import com.harry.clio.model.Category;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

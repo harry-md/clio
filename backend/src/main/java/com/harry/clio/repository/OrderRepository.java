@@ -1,8 +1,8 @@
 package com.harry.clio.repository;
 
-import com.harry.clio.entity.Order;
-import com.harry.clio.entity.OrderDetailType;
-import com.harry.clio.entity.OrderStatus;
+import com.harry.clio.model.Order;
+import com.harry.clio.model.OrderDetailType;
+import com.harry.clio.model.OrderStatus;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

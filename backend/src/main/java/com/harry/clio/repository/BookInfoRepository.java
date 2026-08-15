@@ -1,6 +1,6 @@
 package com.harry.clio.repository;
 
-import com.harry.clio.entity.BookInfo;
+import com.harry.clio.model.BookInfo;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

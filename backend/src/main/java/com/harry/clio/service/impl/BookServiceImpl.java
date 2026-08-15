@@ -1,12 +1,12 @@
 package com.harry.clio.service.impl;
 
 import com.harry.clio.dto.book.*;
-import com.harry.clio.entity.*;
 import com.harry.clio.exception.BadRequestException;
 import com.harry.clio.exception.ResourceNotFoundException;
 import com.harry.clio.mapper.BookAuthorMapper;
 import com.harry.clio.mapper.BookInfoMapper;
 import com.harry.clio.mapper.BookMapper;
+import com.harry.clio.model.*;
 import com.harry.clio.repository.*;
 import com.harry.clio.repository.specification.BookSpecification;
 import com.harry.clio.service.BookProcessingQueue;
@@ -20,7 +20,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.HashSet;
@@ -44,32 +43,37 @@ public class BookServiceImpl implements BookService {
     private final PublisherRepository publisherRepository;
     private final BookProcessingQueue bookProcessingQueue;
 
-    @Transactional
+    private record BookWithInfo(Book book, BookInfo info) {}
+
     @Override
     public BookDetailResponse uploadBook(int publisherId, CreateBookMetadataRequest request) {
-        Set<Category> categories =
-                new HashSet<>(categoryRepository.findAllById(request.categoryIds()));
+        BookWithInfo bookWithInfo = transactionTemplate.execute(status -> {
+            Set<Category> categories =
+                    new HashSet<>(categoryRepository.findAllById(request.categoryIds()));
 
-        List<BookAuthorResponse> authorSnapshots = buildAuthorSnapshot(request.authors());
+            List<BookAuthorResponse> authorSnapshots = buildAuthorSnapshot(request.authors());
 
-        Book book = bookRepository.save(bookMapper.toEntity(
-                request,
-                publisherRepository.getReferenceById(publisherId),
-                request.objectKey(),
-                authorSnapshots,
-                categories));
+            Book book = bookRepository.save(bookMapper.toEntity(
+                    request,
+                    publisherRepository.getReferenceById(publisherId),
+                    request.objectKey(),
+                    authorSnapshots,
+                    categories));
 
-        bookAuthorRepository.saveAll(buildBookAuthors(book, authorSnapshots));
+            bookAuthorRepository.saveAll(buildBookAuthors(book, authorSnapshots));
 
-        BookInfo bookInfo = bookInfoRepository.save(BookInfo.builder()
-                .book(book)
-                .isbn(request.isbn())
-                .language(request.language())
-                .description(request.description())
-                .build());
+            BookInfo bookInfo = bookInfoRepository.save(BookInfo.builder()
+                    .book(book)
+                    .isbn(request.isbn())
+                    .language(request.language())
+                    .description(request.description())
+                    .build());
+            return new BookWithInfo(book, bookInfo);
+        });
 
-        bookProcessingQueue.enqueue(book.getId());
-        return bookMapper.toDetailResponse(book, bookInfoMapper.toResponse(bookInfo));
+        bookProcessingQueue.enqueue(bookWithInfo.book.getId());
+        return bookMapper.toDetailResponse(
+                bookWithInfo.book, bookInfoMapper.toResponse(bookWithInfo.info));
     }
 
     private List<BookAuthorResponse> buildAuthorSnapshot(List<BookAuthorResponse> request) {

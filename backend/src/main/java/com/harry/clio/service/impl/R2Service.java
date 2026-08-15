@@ -1,13 +1,13 @@
 package com.harry.clio.service.impl;
 
 import com.adobe.epubcheck.api.EpubCheck;
+import com.harry.clio.config.properties.R2Properties;
 import com.harry.clio.dto.book.PresignedUpload;
 import com.harry.clio.exception.InvalidEbookException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
@@ -31,17 +31,14 @@ import java.util.UUID;
 @Service
 public class R2Service {
     private static final int EPUBCHECK_FATAL = 4;
-
-    @Value("${r2.bucket-name}")
-    private String r2BucketName;
-
+    private final R2Properties r2Properties;
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
 
     public PresignedUpload createOriginUploadUrl() {
         String objectKey = "books/origin/" + UUID.randomUUID() + ".epub";
         PutObjectRequest req = PutObjectRequest.builder()
-                .bucket(r2BucketName)
+                .bucket(r2Properties.bucketName())
                 .key(objectKey)
                 .contentType("application/epub+zip")
                 .build();
@@ -63,7 +60,7 @@ public class R2Service {
             Files.deleteIfExists(tmpFile);
 
             GetObjectRequest req = GetObjectRequest.builder()
-                    .bucket(r2BucketName)
+                    .bucket(r2Properties.bucketName())
                     .key(objectKey)
                     .build();
 
@@ -81,7 +78,7 @@ public class R2Service {
         String objectKey = "books/encrypted/" + UUID.randomUUID();
         try {
             PutObjectRequest req = PutObjectRequest.builder()
-                    .bucket(r2BucketName)
+                    .bucket(r2Properties.bucketName())
                     .key(objectKey)
                     .contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE)
                     .build();
@@ -101,7 +98,7 @@ public class R2Service {
 
         try {
             DeleteObjectRequest req = DeleteObjectRequest.builder()
-                    .bucket(r2BucketName)
+                    .bucket(r2Properties.bucketName())
                     .key(objectKey)
                     .build();
             s3Client.deleteObject(req);
@@ -111,8 +108,10 @@ public class R2Service {
     }
 
     public String getPresignedUrl(String objectKey) {
-        GetObjectRequest objectRequest =
-                GetObjectRequest.builder().bucket(r2BucketName).key(objectKey).build();
+        GetObjectRequest objectRequest = GetObjectRequest.builder()
+                .bucket(r2Properties.bucketName())
+                .key(objectKey)
+                .build();
 
         GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
                 .signatureDuration(Duration.ofMinutes(30))
