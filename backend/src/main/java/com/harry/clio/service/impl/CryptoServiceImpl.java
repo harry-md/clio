@@ -1,8 +1,8 @@
 package com.harry.clio.service.impl;
 
-import com.harry.clio.entity.LicenseType;
 import com.harry.clio.exception.BadRequestException;
 import com.harry.clio.exception.CryptoException;
+import com.harry.clio.model.LicenseType;
 import com.harry.clio.service.CryptoService;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.RSASSASigner;
@@ -41,12 +41,12 @@ public class CryptoServiceImpl implements CryptoService {
     private final SecureRandom secureRandom;
     private final SecretKey masterKey;
 
-    @Value("${clio.license-key}")
-    private String licenseKey;
-
     private static final int AES_KEY_LENGTH = 256;
     private static final int GCM_NONCE_LENGTH = 12;
     private static final int GCM_TAG_LENGTH = 128;
+
+    @Value("${clio.license-key}")
+    private String licenseKey;
 
     @Override
     public SecretKey generateContentKey() {

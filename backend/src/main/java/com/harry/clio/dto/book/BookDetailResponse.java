@@ -1,9 +1,9 @@
 package com.harry.clio.dto.book;
 
 import com.harry.clio.dto.category.CategoryResponse;
-import com.harry.clio.entity.BookAuthorResponse;
-import com.harry.clio.entity.BookStatus;
-import com.harry.clio.entity.BookType;
+import com.harry.clio.model.BookAuthorResponse;
+import com.harry.clio.model.BookStatus;
+import com.harry.clio.model.BookType;
 
 import java.math.BigDecimal;
 import java.time.Instant;

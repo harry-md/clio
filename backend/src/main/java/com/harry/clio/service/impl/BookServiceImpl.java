@@ -1,12 +1,12 @@
 package com.harry.clio.service.impl;
 
 import com.harry.clio.dto.book.*;
-import com.harry.clio.entity.*;
 import com.harry.clio.exception.BadRequestException;
 import com.harry.clio.exception.ResourceNotFoundException;
 import com.harry.clio.mapper.BookAuthorMapper;
 import com.harry.clio.mapper.BookInfoMapper;
 import com.harry.clio.mapper.BookMapper;
+import com.harry.clio.model.*;
 import com.harry.clio.repository.*;
 import com.harry.clio.repository.specification.BookSpecification;
 import com.harry.clio.service.BookProcessingQueue;
@@ -43,11 +43,11 @@ public class BookServiceImpl implements BookService {
     private final PublisherRepository publisherRepository;
     private final BookProcessingQueue bookProcessingQueue;
 
-    private record BookAndInfo(Book book, BookInfo info) {}
+    private record BookWithInfo(Book book, BookInfo info) {}
 
     @Override
     public BookDetailResponse uploadBook(int publisherId, CreateBookMetadataRequest request) {
-        BookAndInfo bookAndInfo = transactionTemplate.execute(status -> {
+        BookWithInfo bookWithInfo = transactionTemplate.execute(status -> {
             Set<Category> categories =
                     new HashSet<>(categoryRepository.findAllById(request.categoryIds()));
 
@@ -68,12 +68,12 @@ public class BookServiceImpl implements BookService {
                     .language(request.language())
                     .description(request.description())
                     .build());
-            return new BookAndInfo(book, bookInfo);
+            return new BookWithInfo(book, bookInfo);
         });
 
-        bookProcessingQueue.enqueue(bookAndInfo.book.getId());
+        bookProcessingQueue.enqueue(bookWithInfo.book.getId());
         return bookMapper.toDetailResponse(
-                bookAndInfo.book, bookInfoMapper.toResponse(bookAndInfo.info));
+                bookWithInfo.book, bookInfoMapper.toResponse(bookWithInfo.info));
     }
 
     private List<BookAuthorResponse> buildAuthorSnapshot(List<BookAuthorResponse> request) {

@@ -1,6 +1,6 @@
 package com.harry.clio.repository;
 
-import com.harry.clio.entity.Author;
+import com.harry.clio.model.Author;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

@@ -2,15 +2,15 @@ package com.harry.clio.mapper;
 
 import com.harry.clio.dto.publisher.PublisherAdminDto;
 import com.harry.clio.dto.publisher.PublisherDto;
-import com.harry.clio.entity.Publisher;
-import com.harry.clio.entity.User;
+import com.harry.clio.model.Publisher;
+import com.harry.clio.model.User;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface PublisherMapper {
-    PublisherDto toDto(Publisher entity);
+    PublisherDto toDto(Publisher publisher);
 
     @Mapping(target = "userId", source = "user.id")
     @Mapping(target = "username", source = "user.username")

@@ -21,13 +21,13 @@ public class BookProcessingWorker implements SmartLifecycle {
     @Value("${clio.book-workers}")
     private int bookWorkers;
 
-    private static final Duration POP_TIMEOUT = Duration.ofSeconds(5);
-    private static final int MAX_ATTEMPTS = 3;
-    private static final Duration RETRY_DELAY = Duration.ofSeconds(1);
-
     private final BookProcessingQueue bookProcessingQueue;
     private final BookProcessingService bookProcessingService;
     private final TaskExecutor bookProcessingExecutor;
+
+    private static final Duration POP_TIMEOUT = Duration.ofSeconds(5);
+    private static final int MAX_ATTEMPTS = 3;
+    private static final Duration RETRY_DELAY = Duration.ofSeconds(1);
 
     private volatile boolean running = false;
 

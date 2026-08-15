@@ -1,7 +1,7 @@
 package com.harry.clio.dto.book;
 
-import com.harry.clio.entity.BookAuthorResponse;
-import com.harry.clio.entity.BookType;
+import com.harry.clio.model.BookAuthorResponse;
+import com.harry.clio.model.BookType;
 
 import java.math.BigDecimal;
 import java.util.List;

@@ -1,8 +1,8 @@
 package com.harry.clio.repository;
 
-import com.harry.clio.entity.Book;
-import com.harry.clio.entity.BookStatus;
-import com.harry.clio.entity.BookType;
+import com.harry.clio.model.Book;
+import com.harry.clio.model.BookStatus;
+import com.harry.clio.model.BookType;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;

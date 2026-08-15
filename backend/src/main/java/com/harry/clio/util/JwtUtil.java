@@ -1,6 +1,6 @@
 package com.harry.clio.util;
 
-import com.harry.clio.configs.properties.JwtProperties;
+import com.harry.clio.config.properties.JwtProperties;
 import com.harry.clio.dto.CustomUser;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;

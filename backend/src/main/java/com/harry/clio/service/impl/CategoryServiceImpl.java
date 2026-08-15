@@ -2,9 +2,9 @@ package com.harry.clio.service.impl;
 
 import com.harry.clio.dto.category.CategoryResponse;
 import com.harry.clio.dto.category.CreateCategoryRequest;
-import com.harry.clio.entity.Category;
 import com.harry.clio.exception.ResourceNotFoundException;
 import com.harry.clio.mapper.CategoryMapper;
+import com.harry.clio.model.Category;
 import com.harry.clio.repository.CategoryRepository;
 import com.harry.clio.service.CategoryService;
 

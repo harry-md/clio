@@ -1,8 +1,8 @@
 package com.harry.clio.mapper;
 
-import com.harry.clio.entity.Author;
-import com.harry.clio.entity.BookAuthorResponse;
-import com.harry.clio.entity.BookAuthorRole;
+import com.harry.clio.model.Author;
+import com.harry.clio.model.BookAuthorResponse;
+import com.harry.clio.model.BookAuthorRole;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
