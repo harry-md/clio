@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { EmptyState } from "@/components/EmptyState";
 import { Header } from "@/components/Header";
-import { LibraryBooks } from "@/components/LibraryBooks";
+import LibraryBooks from "@/components/LibraryBooks";
 import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { Pagination } from "@/components/Pagination";
 import { Alert, AlertDescription } from "@/components/ui/alert";

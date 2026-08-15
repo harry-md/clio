@@ -98,29 +98,33 @@ public class UserLibraryServiceImpl implements UserLibraryService {
 
         Book book = library.getBook();
 
-        String license;
-        switch (library.getType()) {
-            case PURCHASED -> {
-                license = cryptoService.createLicense(
-                        userId, bookId, book.getEncryptedContentKey(), request.publicKeySpki());
-            }
-            case SUBSCRIBED -> {
-                Subscription sub = subscriptionRepository
-                        .findByUserIdAndStatus(userId, SubscriptionStatus.ACTIVE)
-                        .orElseThrow(() -> new BadRequestException("Chưa có gói đăng ký hợp lệ"));
+        String license =
+                switch (library.getType()) {
+                    case PURCHASED ->
+                        cryptoService.createLicense(
+                                userId,
+                                bookId,
+                                book.getEncryptedContentKey(),
+                                request.publicKeySpki());
 
-                license = cryptoService.createLicense(
-                        userId,
-                        bookId,
-                        sub.getId(),
-                        sub.getEndDate()
-                                .atStartOfDay(ZoneId.of("Asia/Ho_Chi_Minh"))
-                                .toInstant(),
-                        book.getEncryptedContentKey(),
-                        request.publicKeySpki());
-            }
-            default -> throw new BadRequestException("Sách không hợp lệ");
-        }
+                    case SUBSCRIBED -> {
+                        Subscription sub = subscriptionRepository
+                                .findByUserIdAndStatus(userId, SubscriptionStatus.ACTIVE)
+                                .orElseThrow(() ->
+                                        new BadRequestException("Chưa có gói đăng ký hợp lệ"));
+
+                        yield cryptoService.createLicense(
+                                userId,
+                                bookId,
+                                sub.getId(),
+                                sub.getEndDate()
+                                        .atStartOfDay(ZoneId.of("Asia/Ho_Chi_Minh"))
+                                        .toInstant(),
+                                book.getEncryptedContentKey(),
+                                request.publicKeySpki());
+                    }
+                    default -> throw new BadRequestException("Sách không hợp lệ");
+                };
         String downloadUrl = r2Service.getPresignedUrl(book.getEncryptedFileUrl());
         Instant urlExpiredAt = Instant.now().plus(Duration.ofMinutes(5));
         return new DownloadResponse(downloadUrl, urlExpiredAt, license);

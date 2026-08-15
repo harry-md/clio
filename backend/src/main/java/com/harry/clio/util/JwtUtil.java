@@ -1,5 +1,6 @@
 package com.harry.clio.util;
 
+import com.harry.clio.configs.properties.JwtProperties;
 import com.harry.clio.dto.CustomUser;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -11,21 +12,19 @@ import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 
-import org.springframework.beans.factory.annotation.Value;
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
 
+@RequiredArgsConstructor
 @Component
 public class JwtUtil {
-    @Value("${jwt.secret}")
-    private String jwtSecret;
-
-    @Value("${jwt.expiration}")
-    private long jwtExpiration;
+    private final JwtProperties properties;
 
     public String generateToken(CustomUser principal) throws JOSEException {
-        JWSSigner signer = new MACSigner(jwtSecret);
+        JWSSigner signer = new MACSigner(properties.secret());
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .subject(principal.getUsername())
                 .claim("userId", principal.getId())
@@ -33,7 +32,7 @@ public class JwtUtil {
                 .claim("firstName", principal.getFirstName())
                 .claim("lastName", principal.getLastName())
                 .claim("avatar", principal.getAvatar())
-                .expirationTime(new Date(System.currentTimeMillis() + jwtExpiration))
+                .expirationTime(new Date(System.currentTimeMillis() + properties.expiration()))
                 .issueTime(new Date())
                 .build();
 
@@ -44,7 +43,7 @@ public class JwtUtil {
 
     private JWTClaimsSet validateToken(String token) throws Exception {
         SignedJWT signedJWT = SignedJWT.parse(token);
-        JWSVerifier verifier = new MACVerifier(jwtSecret);
+        JWSVerifier verifier = new MACVerifier(properties.secret());
 
         if (signedJWT.verify(verifier)) {
             Date expiration = signedJWT.getJWTClaimsSet().getExpirationTime();

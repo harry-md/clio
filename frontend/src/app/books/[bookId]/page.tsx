@@ -160,7 +160,7 @@ const BookDetailPage = async ({ params }: BookDetailPageProps) => {
               </div>
 
               <div className="max-w-4xl">
-                <h1 className="mt-2 font-serif text-4xl font-semibold leading-tight text-foreground sm:text-5xl lg:text-6xl">
+                <h1 className="mt-2 font-serif text-5xl font-semibold leading-tight text-foreground">
                   {book.title}
                 </h1>
 
@@ -196,8 +196,8 @@ const BookDetailPage = async ({ params }: BookDetailPageProps) => {
                 </div>
 
                 <div className="mt-9 flex flex-wrap items-center gap-4 border-y border-border py-6">
-                  <span className="text-3xl font-semibold text-price">
-                    {`${priceFormatter.format(Number(book.price))} VND`}
+                  <span className="text-2xl font-semibold text-price">
+                    {priceFormatter.format(Number(book.price))}đ
                   </span>
 
                   <BookActions book={book} />
@@ -233,22 +233,22 @@ const BookDetailPage = async ({ params }: BookDetailPageProps) => {
 
             <section className="grid gap-12 py-14 lg:grid-cols-[minmax(0,1fr)_300px]">
               <div>
-                <h2 className="text-4xl font-semibold text-foreground">
+                <h2 className="text-2xl font-semibold text-foreground">
                   Giới thiệu
                 </h2>
 
-                <div className="mt-6 whitespace-pre-line text-xl leading-9 text-foreground">
+                <div className="mt-1 whitespace-pre-line leading-9 text-foreground">
                   {book.bookInfo?.description ||
                     "Chưa có phần giới thiệu cho sách này."}
                 </div>
               </div>
 
               <aside className="border-t border-border pt-6 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
-                <h3 className="text-3xl font-semibold text-foreground">
+                <h3 className="text-2xl font-semibold text-foreground">
                   Thông tin sách
                 </h3>
 
-                <dl className="mt-8 space-y-5 text-lg">
+                <dl className="mt-8 space-y-5">
                   {metadataItems.map((item) => (
                     <div
                       key={item.label}
@@ -258,7 +258,7 @@ const BookDetailPage = async ({ params }: BookDetailPageProps) => {
                         {item.label}
                       </dt>
 
-                      <dd className="text-right text-lg text-secondary-foreground">
+                      <dd className="text-right text-secondary-foreground">
                         {item.value}
                       </dd>
                     </div>

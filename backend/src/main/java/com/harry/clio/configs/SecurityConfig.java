@@ -1,4 +1,4 @@
-package com.harry.clio.config;
+package com.harry.clio.configs;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

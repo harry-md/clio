@@ -168,8 +168,8 @@ export const SearchFiltersForm = ({
             >
               Tác giả: <span className="font-semibold">{authorName} </span>
               <svg
-                width="800px"
-                height="800px"
+                width="1rem"
+                height="1rem"
                 viewBox="-0.5 0 25 25"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
@@ -185,9 +185,9 @@ export const SearchFiltersForm = ({
                 <path
                   d="M3 3.32001L21 21.32"
                   stroke="#000000"
-                  stroke-width="1.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 />
               </svg>
             </Button>
@@ -202,8 +202,8 @@ export const SearchFiltersForm = ({
             >
               Danh mục: <span className="font-semibold">{categoryName} </span>
               <svg
-                width="800px"
-                height="800px"
+                width="1rem"
+                height="1rem"
                 viewBox="-0.5 0 25 25"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
@@ -219,9 +219,9 @@ export const SearchFiltersForm = ({
                 <path
                   d="M3 3.32001L21 21.32"
                   stroke="#000000"
-                  stroke-width="1.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 />
               </svg>
             </Button>

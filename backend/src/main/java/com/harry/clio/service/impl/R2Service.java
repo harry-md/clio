@@ -31,12 +31,11 @@ import java.util.UUID;
 @Service
 public class R2Service {
     private static final int EPUBCHECK_FATAL = 4;
+    private final S3Client s3Client;
+    private final S3Presigner s3Presigner;
 
     @Value("${r2.bucket-name}")
     private String r2BucketName;
-
-    private final S3Client s3Client;
-    private final S3Presigner s3Presigner;
 
     public PresignedUpload createOriginUploadUrl() {
         String objectKey = "books/origin/" + UUID.randomUUID() + ".epub";

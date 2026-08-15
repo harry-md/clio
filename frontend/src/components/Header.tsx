@@ -5,8 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import { ClioLogo } from "@/components/ClioLogo";
 import { LoadingOverlay } from "@/components/LoadingOverlay";
+import { Logo } from "@/components/Logo";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
@@ -60,7 +60,7 @@ export const Header = () => {
 
       <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="mx-auto flex min-h-18 max-w-360 items-center gap-6 px-5 lg:px-10">
-          <ClioLogo />
+          <Logo />
 
           <nav className="hidden items-center gap-7 lg:flex">
             {navigationItems.map((item) => {

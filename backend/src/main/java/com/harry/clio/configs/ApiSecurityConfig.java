@@ -1,4 +1,4 @@
-package com.harry.clio.config;
+package com.harry.clio.configs;
 
 import com.harry.clio.filter.JwtFilter;
 

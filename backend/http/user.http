@@ -1,0 +1,74 @@
+###
+# group: User
+# @name Create User
+
+POST http://localhost:8080/api/users
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="username"
+
+user1
+--WebAppBoundary
+Content-Disposition: form-data; name="password"
+
+1
+--WebAppBoundary
+Content-Disposition: form-data; name="firstName"
+
+Normal
+--WebAppBoundary
+Content-Disposition: form-data; name="lastName"
+
+user
+--WebAppBoundary
+Content-Disposition: form-data; name="email"
+
+u1@gmail.com
+--WebAppBoundary
+Content-Disposition: form-data; name="avatar"; filename="cat.webp"
+
+< /home/harry/Downloads/cat.webp
+--WebAppBoundary
+
+###
+# group: User
+# @name Login Admin
+
+POST http://localhost:8080/api/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "1"
+}
+
+###
+# group: User
+# @name Login Publisher
+
+POST http://localhost:8080/api/login
+Content-Type: application/json
+
+{
+  "username": "pub1",
+  "password": "1"
+}
+
+###
+# group: User
+# @name Get Profile
+
+GET http://localhost:8080/api/current-user
+
+###
+# group: User
+# @name Login User
+
+POST http://localhost:8080/api/login
+Content-Type: application/json
+
+{
+  "username": "user1",
+  "password": "1"
+}
