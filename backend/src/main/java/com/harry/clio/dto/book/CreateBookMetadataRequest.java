@@ -1,7 +1,7 @@
 package com.harry.clio.dto.book;
 
-import com.harry.clio.entity.BookAuthorResponse;
-import com.harry.clio.entity.Language;
+import com.harry.clio.model.BookAuthorResponse;
+import com.harry.clio.model.Language;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;

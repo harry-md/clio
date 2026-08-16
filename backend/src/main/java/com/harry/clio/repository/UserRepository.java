@@ -1,7 +1,7 @@
 package com.harry.clio.repository;
 
-import com.harry.clio.entity.User;
-import com.harry.clio.entity.UserRole;
+import com.harry.clio.model.User;
+import com.harry.clio.model.UserRole;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

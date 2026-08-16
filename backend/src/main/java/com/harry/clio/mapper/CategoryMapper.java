@@ -2,7 +2,7 @@ package com.harry.clio.mapper;
 
 import com.harry.clio.dto.category.CategoryResponse;
 import com.harry.clio.dto.category.CreateCategoryRequest;
-import com.harry.clio.entity.Category;
+import com.harry.clio.model.Category;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
@@ -11,5 +11,5 @@ import org.mapstruct.ReportingPolicy;
 public interface CategoryMapper {
     Category toEntity(CreateCategoryRequest dto);
 
-    CategoryResponse toResponse(Category entity);
+    CategoryResponse toResponse(Category category);
 }

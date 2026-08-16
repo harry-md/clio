@@ -1,6 +1,6 @@
 package com.harry.clio.service.impl;
 
-import com.harry.clio.entity.SubscriptionStatus;
+import com.harry.clio.model.SubscriptionStatus;
 import com.harry.clio.repository.SubscriptionRepository;
 import com.harry.clio.service.SubscriptionService;
 

@@ -1,6 +1,6 @@
 package com.harry.clio.dto.user;
 
-import com.harry.clio.entity.UserRole;
+import com.harry.clio.model.UserRole;
 
 import java.time.Instant;
 

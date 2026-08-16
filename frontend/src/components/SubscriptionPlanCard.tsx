@@ -96,7 +96,7 @@ export const SubscriptionPlanCard = ({ plan }: SubscriptionPlanCardProps) => {
         <div className="mt-10 border-y border-border py-8">
           <div className="mt-3 flex flex-wrap items-end gap-3">
             <span className="text-4xl font-semibold text-price">
-              {`${priceFormatter.format(Number(plan.price))} VND`}
+              {priceFormatter.format(Number(plan.price))}đ
             </span>
             <span className="pb-2 text-muted-foreground">
               / {durationLabel}

@@ -1,7 +1,7 @@
 package com.harry.clio.mapper;
 
 import com.harry.clio.dto.book.*;
-import com.harry.clio.entity.*;
+import com.harry.clio.model.*;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

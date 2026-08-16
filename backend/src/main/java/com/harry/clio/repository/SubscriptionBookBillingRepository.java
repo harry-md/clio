@@ -1,6 +1,6 @@
 package com.harry.clio.repository;
 
-import com.harry.clio.entity.SubscriptionBookBilling;
+import com.harry.clio.model.SubscriptionBookBilling;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
