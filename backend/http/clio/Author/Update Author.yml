@@ -1,0 +1,25 @@
+info:
+  name: Update Author
+  type: http
+  seq: 3
+
+http:
+  method: PATCH
+  url: http://localhost:8080/api/authors/22
+  body:
+    type: multipart-form
+    data:
+      - name: fullName
+        type: text
+        value: abc
+      - name: verified
+        type: text
+        value: ""
+        disabled: true
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

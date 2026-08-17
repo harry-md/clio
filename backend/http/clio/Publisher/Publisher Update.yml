@@ -1,0 +1,21 @@
+info:
+  name: Publisher Update
+  type: http
+  seq: 5
+
+http:
+  method: PATCH
+  url: http://localhost:8080/api/publishers/current-publisher
+  body:
+    type: json
+    data: |-
+      {
+        "bankAccountNumber": 1
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

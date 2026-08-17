@@ -10,8 +10,8 @@ import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
-public class BookProcessingQueue {
-    private static final String QUEUE_KEY = "book-processing:queue";
+public class BookQueue {
+    private static final String QUEUE_KEY = "book-process-queue";
     private final StringRedisTemplate redisTemplate;
 
     public void enqueue(Integer bookId) {

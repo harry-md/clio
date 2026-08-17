@@ -1,7 +1,16 @@
 spring:
   threads:
     virtual:
-      enabled: true
+      enabled: false
+  cache:
+    type: redis
+    cache-names:
+      - homepage-books
+      - book-details
+    redis:
+      time-to-live: 1h
+      cache-null-values: false
+      use-key-prefix: true
   servlet:
     multipart:
       enabled: true
@@ -27,9 +36,9 @@ spring:
       max-lifetime: 1800000
       auto-commit: false
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/cliodb
-    username: root
-    password: root
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
   sql:
     init:
       mode: always

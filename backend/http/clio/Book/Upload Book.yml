@@ -1,0 +1,31 @@
+info:
+  name: Upload Book
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: http://localhost:8080/api/books
+  body:
+    type: json
+    data: |-
+      {
+        "title": "Hóa thân",
+        "price": 100000,
+        "authors": [
+          {
+            "authorId": 7,
+            "role": "AUTHOR"
+          }
+        ],
+        "categoryIds": [7],
+        "language": "VI",
+        "objectKey": "books/origin/9d00477d-1000-4aad-9206-4d7bdc9119a5.epub"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

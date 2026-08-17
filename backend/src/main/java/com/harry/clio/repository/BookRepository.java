@@ -20,10 +20,12 @@ public interface BookRepository
         SELECT b
         FROM Book b
         JOIN FETCH b.categories c
-        WHERE b.id = :bookId AND b.active = true AND b.type = :type
+        WHERE b.id = :bookId AND b.active = true AND b.type = :type AND b.status = :status
         """)
     Optional<Book> findWithCategoryById(
-            @Param(value = "bookId") Integer bookId, @Param("type") BookType type);
+            @Param(value = "bookId") Integer bookId,
+            @Param("type") BookType type,
+            @Param("status") BookStatus status);
 
     @Query("""
         SELECT b

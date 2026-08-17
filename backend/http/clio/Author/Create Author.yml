@@ -1,0 +1,28 @@
+info:
+  name: Create Author
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: http://localhost:8080/api/authors
+  body:
+    type: multipart-form
+    data:
+      - name: fullName
+        type: text
+        value: Test Delete
+      - name: biography
+        type: text
+        value: hehe
+      - name: avatarFile
+        type: text
+        value: ""
+        disabled: true
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

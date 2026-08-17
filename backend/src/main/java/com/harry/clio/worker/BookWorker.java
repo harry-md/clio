@@ -1,8 +1,8 @@
 package com.harry.clio.worker;
 
 import com.harry.clio.exception.InvalidEbookException;
-import com.harry.clio.service.BookProcessingQueue;
-import com.harry.clio.service.BookProcessingService;
+import com.harry.clio.service.BookProcessService;
+import com.harry.clio.service.BookQueue;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,17 +17,17 @@ import java.time.Duration;
 @Slf4j
 @RequiredArgsConstructor
 @Component
-public class BookProcessingWorker implements SmartLifecycle {
+public class BookWorker implements SmartLifecycle {
     @Value("${clio.book-workers}")
     private int bookWorkers;
 
-    private final BookProcessingQueue bookProcessingQueue;
-    private final BookProcessingService bookProcessingService;
-    private final TaskExecutor bookProcessingExecutor;
+    private final BookQueue bookQueue;
+    private final BookProcessService bookProcessService;
+    private final TaskExecutor bookExecutor;
 
     private static final Duration POP_TIMEOUT = Duration.ofSeconds(5);
     private static final int MAX_ATTEMPTS = 3;
-    private static final Duration RETRY_DELAY = Duration.ofSeconds(1);
+    private static final Duration RETRY_DELAY = Duration.ofSeconds(5);
 
     private volatile boolean running = false;
 
@@ -40,13 +40,13 @@ public class BookProcessingWorker implements SmartLifecycle {
         running = true;
 
         for (int i = 0; i < bookWorkers; i++) {
-            bookProcessingExecutor.execute(this::consumeLoop);
+            bookExecutor.execute(this::consumeLoop);
         }
     }
 
     private void consumeLoop() {
         while (running && !Thread.currentThread().isInterrupted()) {
-            Integer bookId = bookProcessingQueue.dequeue(POP_TIMEOUT).orElse(null);
+            Integer bookId = bookQueue.dequeue(POP_TIMEOUT).orElse(null);
             if (bookId == null) {
                 continue;
             }
@@ -64,16 +64,16 @@ public class BookProcessingWorker implements SmartLifecycle {
                         MAX_ATTEMPTS,
                         Thread.currentThread().getName());
 
-                bookProcessingService.process(bookId);
+                bookProcessService.process(bookId);
                 return;
             } catch (InvalidEbookException ex) {
-                bookProcessingService.handleBookFailed(bookId);
+                bookProcessService.handleBookFailed(bookId);
                 return;
             } catch (RuntimeException ex) {
                 log.error("Lỗi xử lý sách {}", bookId, ex);
 
                 if (i == MAX_ATTEMPTS) {
-                    bookProcessingService.handleBookFailed(bookId);
+                    bookProcessService.handleBookFailed(bookId);
                     log.error("Sách {} đã xử lý thất bại", bookId, ex);
                     return;
                 }
