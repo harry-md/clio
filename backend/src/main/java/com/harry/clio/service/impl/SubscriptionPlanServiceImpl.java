@@ -7,6 +7,7 @@ import com.harry.clio.service.SubscriptionPlanService;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,6 +18,7 @@ public class SubscriptionPlanServiceImpl implements SubscriptionPlanService {
     private final SubscriptionPlanRepository subscriptionPlanRepository;
     private final SubscriptionPlanMapper subscriptionPlanMapper;
 
+    @Cacheable(cacheNames = "subscription-plans")
     @Override
     public List<SubscriptionPlanResponse> getSubscriptionPlans() {
         return subscriptionPlanRepository.findAllByActiveTrue().stream()

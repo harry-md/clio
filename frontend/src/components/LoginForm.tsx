@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { useAuth } from "@/context/AuthContext";
 import { Api, getApiErrorMessage } from "@/lib/api";
+import type { AuthUser } from "@/lib/types";
+import { isAxiosError } from "axios";
 
 interface LoginFormFields {
   username: string;
@@ -60,20 +62,24 @@ export const LoginForm = () => {
 
     try {
       setLoading(true);
-      await Api.post("/login", {
+      await Api.post<AuthUser>("/login", {
         username: form.username.trim(),
         password: form.password,
       });
 
       await refreshUser();
       router.replace("/");
-    } catch (error) {
-      setError(
-        getApiErrorMessage(
-          error,
-          "Tên đăng nhập hoặc mật khẩu không chính xác!",
-        ),
-      );
+    } catch (error: unknown) {
+      if (isAxiosError(error) && !error.response) {
+        setError("Không thể kết nối tới máy chủ.");
+      } else {
+        setError(
+          getApiErrorMessage(
+            error,
+            "Tên đăng nhập hoặc mật khẩu không chính xác!",
+          ),
+        );
+      }
     } finally {
       setLoading(false);
     }

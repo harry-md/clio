@@ -7,6 +7,7 @@ import {
 } from "@/components/SearchFiltersForm";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { Book, PageResponse } from "@/lib/types";
+import { Api, getApiErrorMessage } from "@/lib/api";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -58,23 +59,15 @@ const fetchSearchBooks = async (
   filters: Record<string, string>,
   sort: string,
 ): Promise<PageResponse<Book>> => {
-  "use cache";
-  cacheLife({ revalidate: 300 });
+  const { data } = await Api.get<PageResponse<Book>>("/books", {
+    params: {
+      ...filters,
+      page: 0,
+      sort: [sort, "id,desc"],
+    },
+  });
 
-  const params = new URLSearchParams(filters);
-  params.append("page", "0");
-  params.append("sort", sort);
-  params.append("sort", "id,desc");
-
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/books?${params.toString()}`,
-  );
-  if (!res.ok) {
-    throw new Error("Không thể tìm kiếm sách.");
-  }
-
-  const json = await res.json();
-  return json.data ?? json;
+  return data;
 };
 
 export const SearchPageContent = async ({
@@ -101,18 +94,14 @@ export const SearchPageContent = async ({
       const data = await fetchSearchBooks(getRequestFilters(filters), sort);
       books = data.content;
     } catch (requestError: unknown) {
-      if (requestError instanceof Error) {
-        error = requestError.message ?? "Có lỗi khi tìm kiếm sách.";
-      }
+      error = getApiErrorMessage(requestError, "Có lỗi khi tìm kiếm sách.");
     }
   }
 
   return (
     <section className="mx-auto max-w-360 px-5 py-12 lg:px-10 lg:py-16">
       <div className="border-b border-border pb-8">
-        <h1 className="font-serif text-5xl font-bold text-foreground">
-          Tìm kiếm sách
-        </h1>
+        <h1 className="text-5xl font-bold text-foreground">Tìm kiếm sách</h1>
       </div>
 
       <SearchFiltersForm

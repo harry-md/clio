@@ -6,7 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Api, getApiErrorMessage } from "@/lib/api";
 import { getBooksByUser, getOrCreateKey, storeBook } from "@/lib/offline";
 import type { LibraryItem } from "@/lib/types";
-import LibraryCard from "./LibraryCard";
+import LibraryCard, { type DownloadStatus } from "./LibraryCard";
 
 interface LibraryBooksProps {
   libraries: LibraryItem[];
@@ -19,8 +19,8 @@ interface DownloadResponse {
 }
 
 const LibraryBooks = ({ libraries }: LibraryBooksProps) => {
-  const { user, initialized } = useAuth();
-  const userId = user?.id;
+  const { user, offlineAccount, initialized } = useAuth();
+  const userId = user?.id ?? offlineAccount?.userId;
 
   const [downloadedBookIds, setDownloadedBookIds] = useState<Set<number>>(
     new Set(),
@@ -32,8 +32,15 @@ const LibraryBooks = ({ libraries }: LibraryBooksProps) => {
   );
   const [error, setError] = useState("");
 
-  const handleDownload = async (bookId: number): Promise<void> => {
+  const handleDownload = async (bookId: number) => {
     if (!user) {
+      return;
+    }
+
+    const library = libraries.find((item) => item.bookId === bookId);
+
+    if (!library) {
+      setError("Không tìm thấy thông tin sách.");
       return;
     }
 
@@ -44,11 +51,11 @@ const LibraryBooks = ({ libraries }: LibraryBooksProps) => {
       const accountKey = await getOrCreateKey(user.id);
 
       const { data } = await Api.post<DownloadResponse>("/libraries/download", {
-        bookId: bookId,
+        bookId,
         publicKeySpki: accountKey.publicKeySpki,
       });
 
-      await storeBook(user.id, bookId, data.license, data.downloadUrl);
+      await storeBook(user.id, library, data.license, data.downloadUrl);
 
       setDownloadedBookIds((current) => {
         const bookIds = new Set(current);
@@ -102,6 +109,16 @@ const LibraryBooks = ({ libraries }: LibraryBooksProps) => {
     };
   }, [initialized, userId]);
 
+  const getDownloadStatus = (bookId: number): DownloadStatus => {
+    if (downloadedBookIds.has(bookId)) {
+      return "DOWNLOADED";
+    }
+    if (downloadingBookId === bookId) {
+      return "DOWNLOADING";
+    }
+    return "READY";
+  };
+
   return (
     <>
       {error && (
@@ -110,21 +127,18 @@ const LibraryBooks = ({ libraries }: LibraryBooksProps) => {
         </Alert>
       )}
 
-      <div className="grid grid-cols-2 gap-x-5 gap-y-11 pt-10 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-        {libraries.map((library) => (
-          <LibraryCard
-            key={library.id}
-            library={library}
-            downloaded={downloadedBookIds.has(library.bookId)}
-            onDownloadAction={handleDownload}
-            checkingOfflineData={!offlineDataReady}
-            downloading={downloadingBookId === library.bookId}
-            downloadDisabled={
-              !userId || !offlineDataReady || downloadingBookId !== null
-            }
-          />
-        ))}
-      </div>
+      {offlineDataReady && (
+        <div className="grid grid-cols-2 gap-x-5 gap-y-11 pt-10 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+          {libraries.map((library) => (
+            <LibraryCard
+              key={library.id}
+              library={library}
+              downloadStatus={getDownloadStatus(library.bookId)}
+              onDownloadAction={handleDownload}
+            />
+          ))}
+        </div>
+      )}
     </>
   );
 };

@@ -7,6 +7,7 @@ spring:
     cache-names:
       - homepage-books
       - book-details
+      - subscription-plans
     redis:
       time-to-live: 1h
       cache-null-values: false
