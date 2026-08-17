@@ -1,5 +1,6 @@
 package com.harry.clio.dto.subscription;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 public record SubscriptionPlanResponse(
@@ -8,4 +9,5 @@ public record SubscriptionPlanResponse(
         BigDecimal price,
         Integer duration,
         String description,
-        boolean active) {}
+        boolean active)
+        implements Serializable {}
