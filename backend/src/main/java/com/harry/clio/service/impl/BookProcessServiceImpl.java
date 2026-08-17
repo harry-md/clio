@@ -7,7 +7,7 @@ import com.harry.clio.model.BookInfo;
 import com.harry.clio.model.BookStatus;
 import com.harry.clio.repository.BookInfoRepository;
 import com.harry.clio.repository.BookRepository;
-import com.harry.clio.service.BookProcessingService;
+import com.harry.clio.service.BookProcessService;
 import com.harry.clio.service.CryptoService;
 
 import lombok.RequiredArgsConstructor;
@@ -17,6 +17,7 @@ import nl.siegmann.epublib.domain.Resource;
 import nl.siegmann.epublib.epub.EpubReader;
 
 import org.jsoup.Jsoup;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -31,7 +32,7 @@ import javax.crypto.SecretKey;
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class BookProcessingServiceImpl implements BookProcessingService {
+public class BookProcessServiceImpl implements BookProcessService {
     private final R2Service r2Service;
     private final CloudinaryService cloudinaryService;
     private final BookRepository bookRepository;
@@ -43,6 +44,7 @@ public class BookProcessingServiceImpl implements BookProcessingService {
 
     private record EpubExtractData(long wordCount, byte[] coverImage) {}
 
+    @CacheEvict(cacheNames = "homepage-books", allEntries = true)
     @Override
     public void process(int bookId) {
         Book book = bookRepository

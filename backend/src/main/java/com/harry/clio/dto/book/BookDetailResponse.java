@@ -5,6 +5,7 @@ import com.harry.clio.model.BookAuthorResponse;
 import com.harry.clio.model.BookStatus;
 import com.harry.clio.model.BookType;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -23,4 +24,5 @@ public record BookDetailResponse(
         Set<CategoryResponse> categories,
         BookInfoResponse bookInfo,
         Instant createdAt,
-        Instant updatedAt) {}
+        Instant updatedAt)
+        implements Serializable {}

@@ -1,0 +1,39 @@
+info:
+  name: Create User
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: http://localhost:8080/api/users
+  body:
+    type: multipart-form
+    data:
+      - name: username
+        type: text
+        value: user1
+      - name: password
+        type: text
+        value: "1"
+      - name: firstName
+        type: text
+        value: Normal
+      - name: lastName
+        type: text
+        value: user
+      - name: email
+        type: text
+        value: u1@gmail.com
+      - name: avatar
+        type: file
+        value:
+          - /home/harry/Downloads/cat.webp
+        contentType: image/webp
+        disabled: true
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
