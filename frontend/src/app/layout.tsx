@@ -1,4 +1,5 @@
-import type { Metadata } from "next";
+import { SerwistProvider } from "@serwist/turbopack/react";
+import type { Metadata, Viewport } from "next";
 import { Merriweather, Montserrat } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
@@ -15,10 +16,27 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
+  applicationName: "Clio",
+
   title: {
     default: "Clio",
     template: "%s | Clio",
   },
+
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Clio",
+  },
+
+  formatDetection: {
+    telephone: false,
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#151515",
+  colorScheme: "dark",
 };
 
 const RootLayout = ({
@@ -32,11 +50,14 @@ const RootLayout = ({
       className={`${montserrat.variable} ${merriweather.variable} dark antialiased`}
     >
       <body>
-        <AuthProvider>
-          <CartProvider>{children}</CartProvider>
-        </AuthProvider>
+        <SerwistProvider swUrl="/serwist/sw.js">
+          <AuthProvider>
+            <CartProvider>{children}</CartProvider>
+          </AuthProvider>
+        </SerwistProvider>
       </body>
     </html>
   );
 };
+
 export default RootLayout;

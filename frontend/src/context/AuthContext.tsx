@@ -9,14 +9,22 @@ import {
   useState,
 } from "react";
 import { Api } from "@/lib/api";
-import { getOrCreateKey } from "@/lib/offline";
+import {
+  ACCOUNT_STORE,
+  ACTIVE_ACCOUNT_KEY,
+  del,
+  get,
+  type OfflineAccount,
+  save,
+} from "@/lib/offline";
 import type { AuthUser } from "@/lib/types";
 
 interface AuthContextValue {
   user: AuthUser | null;
+  offlineAccount: OfflineAccount | null;
   initialized: boolean;
-  setUser: (user: AuthUser | null) => void;
   refreshUser: () => Promise<AuthUser>;
+  clearUser: () => Promise<void>;
 }
 
 interface AuthProviderProps {
@@ -25,63 +33,92 @@ interface AuthProviderProps {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-const getCurrentUser = async () => {
+const getCurrentUser = async (): Promise<AuthUser> => {
   const { data } = await Api.get<AuthUser>("/current-user");
   return data;
 };
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<AuthUser | null>(null);
+
+  const [offlineAccount, setOfflineAccount] = useState<OfflineAccount | null>(
+    null,
+  );
+
   const [initialized, setInitialized] = useState(false);
 
-  const refreshUser = useCallback(async () => {
+  const refreshUser = useCallback(async (): Promise<AuthUser> => {
     const currentUser = await getCurrentUser();
     setUser(currentUser);
     return currentUser;
   }, []);
 
-  useEffect(() => {
-    let active = true;
+  const clearUser = useCallback(async () => {
+    try {
+      await del(ACCOUNT_STORE, ACTIVE_ACCOUNT_KEY);
+    } catch {}
 
+    setUser(null);
+    setOfflineAccount(null);
+  }, []);
+
+  useEffect(() => {
     const restoreUser = async () => {
       try {
-        const { data } = await Api.get<AuthUser>("/current-user");
+        const currentUser = await getCurrentUser();
 
-        if (active) {
-          setUser(data);
-        }
+        setUser(currentUser);
       } catch {
-        if (active) {
-          setUser(null);
+        setUser(null);
+
+        if (navigator.onLine) {
+          setOfflineAccount(null);
+          return;
+        }
+
+        try {
+          const savedAccount = await get(ACCOUNT_STORE, ACTIVE_ACCOUNT_KEY);
+
+          setOfflineAccount(savedAccount ?? null);
+        } catch {
+          setOfflineAccount(null);
         }
       } finally {
-        if (active) {
-          setInitialized(true);
-        }
+        setInitialized(true);
       }
     };
 
     void restoreUser();
-
-    return () => {
-      active = false;
-    };
   }, []);
 
   useEffect(() => {
     if (!user) {
       return;
     }
-    void getOrCreateKey(user.id);
+
+    const account: OfflineAccount = {
+      userId: user.id,
+      username: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      loggedInAt: new Date().toISOString(),
+    };
+
+    setOfflineAccount(account);
+
+    void save(ACCOUNT_STORE, account).catch((error: unknown) => {
+      console.error("Lỗi khi lưu offline account", error);
+    });
   }, [user]);
 
   return (
     <AuthContext.Provider
       value={{
         user,
+        offlineAccount,
         initialized,
-        setUser,
         refreshUser,
+        clearUser,
       }}
     >
       {children}
@@ -91,8 +128,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
+
   if (context === undefined) {
     throw new Error("useAuth phải gọi trong AuthProvider");
   }
+
   return context;
 };
