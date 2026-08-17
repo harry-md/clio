@@ -148,9 +148,7 @@ export const LibraryPageClient = () => {
   return (
     <>
       <div className="border-b border-border pb-8">
-        <h1 className="font-serif text-5xl font-semibold text-foreground">
-          Thư viện
-        </h1>
+        <h1 className="text-5xl font-semibold text-foreground">Thư viện</h1>
 
         <p className="mt-3 text-muted-foreground">
           {page?.totalElements ?? libraries.length} cuốn sách

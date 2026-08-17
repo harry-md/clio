@@ -23,12 +23,6 @@ export const metadata: Metadata = {
     template: "%s | Clio",
   },
 
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "black-translucent",
-    title: "Clio",
-  },
-
   formatDetection: {
     telephone: false,
   },

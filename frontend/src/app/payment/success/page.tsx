@@ -11,7 +11,7 @@ const PaymentSuccessPage = () => {
           className="mx-auto size-14 text-primary"
         />
 
-        <h1 className="mt-7 font-serif text-4xl font-semibold text-foreground">
+        <h1 className="mt-7 text-4xl font-semibold text-foreground">
           Mua thành công
         </h1>
 

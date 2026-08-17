@@ -73,7 +73,7 @@ export const Cart = () => {
   return (
     <section className="mx-auto max-w-360 px-5 py-12 lg:px-10 lg:py-16">
       <div className="border-b border-border pb-8">
-        <h1 className="mt-3 font-serif text-5xl font-semibold text-foreground">
+        <h1 className="mt-3 text-5xl font-semibold text-foreground">
           Giỏ hàng
         </h1>
 
