@@ -39,4 +39,15 @@ public record BookFilterRequest(
     public boolean isValidRatingRange() {
         return fromRating == null || toRating == null || fromRating <= toRating;
     }
+
+    public boolean hasNoFilters() {
+        return (title == null || title.isBlank())
+                && (authorFullname == null || authorFullname.isBlank())
+                && fromPrice == null
+                && toPrice == null
+                && fromRating == null
+                && toRating == null
+                && categoryId == null
+                && authorId == null;
+    }
 }

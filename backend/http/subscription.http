@@ -1,5 +1,0 @@
-###
-# group: Subscription
-# @name Get All Subscription Plan
-
-GET http://localhost:8080/api/subscription-plans

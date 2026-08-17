@@ -3,6 +3,7 @@ package com.harry.clio.dto.book;
 import com.harry.clio.model.BookAuthorResponse;
 import com.harry.clio.model.BookType;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -14,4 +15,5 @@ public record BookListResponse(
         BookType type,
         Double rating,
         Long ratingCount,
-        List<BookAuthorResponse> authors) {}
+        List<BookAuthorResponse> authors)
+        implements Serializable {}

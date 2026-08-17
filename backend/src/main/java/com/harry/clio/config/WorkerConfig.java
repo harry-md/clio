@@ -10,13 +10,13 @@ public class WorkerConfig {
     @Value("${clio.book-workers}")
     private int bookWorkers;
 
-    @Bean(value = "bookProcessingExecutor")
-    public ThreadPoolTaskExecutor bookProcessingExecutor() {
+    @Bean
+    public ThreadPoolTaskExecutor bookExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(bookWorkers);
         executor.setMaxPoolSize(bookWorkers);
         executor.setQueueCapacity(0);
-        executor.setThreadNamePrefix("book-processing-");
+        executor.setThreadNamePrefix("book-worker-");
         executor.initialize();
         return executor;
     }

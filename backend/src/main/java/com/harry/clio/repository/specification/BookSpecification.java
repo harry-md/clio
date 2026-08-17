@@ -2,6 +2,7 @@ package com.harry.clio.repository.specification;
 
 import com.harry.clio.dto.book.BookFilterRequest;
 import com.harry.clio.model.Book;
+import com.harry.clio.model.BookStatus;
 import com.harry.clio.model.BookType;
 import com.harry.clio.model.Category;
 
@@ -63,6 +64,10 @@ public class BookSpecification {
 
     public static Specification<Book> hasType(BookType type) {
         return (root, query, cb) -> cb.equal(root.get("type"), type);
+    }
+
+    public static Specification<Book> hasStatus(BookStatus status) {
+        return (root, query, cb) -> cb.equal(root.get("status"), status);
     }
 
     public static Specification<Book> isActive(boolean active) {

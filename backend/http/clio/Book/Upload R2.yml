@@ -1,0 +1,40 @@
+info:
+  name: Upload R2
+  type: http
+  seq: 5
+
+http:
+  method: PUT
+  url: https://e19a52322a9943c066fb3fdabfcda820.r2.cloudflarestorage.com/clio/books/origin/eb37b441-b7c2-4dcd-811c-29979bf90f2a.epub?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20260808T110821Z&X-Amz-SignedHeaders=content-type%3Bhost&X-Amz-Credential=91b8946993828f0d47d9deebdbde4774%2F20260808%2Fauto%2Fs3%2Faws4_request&X-Amz-Expires=300&X-Amz-Signature=607fe1595a82cbc819ac010b15c67bc1ce7577d0921e3a6a63e3b02c0ccf9af3
+  params:
+    - name: X-Amz-Algorithm
+      value: AWS4-HMAC-SHA256
+      type: query
+    - name: X-Amz-Date
+      value: 20260808T110821Z
+      type: query
+    - name: X-Amz-SignedHeaders
+      value: content-type%3Bhost
+      type: query
+    - name: X-Amz-Credential
+      value: 91b8946993828f0d47d9deebdbde4774%2F20260808%2Fauto%2Fs3%2Faws4_request
+      type: query
+    - name: X-Amz-Expires
+      value: "300"
+      type: query
+    - name: X-Amz-Signature
+      value: 607fe1595a82cbc819ac010b15c67bc1ce7577d0921e3a6a63e3b02c0ccf9af3
+      type: query
+  body:
+    type: file
+    data:
+      - filePath: /home/harry/Downloads/books/1984/1984.epub
+        contentType: application/epub+zip
+        selected: true
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

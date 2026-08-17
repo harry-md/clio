@@ -9,11 +9,12 @@ import com.harry.clio.mapper.BookMapper;
 import com.harry.clio.model.*;
 import com.harry.clio.repository.*;
 import com.harry.clio.repository.specification.BookSpecification;
-import com.harry.clio.service.BookProcessingQueue;
+import com.harry.clio.service.BookQueue;
 import com.harry.clio.service.BookService;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -41,7 +42,7 @@ public class BookServiceImpl implements BookService {
     private final BookAuthorMapper bookAuthorMapper;
     private final CategoryRepository categoryRepository;
     private final PublisherRepository publisherRepository;
-    private final BookProcessingQueue bookProcessingQueue;
+    private final BookQueue bookProcessingQueue;
 
     private record BookWithInfo(Book book, BookInfo info) {}
 
@@ -102,10 +103,22 @@ public class BookServiceImpl implements BookService {
                 .toList();
     }
 
+    @Cacheable(cacheNames = "homepage-books", key = """
+        'page=' + #pageable.pageNumber +
+        '|size=' + #pageable.pageSize +
+        '|sort=' +  #pageable.sort.toString()
+        """, condition = """
+            #pageable.paged &&
+            #pageable.pageNumber == 0 &&
+            #pageable.pageSize == 12 &&
+            #request.hasNoFilters()
+            """)
     @Override
     public Page<BookListResponse> getAllBooks(BookFilterRequest request, Pageable pageable) {
         Specification<Book> spec = Specification.where(BookSpecification.hasType(BookType.SYSTEM)
+                .and(BookSpecification.hasStatus(BookStatus.COMPLETED))
                 .and(BookSpecification.isActive(true).and(BookSpecification.buildFilter(request))));
+
         Pageable normalizedPageable = applyNullHandling(pageable);
         return bookRepository.findAll(spec, normalizedPageable).map(bookMapper::toListResponse);
     }
@@ -126,11 +139,13 @@ public class BookServiceImpl implements BookService {
         return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(orders));
     }
 
+    @Cacheable(cacheNames = "book-details", key = "#bookId")
     @Override
     public BookDetailResponse getBookDetail(int bookId) {
         Book book = bookRepository
-                .findWithCategoryById(bookId, BookType.SYSTEM)
+                .findWithCategoryById(bookId, BookType.SYSTEM, BookStatus.COMPLETED)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sách"));
+
         BookInfo bookInfo = bookInfoRepository
                 .findById(book.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thông tin sách"));

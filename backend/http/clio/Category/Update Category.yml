@@ -1,0 +1,21 @@
+info:
+  name: Update Category
+  type: http
+  seq: 4
+
+http:
+  method: PATCH
+  url: http://localhost:8080/api/categories/26
+  body:
+    type: json
+    data: |-
+      {
+        "name": "testafasdfadsfsfa"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
