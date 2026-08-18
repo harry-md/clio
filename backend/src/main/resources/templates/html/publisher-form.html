@@ -14,10 +14,8 @@
           <div class="page-heading-copy">
             <span class="page-icon"><i class="bi bi-person-plus" aria-hidden="true"></i></span>
             <div>
-              <p class="eyebrow mb-1">Management</p>
-              <h1 class="h3 mb-1" th:text="${isEdit ? 'Sửa Publisher' : 'Thêm Publisher'}">
+              <h1 class="h3 mb-1" th:text="${isEdit ? 'Sửa' : 'Thêm'}">
               </h1>
-              <p class="text-muted mb-0">Chuyển tài khoản user thành Publisher.</p>
             </div>
           </div>
           <div class="heading-actions"><a class="btn btn-outline-secondary btn-sm" th:href="@{/publishers}"><i
@@ -26,7 +24,8 @@
 
         <section class="row g-3">
           <div class="col-12 col-xl-8">
-            <form class="panel needs-validation" novalidate method="post" th:object="${publisherForm}" th:action="${formAction}">
+            <form class="panel needs-validation" novalidate method="post" th:object="${publisherForm}"
+                  th:action="${formAction}">
               <div class="mb-3" th:if="${!isEdit}">
                 <label class="form-label" for="userId">User</label>
                 <select class="form-select" id="userId" th:field="*{userId}">
@@ -42,7 +41,8 @@
                 <label class="form-label">User</label>
                 <input type="hidden" th:field="*{userId}">
                 <input class="form-control" type="text"
-                       th:value="|${selectedPublisher.firstName + ' ' + selectedPublisher.lastName} (${selectedPublisher.username})|" disabled>
+                       th:value="|${selectedPublisher.firstName + ' ' + selectedPublisher.lastName} (${selectedPublisher.username})|"
+                       disabled>
               </div>
 
               <div class="mb-3">
@@ -53,7 +53,8 @@
                 </div>
               </div>
               <button class="btn btn-primary" type="submit" th:text="${isEdit ? 'Lưu' : 'Tạo Publisher'}">
-                <a class="btn btn-outline-secondary" th:href="${isEdit ? '/publishers/' + selectedPublisher.userId : '/publishers'}">
+                <a class="btn btn-outline-secondary"
+                   th:href="${isEdit ? '/publishers/' + selectedPublisher.userId : '/publishers'}">
                   Hủy
                 </a>
               </button>

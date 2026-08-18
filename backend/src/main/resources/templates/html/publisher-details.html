@@ -14,19 +14,19 @@
           <div class="page-heading-copy">
             <span class="page-icon"><i class="bi bi-person-lines-fill" aria-hidden="true"></i></span>
             <div>
-              <p class="eyebrow mb-1">Management</p>
-              <h1 class="h3 mb-1">User Details</h1>
-              <p class="text-muted mb-0">Inspect account status, profile data, permissions, and recent activity.</p>
+              <h1 class="h3 mb-1">Chi tiết NXB</h1>
             </div>
           </div>
-          <div class="heading-actions"><a class="btn btn-outline-secondary btn-sm" th:href="@{/publishers}"><i class="bi bi-arrow-left" aria-hidden="true"></i></a></div>
+          <div class="heading-actions"><a class="btn btn-outline-secondary btn-sm" th:href="@{/publishers}"><i
+                  class="bi bi-arrow-left" aria-hidden="true"></i></a></div>
         </div>
 
         <section class="row g-3">
           <div class="col-12 col-xl-4">
             <div class="panel h-100 text-center profile-card">
               <div class="profile-hero pt-5">
-                <img class="avatar-img avatar-xl profile-photo" th:src="${publisher.avatar}" th:alt="${publisher.firstName + ' ' + publisher.lastName}">
+                <img class="avatar-img avatar-xl profile-photo" th:src="${publisher.avatar}"
+                     th:alt="${publisher.firstName + ' ' + publisher.lastName}">
                 <h2 class="h5 mb-1" th:text="${publisher.firstName + ' ' + publisher.lastName}"></h2>
                 <p class="text-muted mb-3" th:text="${publisher.username}"></p>
                 <span class="badge text-bg-success">Publisher</span>
@@ -55,9 +55,10 @@
             <div class="panel mb-3">
               <div class="panel-header">
                 <div>
-                  <h2 class="h5 mb-1 section-title"><i class="bi bi-building"></i><span>Thông tin của Publisher</span>
+                  <h2 class="h5 mb-1 section-title"><i class="bi bi-building"></i><span>Thông tin NXB</span>
+                  </h2>
                 </div>
-                <a class="btn btn-primary btn-sm" th:href="@{/publishers/{id}/edit(id=${publisher.userId})}">Sửa Publisher</a>
+                <a class="btn btn-primary btn-sm" th:href="@{/publishers/{id}/edit(id=${publisher.userId})}">Sửa</a>
               </div>
 
               <div class="row g-3">

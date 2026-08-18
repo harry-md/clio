@@ -2,7 +2,6 @@
 
 (function () {
     var sidebarStorageKey = "adminHMD.sidebarMini";
-    var themeStorageKey = "adminHMD.colorTheme";
     var desktopMedia = "(min-width: 992px)";
 
     function onReady(callback) {
@@ -43,15 +42,9 @@
         }
     }
 
-    function getPreferredTheme(storageAvailable) {
-        return "light";
-    }
-
     onReady(function () {
         var body = document.body;
         var sidebarToggle = document.querySelector("[data-sidebar-toggle]");
-        var themeToggles = document.querySelectorAll("[data-theme-toggle]");
-        var themeIcons = document.querySelectorAll("[data-theme-icon]");
         var closeButtons = document.querySelectorAll("[data-sidebar-close]");
         var sidebarLinks = document.querySelectorAll(".sidebar-nav .nav-link");
         var mediaQuery = window.matchMedia(desktopMedia);
@@ -94,46 +87,8 @@
             });
         }
 
-        function updateThemeControls(theme) {
-            var nextTheme = theme === "dark" ? "light" : "dark";
-            var label = "Switch to " + nextTheme + " mode";
-            var iconClass = theme === "dark" ? "bi bi-sun" : "bi bi-moon-stars";
-
-            Array.prototype.forEach.call(themeToggles, function (button) {
-                button.setAttribute("aria-label", label);
-                button.setAttribute("title", label);
-            });
-
-            Array.prototype.forEach.call(themeIcons, function (icon) {
-                icon.className = iconClass;
-            });
-        }
-
-        function applyTheme(theme) {
-            document.documentElement.setAttribute("data-theme", theme);
-            document.documentElement.setAttribute("data-bs-theme", theme);
-
-            if (storageAvailable) {
-                window.localStorage.setItem(themeStorageKey, theme);
-            }
-
-            updateThemeControls(theme);
-        }
-
-        function initThemeToggle() {
-            applyTheme(getPreferredTheme(storageAvailable));
-
-            Array.prototype.forEach.call(themeToggles, function (button) {
-                button.addEventListener("click", function () {
-                    var currentTheme = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
-                    applyTheme(currentTheme === "dark" ? "light" : "dark");
-                });
-            });
-        }
-
         initValidation();
         initTableSearch();
-        initThemeToggle();
         if (!sidebarToggle) {
             return;
         }
@@ -147,7 +102,7 @@
         }
 
         function setToggleExpanded() {
-            var expanded = isDesktop()
+            const expanded = isDesktop()
                 ? !body.classList.contains("sidebar-mini")
                 : body.classList.contains("sidebar-open");
 
