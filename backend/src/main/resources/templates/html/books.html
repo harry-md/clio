@@ -171,7 +171,8 @@
                       <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                       <input type="hidden" name="active" th:value="${!book.active}">
 
-                      <button class="btn btn-sm" th:classappend="${book.active} ? ' btn-outline-danger' : ' btn-outline-success'"
+                      <button class="btn btn-sm"
+                              th:classappend="${book.active} ? ' btn-outline-danger' : ' btn-outline-success'"
                               th:text="${book.active} ? 'Disable' : 'Enable'" type="submit">
                       </button>
                     </form>

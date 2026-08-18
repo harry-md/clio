@@ -3,16 +3,16 @@
 <head th:replace="~{html/base :: head('Dashboard')}"></head>
 
 <body>
-  <div class="admin-shell">
-    <div th:replace="~{html/base :: sidebar('dashboard')}"></div>
-    <div class="admin-main">
-     <div th:replace="~{html/base :: topnav}"></div>
-      <main></main>
-      <footer th:replace="~{html/base :: footer}"></footer>
-    </div>
+<div class="admin-shell">
+  <div th:replace="~{html/base :: sidebar('dashboard')}"></div>
+  <div class="admin-main">
+    <div th:replace="~{html/base :: topnav}"></div>
+    <main></main>
+    <footer th:replace="~{html/base :: footer}"></footer>
   </div>
+</div>
 
-  <script th:src="@{assets/js/bootstrap.bundle.min.js}"></script>
-  <script th:src="@{assets/js/main.js}"></script>
+<script th:src="@{assets/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{assets/js/main.js}"></script>
 </body>
 </html>
