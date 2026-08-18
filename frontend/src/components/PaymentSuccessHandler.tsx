@@ -24,7 +24,7 @@ export const PaymentSuccessHandler = () => {
         }
 
         window.sessionStorage.removeItem("pending-book-checkout");
-        await refreshUser().catch();
+        await refreshUser().catch(() => undefined);
         router.replace("/library");
       };
 

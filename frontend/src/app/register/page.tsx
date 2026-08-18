@@ -8,9 +8,7 @@ const RegisterPage = () => {
 
       <div className="mx-auto max-w-2xl px-5 py-14 lg:py-20">
         <section>
-          <h2 className="font-serif text-5xl font-semibold text-foreground">
-            Đăng ký
-          </h2>
+          <h2 className="text-5xl font-semibold text-foreground">Đăng ký</h2>
           <RegisterForm />
         </section>
       </div>

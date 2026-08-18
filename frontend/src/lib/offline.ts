@@ -7,11 +7,14 @@ import {
   type StoreValue,
 } from "idb";
 import { base64url, importSPKI, jwtVerify } from "jose";
+import type { LibraryItem } from "./types";
 
 const DB_NAME = "offline";
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const KEY_STORE = "device-keys";
 export const BOOK_STORE = "offline-books";
+export const ACCOUNT_STORE = "offline-account";
+export const ACTIVE_ACCOUNT_KEY = "active-account";
 
 export interface AccountKey {
   id: number;
@@ -19,13 +22,24 @@ export interface AccountKey {
   publicKeySpki: string;
   createdAt: string;
 }
-
+export type OfflineBookMetadata = Pick<
+  LibraryItem,
+  "title" | "authors" | "type"
+>;
 export interface BookData {
   userId: number;
   bookId: number;
+  metadata: OfflineBookMetadata;
   license: string;
   encryptedFile: Blob;
   downloadedAt: string;
+}
+export interface OfflineAccount {
+  userId: number;
+  username: string;
+  firstName: string;
+  lastName: string;
+  loggedInAt: string;
 }
 
 interface MyDB extends DBSchema {
@@ -36,6 +50,10 @@ interface MyDB extends DBSchema {
   "offline-books": {
     key: [number, number];
     value: BookData;
+  };
+  "offline-account": {
+    key: string;
+    value: OfflineAccount;
   };
 }
 
@@ -55,6 +73,9 @@ const getDatabase = (): Promise<IDBPDatabase<MyDB>> => {
         if (!db.objectStoreNames.contains(BOOK_STORE)) {
           db.createObjectStore(BOOK_STORE);
         }
+        if (!db.objectStoreNames.contains(ACCOUNT_STORE)) {
+          db.createObjectStore(ACCOUNT_STORE);
+        }
       },
     }).catch((error: unknown) => {
       dbPromise = null;
@@ -73,26 +94,38 @@ export const get = async <StoreName extends StoreNames<MyDB>>(
   return db.get(objectKey, key);
 };
 
-const save = async <StoreName extends StoreNames<MyDB>>(
+export const save = async <StoreName extends StoreNames<MyDB>>(
   objectKey: StoreName,
   value: StoreValue<MyDB, StoreName>,
-): Promise<void> => {
+) => {
   const db: IDBPDatabase<MyDB> = await getDatabase();
 
-  if (objectKey === KEY_STORE) {
-    const accountKey = value as AccountKey;
-    await db.add(KEY_STORE, accountKey, accountKey.id);
-    return;
-  }
+  switch (objectKey) {
+    case KEY_STORE: {
+      const accountKey = value as AccountKey;
+      await db.add(KEY_STORE, accountKey, accountKey.id);
+      return;
+    }
+    case BOOK_STORE: {
+      const bookData = value as BookData;
+      await db.put(BOOK_STORE, bookData, [bookData.userId, bookData.bookId]);
+      return;
+    }
+    case ACCOUNT_STORE: {
+      const account = value as OfflineAccount;
+      await db.put(ACCOUNT_STORE, account, ACTIVE_ACCOUNT_KEY);
+      return;
+    }
 
-  const bookData = value as BookData;
-  await db.put(BOOK_STORE, bookData, [bookData.userId, bookData.bookId]);
+    default:
+      throw new Error("Object key không hợp lệ");
+  }
 };
 
 export const del = async <StoreName extends StoreNames<MyDB>>(
   objectKey: StoreName,
   key: StoreKey<MyDB, StoreName>,
-): Promise<void> => {
+) => {
   const db: IDBPDatabase<MyDB> = await getDatabase();
   await db.delete(objectKey, key);
 };
@@ -148,10 +181,10 @@ export const getBooksByUser = async (userId: number): Promise<BookData[]> => {
 
 export const storeBook = async (
   userId: number,
-  bookId: number,
+  book: Pick<LibraryItem, "bookId" | "title" | "authors" | "type">,
   license: string,
   downloadUrl: string,
-): Promise<void> => {
+) => {
   const res: Response = await fetch(downloadUrl, {
     credentials: "omit",
     cache: "no-store",
@@ -171,7 +204,12 @@ export const storeBook = async (
 
   const bookData: BookData = {
     userId: userId,
-    bookId: bookId,
+    bookId: book.bookId,
+    metadata: {
+      title: book.title,
+      authors: book.authors,
+      type: book.type,
+    },
     license: license,
     encryptedFile: encryptedFile,
     downloadedAt: new Date().toISOString(),

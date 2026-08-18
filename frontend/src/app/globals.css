@@ -122,8 +122,6 @@
   --color-auth-cool-overlay: var(--auth-cool-overlay);
 
   --font-sans: var(--font-montserrat);
-  --font-serif: var(--font-merriweather);
-  --font-heading: var(--font-merriweather);
 
   --radius-sm: var(--radius);
   --radius-md: var(--radius);

@@ -11,7 +11,7 @@ const PaymentCancelPage = () => {
           className="mx-auto size-14 text-destructive-foreground"
         />
 
-        <h1 className="mt-7 font-serif text-4xl font-semibold text-foreground">
+        <h1 className="mt-7 text-4xl font-semibold text-foreground">
           Mua thất bại
         </h1>
 

@@ -9,22 +9,21 @@ import { Spinner } from "@/components/ui/spinner";
 import { useAuth } from "@/context/AuthContext";
 import { BOOK_STORE, decryptFile, get, verifyLicense } from "@/lib/offline";
 
-interface ReadComponentProps {
+interface ReaderProps {
   bookId: number;
 }
 
 type ReaderPhase = "loading" | "ready" | "error";
 
-export const ReadComponent = ({ bookId }: ReadComponentProps) => {
-  const { user, initialized } = useAuth();
-  const userId = user?.id;
+export const Reader = ({ bookId }: ReaderProps) => {
+  const { user, offlineAccount, initialized } = useAuth();
+  const userId = user?.id ?? offlineAccount?.userId;
 
   const readerElementRef = useRef<HTMLDivElement>(null);
   const renditionRef = useRef<Rendition | null>(null);
 
   const [phase, setPhase] = useState<ReaderPhase>("loading");
-
-  const [message, setMessage] = useState("Đang mở sách...");
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (!initialized) {
@@ -33,7 +32,7 @@ export const ReadComponent = ({ bookId }: ReadComponentProps) => {
 
     if (userId === undefined) {
       setPhase("error");
-      setMessage("Bạn cần đăng nhập để đọc sách.");
+      setError("Không thấy tài khoản đã đăng nhập.");
       return;
     }
 
@@ -43,21 +42,15 @@ export const ReadComponent = ({ bookId }: ReadComponentProps) => {
     const openBook = async () => {
       try {
         setPhase("loading");
-        setMessage("Đang lấy dữ liệu sách...");
 
         const bookData = await get(BOOK_STORE, [userId, bookId]);
-
         if (!bookData) {
-          throw new Error("Sách chưa được tải xuống trên trình duyệt này.");
+          throw new Error("Sách chưa được tải xuống.");
         }
-
-        setMessage("Đang xác minh license...");
 
         const license = await verifyLicense(bookData.license, userId, bookId);
 
-        setMessage("Đang giải mã sách...");
-
-        const decryptedEpub = await decryptFile(
+        const originFile = await decryptFile(
           userId,
           license.wrappedContentKey,
           bookData.encryptedFile,
@@ -67,15 +60,13 @@ export const ReadComponent = ({ bookId }: ReadComponentProps) => {
           return;
         }
 
-        setMessage("Đang khởi tạo trình đọc...");
-
         const { default: ePub } = await import("epubjs");
 
         if (disposed || !readerElementRef.current) {
           return;
         }
 
-        epubBook = ePub(decryptedEpub);
+        epubBook = ePub(originFile);
 
         const rendition = epubBook.renderTo(readerElementRef.current, {
           width: "100%",
@@ -91,7 +82,6 @@ export const ReadComponent = ({ bookId }: ReadComponentProps) => {
 
         if (!disposed) {
           setPhase("ready");
-          setMessage("");
         }
       } catch (error: unknown) {
         if (disposed) {
@@ -103,9 +93,7 @@ export const ReadComponent = ({ bookId }: ReadComponentProps) => {
         renditionRef.current = null;
 
         setPhase("error");
-        setMessage(
-          error instanceof Error ? error.message : "Không thể mở sách.",
-        );
+        setError(error instanceof Error ? error.message : "Không thể mở sách.");
       }
     };
 
@@ -137,24 +125,15 @@ export const ReadComponent = ({ bookId }: ReadComponentProps) => {
         {phase === "loading" && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background/95 text-foreground">
             <Spinner />
-            <p className="text-sm text-muted-foreground">{message}</p>
           </div>
         )}
 
         {phase === "error" && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-background px-6 text-center">
-            <p className="font-serif text-2xl font-semibold text-foreground">
-              Không thể mở sách
+            <p className="text-2xl font-semibold text-foreground">
+              Lỗi khi mở sách
             </p>
-
-            <p className="max-w-xl text-muted-foreground">{message}</p>
-
-            <Link
-              href="/library"
-              className="text-sm font-semibold text-link hover:underline"
-            >
-              Quay lại thư viện
-            </Link>
+            <p className="max-w-xl text-muted-foreground">{error}</p>
           </div>
         )}
       </div>

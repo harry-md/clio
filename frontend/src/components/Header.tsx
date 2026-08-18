@@ -31,7 +31,9 @@ const navigationItems = [
 export const Header = () => {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, initialized, setUser } = useAuth();
+  const { user, offlineAccount, initialized, clearUser } = useAuth();
+
+  const displayAccount = user ?? offlineAccount;
   const { books, clearCart } = useCart();
   const [navigating, setNavigating] = useState(false);
 
@@ -46,10 +48,12 @@ export const Header = () => {
 
   const handleLogout = async () => {
     try {
-      await Api.post("/logout");
+      if (navigator.onLine) {
+        await Api.post("/logout");
+      }
     } finally {
       clearCart();
-      setUser(null);
+      await clearUser();
       router.replace("/");
     }
   };
@@ -117,25 +121,27 @@ export const Header = () => {
 
           {!initialized ? (
             <div aria-hidden="true" className="h-10 w-36" />
-          ) : user ? (
+          ) : displayAccount ? (
             <div className="flex items-center gap-3">
               <div
                 className={cn(
                   "relative size-9 shrink-0 overflow-hidden border bg-secondary",
-                  user.isSubscribed ? "border-primary" : "border-border-strong",
+                  user?.isSubscribed
+                    ? "border-primary"
+                    : "border-border-strong",
                 )}
               >
-                {user.avatar ? (
+                {user?.avatar ? (
                   <Image
                     src={user.avatar}
-                    alt={`Avatar ${user.firstName} ${user.lastName}`}
+                    alt={`Avatar ${displayAccount.firstName}`}
                     fill
                     sizes="36px"
                     className="object-cover"
                   />
                 ) : (
                   <span className="grid h-full place-items-center text-sm font-semibold text-secondary-foreground">
-                    {user.firstName}
+                    {displayAccount.firstName.charAt(0).toUpperCase()}
                   </span>
                 )}
               </div>
@@ -144,10 +150,10 @@ export const Header = () => {
                 <p
                   className={cn(
                     "font-semibold",
-                    user.isSubscribed ? "text-primary" : "text-foreground",
+                    user?.isSubscribed ? "text-primary" : "text-foreground",
                   )}
                 >
-                  {user.firstName} {user.lastName}
+                  {displayAccount.firstName} {displayAccount.lastName}
                 </p>
 
                 <Button

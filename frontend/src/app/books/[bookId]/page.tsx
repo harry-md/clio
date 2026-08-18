@@ -152,7 +152,7 @@ const BookDetailPage = async ({ params }: BookDetailPageProps) => {
                   >
                     <span className="text-xs uppercase tracking-[0.25em] text-muted-foreground"></span>
 
-                    <h2 className="font-serif text-3xl leading-tight text-foreground">
+                    <h2 className="text-3xl leading-tight text-foreground">
                       {book.title}
                     </h2>
                   </div>
@@ -160,7 +160,7 @@ const BookDetailPage = async ({ params }: BookDetailPageProps) => {
               </div>
 
               <div className="max-w-4xl">
-                <h1 className="mt-2 font-serif text-5xl font-semibold leading-tight text-foreground">
+                <h1 className="mt-2 text-5xl font-semibold leading-tight text-foreground">
                   {book.title}
                 </h1>
 
