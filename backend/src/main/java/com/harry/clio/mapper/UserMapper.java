@@ -1,5 +1,6 @@
 package com.harry.clio.mapper;
 
+import com.harry.clio.dto.user.AdminUserListResponse;
 import com.harry.clio.dto.user.CreateUserRequest;
 import com.harry.clio.dto.user.UserOption;
 import com.harry.clio.dto.user.UserResponse;
@@ -19,4 +20,6 @@ public interface UserMapper {
 
     @Mapping(target = "userId", source = "id")
     UserOption toUserOption(User user);
+
+    AdminUserListResponse toAdminListResponse(User user);
 }

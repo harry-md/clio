@@ -33,10 +33,15 @@
          th:href="@{/}"><span class="nav-icon"><i class="bi bi-speedometer2"></i></span>
         <span class="nav-text">Dashboard</span>
       </a>
-
+      <a class="nav-link" th:classappend="${activePage == 'books'} ? 'active' : ''" th:href="@{/books}">
+        <span class="nav-icon">
+            <i class="bi bi-book"></i>
+        </span>
+        <span class="nav-text">Books</span>
+      </a>
       <a class="nav-link" th:classappend="${activePage == 'users'} ? 'active' : ''" th:href="@{/users}">
         <span class="nav-icon">
-            <i class="bi bi-people"></i>
+            <i class="bi bi-person"></i>
         </span>
         <span class="nav-text">Users</span>
       </a>
@@ -47,19 +52,8 @@
         </span>
         <span class="nav-text">Publishers</span>
       </a>
-
-      <a class="nav-link" th:href="@{/charts}">
-        <span class="nav-icon"><i class="bi bi-bar-chart-line"></i></span>
-        <span class="nav-text">Charts</span>
-      </a>
-
-      <a class="nav-link" th:href="@{/tables}">
-        <span class="nav-icon"><i class="bi bi-table"></i></span>
-        <span class="nav-text">Tables</span>
-      </a>
     </nav>
   </aside>
-
 </th:block>
 
 
@@ -77,44 +71,21 @@
     </button>
 
     <div class="navbar-actions ms-auto">
-
-      <button class="icon-button theme-toggle"
-              type="button"
-              data-theme-toggle
-              aria-label="Switch color theme">
-
-        <i class="bi bi-moon-stars"
-           data-theme-icon>
-        </i>
-      </button>
       <div class="dropdown">
         <button class="profile-button dropdown-toggle"
                 type="button"
                 data-bs-toggle="dropdown"
                 aria-expanded="false">
 
-          <img class="avatar-img avatar-md sidebar-user-avatar" style="width: 40px; height: 40px;"
-               th:src="${currentAdmin.avatar}"
-               th:alt="|${currentAdmin.firstName} ${currentAdmin.lastName}|">
+          <img class="avatar-img avatar-md" style="width: 40px; height: 40px;" th:src="${currentAdmin.avatar}" th:alt="|${currentAdmin.firstName} ${currentAdmin.lastName}|">
           <strong th:text="|${currentAdmin.firstName} ${currentAdmin.lastName}|">Admin</strong>
-          <small th:text="${currentAdmin.role}">ADMIN</small>
         </button>
 
         <ul class="dropdown-menu dropdown-menu-end">
           <li>
-            <hr class="dropdown-divider">
-          </li>
-
-          <li>
-            <form th:action="@{/logout}"
-                  method="post">
-
-              <input type="hidden"
-                     th:name="${_csrf.parameterName}"
-                     th:value="${_csrf.token}">
-
-              <button class="dropdown-item"
-                      type="submit">
+            <form th:action="@{/logout}" method="post">
+              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+              <button class="dropdown-item" type="submit">
                 Log out
               </button>
             </form>

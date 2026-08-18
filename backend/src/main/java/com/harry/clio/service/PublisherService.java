@@ -1,6 +1,6 @@
 package com.harry.clio.service;
 
-import com.harry.clio.dto.publisher.PublisherAdminDto;
+import com.harry.clio.dto.publisher.AdminPublisherDto;
 import com.harry.clio.dto.publisher.PublisherDto;
 import com.harry.clio.dto.publisher.PublisherForm;
 import com.harry.clio.dto.user.UserOption;
@@ -16,9 +16,9 @@ public interface PublisherService {
 
     PublisherDto updatePublisher(int userId, PublisherDto dto);
 
-    List<PublisherAdminDto> getAllPublishers();
+    List<AdminPublisherDto> getAllPublishers();
 
-    PublisherAdminDto getPublisherAdmin(int userId);
+    AdminPublisherDto getPublisherAdmin(int userId);
 
     List<UserOption> getUserOptions();
 }
