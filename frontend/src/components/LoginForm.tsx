@@ -1,8 +1,8 @@
 "use client";
 
+import { isAxiosError } from "axios";
 import { useRouter } from "next/navigation";
 import { type SubmitEvent, useState } from "react";
-
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
@@ -11,7 +11,6 @@ import { Spinner } from "@/components/ui/spinner";
 import { useAuth } from "@/context/AuthContext";
 import { Api, getApiErrorMessage } from "@/lib/api";
 import type { AuthUser } from "@/lib/types";
-import { isAxiosError } from "axios";
 
 interface LoginFormFields {
   username: string;

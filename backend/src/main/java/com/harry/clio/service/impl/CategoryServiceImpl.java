@@ -10,6 +10,7 @@ import com.harry.clio.service.CategoryService;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,6 +21,7 @@ public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
 
+    @Cacheable(value = "categories")
     public List<CategoryResponse> getCategories() {
         return categoryRepository.findAll().stream()
                 .map(categoryMapper::toResponse)

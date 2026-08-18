@@ -1,6 +1,6 @@
 package com.harry.clio.mapper;
 
-import com.harry.clio.dto.publisher.PublisherAdminDto;
+import com.harry.clio.dto.publisher.AdminPublisherDto;
 import com.harry.clio.dto.publisher.PublisherDto;
 import com.harry.clio.model.Publisher;
 import com.harry.clio.model.User;
@@ -20,5 +20,5 @@ public interface PublisherMapper {
     @Mapping(target = "avatar", source = "user.avatar")
     @Mapping(target = "bankAccountNumber", source = "publisher.bankAccountNumber")
     @Mapping(target = "balance", source = "publisher.balance")
-    PublisherAdminDto toAdminDto(User user, Publisher publisher);
+    AdminPublisherDto toAdminDto(User user, Publisher publisher);
 }

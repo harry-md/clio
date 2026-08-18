@@ -1,4 +1,3 @@
-import { cacheLife } from "next/cache";
 import { BookCard } from "@/components/BookCard";
 import { EmptyState } from "@/components/EmptyState";
 import {
@@ -6,8 +5,8 @@ import {
   SearchFiltersForm,
 } from "@/components/SearchFiltersForm";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import type { Book, PageResponse } from "@/lib/types";
 import { Api, getApiErrorMessage } from "@/lib/api";
+import type { Book, PageResponse } from "@/lib/types";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 

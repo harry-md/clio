@@ -13,4 +13,8 @@ public interface BookService {
     BookDetailResponse getBookDetail(int bookId);
 
     int deleteFailedBooks();
+
+    Page<AdminBookListResponse> getAllAdminBooks(BookFilterRequest request, Pageable pageable);
+
+    void updateBookActive(int bookId, boolean active);
 }

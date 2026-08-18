@@ -8,6 +8,7 @@ spring:
       - homepage-books
       - book-details
       - subscription-plans
+      - categories
     redis:
       time-to-live: 1h
       cache-null-values: false

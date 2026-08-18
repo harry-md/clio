@@ -28,4 +28,6 @@ public interface BookMapper {
 
     @Mapping(target = "bookInfo", source = "bookInfo")
     BookDetailResponse toDetailResponse(Book book, BookInfoResponse bookInfo);
+
+    AdminBookListResponse toAdminListResponse(Book book);
 }

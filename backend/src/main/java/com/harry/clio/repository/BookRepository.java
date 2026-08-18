@@ -63,4 +63,6 @@ public interface BookRepository
         WHERE b.status = :status
         """)
     int deleteFailedBooks(@Param("status") BookStatus status);
+
+    Optional<Book> findByIdAndType(Integer bookId, BookType type);
 }

@@ -1,7 +1,9 @@
 package com.harry.clio.service.impl;
 
 import com.harry.clio.dto.CustomUser;
+import com.harry.clio.dto.user.AdminUserListResponse;
 import com.harry.clio.dto.user.CreateUserRequest;
+import com.harry.clio.dto.user.UserFilterRequest;
 import com.harry.clio.dto.user.UserResponse;
 import com.harry.clio.exception.BadRequestException;
 import com.harry.clio.exception.ResourceNotFoundException;
@@ -11,11 +13,15 @@ import com.harry.clio.model.User;
 import com.harry.clio.model.UserRole;
 import com.harry.clio.repository.SubscriptionRepository;
 import com.harry.clio.repository.UserRepository;
+import com.harry.clio.repository.specification.UserSpecification;
 import com.harry.clio.service.UserService;
 
 import lombok.RequiredArgsConstructor;
 
 import org.jspecify.annotations.NonNull;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -94,5 +100,14 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         boolean isSubscribed =
                 subscriptionRepository.existsByUserIdAndStatus(id, SubscriptionStatus.ACTIVE);
         return userMapper.toDto(getUserOrThrow(id), isSubscribed);
+    }
+
+    @Override
+    public Page<AdminUserListResponse> getAllAdminUsers(
+            UserFilterRequest request, Pageable pageable) {
+
+        Specification<User> specification =
+                Specification.where(UserSpecification.buildFilter(request));
+        return userRepository.findAll(specification, pageable).map(userMapper::toAdminListResponse);
     }
 }

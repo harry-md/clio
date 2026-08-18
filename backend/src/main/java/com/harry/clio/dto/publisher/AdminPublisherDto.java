@@ -2,7 +2,7 @@ package com.harry.clio.dto.publisher;
 
 import java.math.BigDecimal;
 
-public record PublisherAdminDto(
+public record AdminPublisherDto(
         Integer userId,
         String username,
         String firstName,

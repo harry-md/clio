@@ -1,6 +1,6 @@
 package com.harry.clio.service.impl;
 
-import com.harry.clio.dto.publisher.PublisherAdminDto;
+import com.harry.clio.dto.publisher.AdminPublisherDto;
 import com.harry.clio.dto.publisher.PublisherDto;
 import com.harry.clio.dto.publisher.PublisherForm;
 import com.harry.clio.dto.user.UserOption;
@@ -42,14 +42,14 @@ public class PublisherServiceImpl implements PublisherService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<PublisherAdminDto> getAllPublishers() {
+    public List<AdminPublisherDto> getAllPublishers() {
         return publisherRepository.findAllWithUser().stream()
                 .map(publisher -> publisherMapper.toAdminDto(publisher.getUser(), publisher))
                 .toList();
     }
 
     @Override
-    public PublisherAdminDto getPublisherAdmin(int userId) {
+    public AdminPublisherDto getPublisherAdmin(int userId) {
         return publisherRepository
                 .findWithUserByUserId(userId)
                 .map(publisher -> publisherMapper.toAdminDto(publisher.getUser(), publisher))
