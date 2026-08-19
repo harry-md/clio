@@ -5,11 +5,8 @@ import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 
 public record BookFilterRequest(
-        @Size(max = 255, message = "Tên sách không được vượt quá độ dài cho phép")
-        String title,
-
-        @Size(max = 255, message = "Tên tác giả không được vượt quá độ dài cho phép")
-        String authorFullname,
+        @Size(max = 255, message = "Keyword tìm kiếm vượt quá độ dài cho phép")
+        String keyword,
 
         @PositiveOrZero(message = "Khoảng giá sách bắt đầu không hợp lệ")
         @Digits(integer = 13, fraction = 2, message = "Khoảng giá sách bắt đầu không hợp lệ")
@@ -41,8 +38,7 @@ public record BookFilterRequest(
     }
 
     public boolean hasNoFilters() {
-        return (title == null || title.isBlank())
-                && (authorFullname == null || authorFullname.isBlank())
+        return (keyword == null || keyword.isBlank())
                 && fromPrice == null
                 && toPrice == null
                 && fromRating == null

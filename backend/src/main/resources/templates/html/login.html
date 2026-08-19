@@ -11,15 +11,11 @@
 </head>
 
 <body class="auth-body">
-<button class="icon-button theme-toggle auth-theme-toggle" type="button" data-theme-toggle
-        aria-label="Switch color theme" title="Switch color theme">
-  <i class="bi bi-moon-stars" data-theme-icon aria-hidden="true"></i>
-</button>
 <main class="auth-page">
   <section class="auth-card">
     <form class="needs-validation" novalidate th:action="@{/login}" method="post">
       <div class="mb-4">
-        <h1 class="h3 mb-1">Đăng nhập Admin</h1>
+        <h1 class="mb-1">Đăng nhập</h1>
       </div>
       <div class="alert alert-danger" th:if="${param.error}">Username hoặc mật khẩu không đúng.</div>
       <div class="alert alert-success" th:if="${param.logout}">Bạn đã đăng xuất.</div>
