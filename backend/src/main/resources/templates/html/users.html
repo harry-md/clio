@@ -19,32 +19,28 @@
             </span>
 
             <div>
-              <h1 class="h3 mb-1">Quản lý tài khoản</h1>
+              <h1 class="mb-1">Quản lý tài khoản</h1>
             </div>
           </div>
         </div>
 
         <section class="panel mt-3">
           <form method="get" th:action="@{/users}" th:object="${filter}" class="p-3">
+            <div th:if="${#fields.hasAnyErrors()}" class="alert alert-danger">
+              <ul class="mb-0">
+                <li th:each="error : ${#fields.allErrors()}" th:text="${error}">
+                </li>
+              </ul>
+            </div>
+
             <div class="row g-3">
-              <div class="col-12 col-md-3">
-                <label class="form-label" for="username">Username</label>
-                <input id="username" class="form-control" type="search" th:field="*{username}">
-              </div>
+              <div class="col-12 col-md-9">
+                <label class="form-label" for="keyword">
+                  Tìm kiếm
+                </label>
 
-              <div class="col-12 col-md-3">
-                <label class="form-label" for="firstName">Tên</label>
-                <input id="firstName" class="form-control" type="search" th:field="*{firstName}">
-              </div>
-
-              <div class="col-12 col-md-3">
-                <label class="form-label" for="lastName">Họ</label>
-                <input id="lastName" class="form-control" type="search" th:field="*{lastName}">
-              </div>
-
-              <div class="col-12 col-md-3">
-                <label class="form-label" for="email">Email</label>
-                <input id="email" class="form-control" type="search" th:field="*{email}">
+                <input id="keyword" class="form-control" type="search" th:field="*{keyword}"
+                       placeholder="Tìm kiếm">
               </div>
             </div>
 
@@ -54,7 +50,8 @@
                 Tìm kiếm
               </button>
 
-              <a class="btn btn-outline-secondary" th:href="@{/users}">
+              <a class="btn btn-outline-secondary"
+                 th:href="@{/users}">
                 Xóa bộ lọc
               </a>
             </div>
@@ -90,7 +87,8 @@
               <tr th:each="user : ${users.content}">
                 <td>
                   <div class="d-flex align-items-center gap-3">
-                    <img class="avatar-img avatar-sm" th:src="${user.avatar}" th:alt="|${user.firstName} ${user.lastName}|">
+                    <img class="avatar-img avatar-sm" th:src="${user.avatar}"
+                         th:alt="|${user.firstName} ${user.lastName}|">
                     <div>
                       <p class="fw-semibold mb-0" th:text="|${user.firstName} ${user.lastName}|"></p>
                       <small class="text-muted" th:text="${user.username}"></small>
@@ -136,47 +134,34 @@
 
                 <li class="page-item"
                     th:classappend="${users.first} ? 'disabled'">
-                  <a class="page-link"
-                     th:href="@{/users(
-           page=${users.number - 1},
-           size=${users.size},
-           username=${filter.username},
-           firstName=${filter.firstName},
-           lastName=${filter.lastName},
-           email=${filter.email}
-         )}">
+                  <a class="page-link" th:href="@{/users(
+                    page=${users.number - 1},
+                    size=${users.size},
+                    keyword=${filter.keyword}
+                 )}">
                     Trước
                   </a>
                 </li>
 
-                <li class="page-item"
-                    th:each="pageNumber : ${pageNumbers}"
+                <li class="page-item" th:each="pageNumber : ${pageNumbers}"
                     th:classappend="${pageNumber == users.number} ? 'active'">
 
-                  <a class="page-link"
-                     th:href="@{/users(
-           page=${pageNumber},
-           size=${users.size},
-           username=${filter.username},
-           firstName=${filter.firstName},
-           lastName=${filter.lastName},
-           email=${filter.email}
-         )}"
+                  <a class="page-link" th:href="@{/users(
+                    page=${pageNumber},
+                    size=${users.size},
+                    keyword=${filter.keyword}
+                  )}"
                      th:text="${pageNumber + 1}">
                   </a>
                 </li>
 
                 <li class="page-item"
                     th:classappend="${users.last} ? 'disabled'">
-                  <a class="page-link"
-                     th:href="@{/users(
-           page=${users.number + 1},
-           size=${users.size},
-           username=${filter.username},
-           firstName=${filter.firstName},
-           lastName=${filter.lastName},
-           email=${filter.email}
-         )}">
+                  <a class="page-link" th:href="@{/users(
+                    page=${users.number + 1},
+                    size=${users.size},
+                    keyword=${filter.keyword}
+                 )}">
                     Sau
                   </a>
                 </li>

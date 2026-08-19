@@ -18,8 +18,7 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 
 export interface SearchFilters {
-  title: string;
-  authorFullname: string;
+  keyword: string;
   fromPrice: string;
   toPrice: string;
   fromRating: string;
@@ -40,8 +39,7 @@ interface SearchFiltersFormProps {
 const RATING_OPTIONS = [1, 2, 3, 4, 5] as const;
 
 const EMPTY_FILTERS: SearchFilters = {
-  title: "",
-  authorFullname: "",
+  keyword: "",
   fromPrice: "",
   toPrice: "",
   fromRating: "",
@@ -233,34 +231,18 @@ export const SearchFiltersForm = ({
         onSubmit={handleSearch}
         className="grid gap-5 border-b border-border py-8 md:grid-cols-2 xl:grid-cols-4"
       >
-        <Field className="md:col-span-2">
-          <FieldLabel htmlFor="search-title">Tên sách</FieldLabel>
+        <Field className="md:col-span-2 xl:col-span-4">
+          <FieldLabel htmlFor="search-keyword">Tìm kiếm</FieldLabel>
 
           <Input
-            id="search-title"
-            name="title"
-            type="text"
-            value={filters.title}
-            onChange={(event) => updateFilter("title", event.target.value)}
-            placeholder="Nhập tên sách..."
+            id="search-keyword"
+            name="keyword"
+            type="search"
+            value={filters.keyword}
+            onChange={(event) => updateFilter("keyword", event.target.value)}
+            placeholder="Nhập tên sách hoặc tên tác giả"
           />
         </Field>
-
-        <Field className="md:col-span-2">
-          <FieldLabel htmlFor="search-author">Tên tác giả</FieldLabel>
-
-          <Input
-            id="search-author"
-            name="authorFullname"
-            type="text"
-            value={filters.authorFullname}
-            onChange={(event) =>
-              updateFilter("authorFullname", event.target.value)
-            }
-            placeholder="Nhập tên tác giả..."
-          />
-        </Field>
-
         <FieldSet className="gap-2 md:col-span-2">
           <FieldLegend
             variant="label"

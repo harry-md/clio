@@ -23,8 +23,7 @@ const getParam = (value: string | string[] | undefined) => {
 };
 
 const readFilters = (params: SearchParams): SearchFilters => ({
-  title: getParam(params.title),
-  authorFullname: getParam(params.authorFullname),
+  keyword: getParam(params.keyword),
   fromPrice: getParam(params.fromPrice),
   toPrice: getParam(params.toPrice),
   fromRating: getParam(params.fromRating),
