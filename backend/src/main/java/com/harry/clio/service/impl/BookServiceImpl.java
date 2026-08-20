@@ -14,13 +14,16 @@ import com.harry.clio.service.BookService;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.HashSet;
@@ -155,5 +158,34 @@ public class BookServiceImpl implements BookService {
     @Override
     public int deleteFailedBooks() {
         return bookRepository.deleteFailedBooks(BookStatus.FAILED);
+    }
+
+    @Override
+    public Page<AdminBookListResponse> getAllAdminBooks(
+            BookFilterRequest request, Pageable pageable) {
+        Specification<Book> specification = Specification.where(
+                        BookSpecification.hasType(BookType.SYSTEM))
+                .and(BookSpecification.buildFilter(request));
+
+        Pageable normalizedPageable = applyNullHandling(pageable);
+
+        return bookRepository
+                .findAll(specification, normalizedPageable)
+                .map(bookMapper::toAdminListResponse);
+    }
+
+    @Override
+    @Transactional
+    @Caching(
+            evict = {
+                @CacheEvict(cacheNames = "homepage-books", allEntries = true),
+                @CacheEvict(cacheNames = "book-details", key = "#bookId")
+            })
+    public void updateBookActive(int bookId, boolean active) {
+        Book book = bookRepository
+                .findByIdAndType(bookId, BookType.SYSTEM)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sách hệ thống"));
+
+        book.setActive(active);
     }
 }

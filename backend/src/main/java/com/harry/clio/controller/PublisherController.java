@@ -1,6 +1,6 @@
 package com.harry.clio.controller;
 
-import com.harry.clio.dto.publisher.PublisherAdminDto;
+import com.harry.clio.dto.publisher.AdminPublisherDto;
 import com.harry.clio.dto.publisher.PublisherForm;
 import com.harry.clio.service.PublisherService;
 
@@ -59,7 +59,7 @@ public class PublisherController {
 
     @GetMapping("/publishers/{userId}/edit")
     public String editView(@PathVariable int userId, Model model) {
-        PublisherAdminDto publisher = publisherService.getPublisherAdmin(userId);
+        AdminPublisherDto publisher = publisherService.getPublisherAdmin(userId);
         PublisherForm form = new PublisherForm();
         form.setUserId(publisher.userId());
         form.setBankAccountNumber(publisher.bankAccountNumber());

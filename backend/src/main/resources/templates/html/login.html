@@ -11,15 +11,11 @@
 </head>
 
 <body class="auth-body">
-<button class="icon-button theme-toggle auth-theme-toggle" type="button" data-theme-toggle
-        aria-label="Switch color theme" title="Switch color theme">
-  <i class="bi bi-moon-stars" data-theme-icon aria-hidden="true"></i>
-</button>
 <main class="auth-page">
   <section class="auth-card">
     <form class="needs-validation" novalidate th:action="@{/login}" method="post">
       <div class="mb-4">
-        <h1 class="h3 mb-1">Đăng nhập Admin</h1>
+        <h1 class="mb-1">Đăng nhập</h1>
       </div>
       <div class="alert alert-danger" th:if="${param.error}">Username hoặc mật khẩu không đúng.</div>
       <div class="alert alert-success" th:if="${param.logout}">Bạn đã đăng xuất.</div>
@@ -31,29 +27,20 @@
       </div>
 
       <div class="mb-3">
-        <label class="form-label"
-               for="password">
+        <label class="form-label" for="password">
           Password (1)
         </label>
 
-        <input class="form-control"
-               id="password"
-               name="password"
-               type="password"
-               autocomplete="current-password"
+        <input class="form-control" id="password" name="password" type="password" autocomplete="current-password"
                required>
-
         <div class="invalid-feedback">
           Password không được để trống.
         </div>
       </div>
 
-      <input type="hidden"
-             th:name="${_csrf.parameterName}"
-             th:value="${_csrf.token}">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
 
-      <button class="btn btn-primary w-100"
-              type="submit">
+      <button class="btn btn-primary w-100" type="submit">
         <i class="bi bi-box-arrow-in-right"></i>
         Đăng nhập
       </button>

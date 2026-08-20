@@ -13,8 +13,7 @@
           <div class="page-heading-copy">
             <span class="page-icon"><i class="bi bi-people" aria-hidden="true"></i></span>
             <div>
-              <p class="eyebrow mb-1">Management</p>
-              <h1 class="h3 mb-1">Publishers</h1>
+              <h1 class="mb-1">Quản lý nhà xuất bản</h1>
             </div>
           </div>
           <div class="heading-actions">
@@ -28,13 +27,8 @@
 
         <section class="panel mt-3">
           <div class="panel-header">
-            <div>
-              <h2 class="h5 mb-1 section-title"><i class="bi bi-table" aria-hidden="true"></i><span>User List</span>
-              </h2>
-              <p class="text-muted mb-0">Search, review, and manage team member accounts.</p>
-            </div>
             <div class="d-flex flex-wrap gap-2">
-              <input class="form-control form-control-sm table-search" type="search" placeholder="Search users"
+              <input class="form-control form-control-sm table-search" type="search" placeholder="Tìm kiếm"
                      data-table-search="publishersTable" aria-label="Search users">
             </div>
           </div>
@@ -44,7 +38,8 @@
                    data-searchable-table>
               <thead>
               <tr>
-                <th>User</th>
+                <th>Username</th>
+                <th>Họ tên</th>
                 <th>Email</th>
                 <th>Bank Account</th>
                 <th>Balance</th>
@@ -54,20 +49,15 @@
 
               <tbody>
               <tr th:each="publisher : ${publishers}">
+                <td class="fw-semibold"
+                    th:text="${publisher.username}">
+                </td>
+
                 <td>
                   <div class="d-flex align-items-center gap-2">
-                    <img class="avatar-img avatar-sm"
-                         th:src="${publisher.avatar}"
-                         th:alt="${publisher.firstName} + ' ' + ${publisher.lastName}">
-                    <div>
-                      <p class="fw-semibold mb-0"
-                         th:text="${publisher.firstName} + ' ' + ${publisher.lastName}">
-                      </p>
-
-                      <p class="text-muted small mb-0"
-                         th:text="${publisher.username}">
-                      </p>
-                    </div>
+                    <img class="avatar-img avatar-sm" th:src="${publisher.avatar}"
+                         th:alt="|${publisher.firstName} ${publisher.lastName}|">
+                    <span th:text="|${publisher.firstName} ${publisher.lastName}|"></span>
                   </div>
                 </td>
 
@@ -76,14 +66,13 @@
                 <td th:text="${publisher.balance}"></td>
 
                 <td class="text-end">
-                  <a class="btn btn-light btn-sm"
-                     th:href="@{/publishers/{id}(id=${publisher.userId})}">
-                    View
+                  <a class="btn btn-light btn-sm" th:href="@{/publishers/{id}(id=${publisher.userId})}">
+                    Xem chi tiết
                   </a>
 
                   <a class="btn btn-primary btn-sm"
                      th:href="@{/publishers/{id}/edit(id=${publisher.userId})}">
-                    Edit
+                    Sửa
                   </a>
                 </td>
               </tr>

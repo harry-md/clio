@@ -21,17 +21,14 @@ public class BookSpecification {
     public static Specification<Book> buildFilter(BookFilterRequest request) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
-            if (request.title() != null && !request.title().isBlank()) {
-                predicates.add(cb.like(
-                        cb.lower(root.get("title")),
-                        String.format("%%%s%%", request.title().toLowerCase())));
-            }
-            if (request.authorFullname() != null && !request.authorFullname().isBlank()) {
+            if (request.keyword() != null && !request.keyword().isBlank()) {
                 Expression<String> authorsText = ((HibernateCriteriaBuilder) cb)
                         .cast((JpaExpression<Object>) root.get("authors"), String.class);
-                predicates.add(cb.like(
-                        cb.lower(authorsText),
-                        String.format("%%%s%%", request.authorFullname().toLowerCase())));
+
+                String keyword = String.format("%%%s%%", request.keyword().toLowerCase());
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("title")), keyword),
+                        cb.like(cb.lower(authorsText), keyword)));
             }
             if (request.fromPrice() != null) {
                 predicates.add(cb.greaterThanOrEqualTo(root.get("price"), request.fromPrice()));
