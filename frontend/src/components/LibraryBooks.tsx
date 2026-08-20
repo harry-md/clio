@@ -38,7 +38,6 @@ const LibraryBooks = ({ libraries }: LibraryBooksProps) => {
     }
 
     const library = libraries.find((item) => item.bookId === bookId);
-
     if (!library) {
       setError("Không tìm thấy thông tin sách.");
       return;

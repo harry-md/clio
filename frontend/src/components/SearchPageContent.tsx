@@ -99,7 +99,7 @@ export const SearchPageContent = async ({
   return (
     <section className="mx-auto max-w-360 px-5 py-12 lg:px-10 lg:py-16">
       <div className="border-b border-border pb-8">
-        <h1 className="text-5xl font-bold text-foreground">Tìm kiếm sách</h1>
+        <h1 className="text-5xl font-bold text-foreground">Tìm kiếm</h1>
       </div>
 
       <SearchFiltersForm

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type ChangeEvent, type SubmitEvent, useState } from "react";
@@ -249,22 +250,7 @@ export const RegisterForm = () => {
           className="flex min-h-24 cursor-pointer items-center gap-5 border border-dashed border-border-strong bg-card p-4 transition hover:border-ring"
         >
           <div className="grid size-16 shrink-0 place-items-center border border-input bg-secondary text-2xl text-muted-foreground">
-            <svg
-              width="20px"
-              height="20px"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              aria-hidden="true"
-            >
-              <path
-                d="M4 12H20M12 4V20"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="square"
-                strokeLinejoin="inherit"
-              />
-            </svg>
+            <Image src="/plus-icon.svg" alt="" width={20} height={20} />
           </div>
 
           <div className="min-w-0">

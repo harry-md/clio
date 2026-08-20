@@ -2,7 +2,6 @@
 
 import type { Book as EpubBook, Rendition } from "epubjs";
 import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -110,13 +109,13 @@ export const Reader = ({ bookId }: ReaderProps) => {
   return (
     <section className="mx-auto flex h-[calc(100vh-5rem)] max-w-360 flex-col gap-3 px-4 py-4 lg:px-8">
       <div className="flex items-center justify-between gap-4 border border-border bg-card px-4 py-3">
-        <Link
+        <a
           href="/library"
           className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground transition hover:text-foreground"
         >
           <ArrowLeft className="size-4" />
           Thư viện
-        </Link>
+        </a>
       </div>
 
       <div className="relative min-h-0 flex-1 overflow-hidden border border-border bg-white">

@@ -1,8 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { type SubmitEvent, useState, useTransition } from "react";
-
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -165,29 +165,13 @@ export const SearchFiltersForm = ({
               onClick={() => removeScopedFilter("author")}
             >
               Tác giả: <span className="font-semibold">{authorName} </span>
-              <svg
-                width="1rem"
-                height="1rem"
-                viewBox="-0.5 0 25 25"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
-              >
-                <path
-                  d="M3 21.32L21 3.32001"
-                  stroke="#000000"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M3 3.32001L21 21.32"
-                  stroke="#000000"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              <Image
+                src="/close.svg"
+                alt=""
+                width={16}
+                height={16}
+                className="size-4 shrink-0"
+              />
             </Button>
           )}
 
@@ -199,29 +183,13 @@ export const SearchFiltersForm = ({
               onClick={() => removeScopedFilter("category")}
             >
               Danh mục: <span className="font-semibold">{categoryName} </span>
-              <svg
-                width="1rem"
-                height="1rem"
-                viewBox="-0.5 0 25 25"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
-              >
-                <path
-                  d="M3 21.32L21 3.32001"
-                  stroke="#000000"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M3 3.32001L21 21.32"
-                  stroke="#000000"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              <Image
+                src="/close.svg"
+                alt=""
+                width={16}
+                height={16}
+                className="size-4 shrink-0"
+              />
             </Button>
           )}
         </div>
@@ -232,21 +200,21 @@ export const SearchFiltersForm = ({
         className="grid gap-5 border-b border-border py-8 md:grid-cols-2 xl:grid-cols-4"
       >
         <Field className="md:col-span-2 xl:col-span-4">
-          <FieldLabel htmlFor="search-keyword">Tìm kiếm</FieldLabel>
-
+          <FieldLabel htmlFor="search-keyword">Từ khóa</FieldLabel>
           <Input
             id="search-keyword"
             name="keyword"
             type="search"
             value={filters.keyword}
             onChange={(event) => updateFilter("keyword", event.target.value)}
-            placeholder="Nhập tên sách hoặc tên tác giả"
+            placeholder="Nhập từ khóa"
           />
         </Field>
+
         <FieldSet className="gap-2 md:col-span-2">
           <FieldLegend
             variant="label"
-            className="mb-2 font-semibold tracking-normal text-field-label normal-case"
+            className="mb-2 tracking-normal text-field-label normal-case"
           >
             Khoảng giá
           </FieldLegend>
@@ -281,9 +249,9 @@ export const SearchFiltersForm = ({
         <FieldSet className="gap-2 md:col-span-2">
           <FieldLegend
             variant="label"
-            className="mb-2 font-semibold tracking-normal text-field-label normal-case"
+            className="mb-2 tracking-normal text-field-label normal-case"
           >
-            Khoảng đánh giá
+            Khoảng điểm
           </FieldLegend>
 
           <div className="grid grid-cols-2 gap-3">

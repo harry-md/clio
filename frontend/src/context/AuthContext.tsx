@@ -1,5 +1,6 @@
 "use client";
 
+import { isAxiosError } from "axios";
 import {
   createContext,
   type ReactNode,
@@ -68,10 +69,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         const currentUser = await getCurrentUser();
 
         setUser(currentUser);
-      } catch {
+      } catch (error: unknown) {
         setUser(null);
 
-        if (navigator.onLine) {
+        const status = isAxiosError(error) ? error.response?.status : undefined;
+
+        if (status === 401 || status === 403) {
+          await del(ACCOUNT_STORE, ACTIVE_ACCOUNT_KEY).catch(() => undefined);
           setOfflineAccount(null);
           return;
         }

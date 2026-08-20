@@ -1,17 +1,12 @@
 import { SerwistProvider } from "@serwist/turbopack/react";
 import type { Metadata, Viewport } from "next";
-import { Merriweather, Montserrat } from "next/font/google";
+import { Bricolage_Grotesque } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
 
-const merriweather = Merriweather({
-  variable: "--font-merriweather",
-  subsets: ["latin", "vietnamese"],
-});
-
-const montserrat = Montserrat({
-  variable: "--font-montserrat",
+const bricolageGrotesque = Bricolage_Grotesque({
+  variable: "--font-bricolage-grotesque",
   subsets: ["latin", "vietnamese"],
 });
 
@@ -41,7 +36,7 @@ const RootLayout = ({
   return (
     <html
       lang="vi"
-      className={`${montserrat.variable} ${merriweather.variable} dark antialiased`}
+      className={`${bricolageGrotesque.variable} dark antialiased`}
     >
       <body>
         <SerwistProvider swUrl="/serwist/sw.js">
