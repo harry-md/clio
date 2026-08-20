@@ -19,7 +19,7 @@
             </span>
 
             <div>
-              <h1 class="h3 mb-1">Quản lý sách</h1>
+              <h1 class="mb-1">Quản lý sách</h1>
             </div>
           </div>
         </div>
@@ -42,15 +42,12 @@
             </div>
 
             <div class="row g-3">
-              <div class="col-12 col-md-4">
-                <label class="form-label" for="title">Tên sách</label>
-                <input id="title" class="form-control" type="search" th:field="*{title}" placeholder="Nhập tên sách">
-              </div>
-
-              <div class="col-12 col-md-4">
-                <label class="form-label" for="authorFullname">Tác giả</label>
-                <input id="authorFullname" class="form-control" type="search" th:field="*{authorFullname}"
-                       placeholder="Nhập tên tác giả">
+              <div class="col-12 col-md-8">
+                <label class="form-label" for="keyword">
+                  Tìm kiếm
+                </label>
+                <input id="keyword" class="form-control" type="search" th:field="*{keyword}"
+                       placeholder="Nhập tên sách hoặc tên tác giả">
               </div>
 
               <div class="col-12 col-md-4">
@@ -204,8 +201,7 @@
                   <a class="page-link" th:href="@{/books(
                          page=${books.number - 1},
                          size=${books.size},
-                         title=${filter.title},
-                         authorFullname=${filter.authorFullname},
+                         keyword=${filter.keyword},
                          categoryId=${filter.categoryId},
                          fromPrice=${filter.fromPrice},
                          toPrice=${filter.toPrice},
@@ -222,8 +218,7 @@
                   <a class="page-link" th:href="@{/books(
                          page=${pageNumber},
                          size=${books.size},
-                         title=${filter.title},
-                         authorFullname=${filter.authorFullname},
+                         keyword=${filter.keyword},
                          categoryId=${filter.categoryId},
                          fromPrice=${filter.fromPrice},
                          toPrice=${filter.toPrice},
@@ -238,8 +233,7 @@
                   <a class="page-link" th:href="@{/books(
                          page=${books.number + 1},
                          size=${books.size},
-                         title=${filter.title},
-                         authorFullname=${filter.authorFullname},
+                         keyword=${filter.keyword},
                          categoryId=${filter.categoryId},
                          fromPrice=${filter.fromPrice},
                          toPrice=${filter.toPrice},

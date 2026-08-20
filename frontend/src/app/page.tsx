@@ -150,7 +150,7 @@ const HomePage = async ({
 
         <div className="relative mx-auto grid min-h-120 max-w-360 items-center gap-12 px-5 py-16 md:grid-cols-[1fr_260px] lg:px-10">
           <div className="max-w-2xl">
-            <h1 className="text-4xl font-semibold leading-tight text-foreground lg:text-6xl">
+            <h1 className="text-5xl font-bold leading-tight text-foreground lg:text-6xl">
               {featuredBook?.title ?? "Hệ thống đọc và phân phối ebook"}
             </h1>
 

@@ -42,7 +42,7 @@ export const BookCard = ({ book }: BookCardProps) => {
                 Clio edition
               </span>
 
-              <p className="text-2xl leading-tight text-foreground">
+              <p className="text-3xl leading-tight text-foreground">
                 {book.title}
               </p>
 
@@ -52,7 +52,10 @@ export const BookCard = ({ book }: BookCardProps) => {
         </div>
 
         <div className="pt-4">
-          <h3 className="line-clamp-2 font-semibold leading-snug text-foreground transition group-hover:text-link">
+          <h3
+            title={book.title}
+            className="text-xl line-clamp-2 font-semibold leading-snug text-foreground transition group-hover:text-link"
+          >
             {book.title}
           </h3>
 
@@ -66,9 +69,19 @@ export const BookCard = ({ book }: BookCardProps) => {
             </span>
 
             {book.rating !== null && (
-              <span className="text-muted-foreground">
-                <span className="text-rating">★</span> {book.rating.toFixed(1)}{" "}
-                ({book.ratingCount})
+              <span className="flex shrink-0 items-center gap-1 whitespace-nowrap text-muted-foreground">
+                <Image
+                  src="/star.svg"
+                  alt=""
+                  aria-hidden="true"
+                  width={16}
+                  height={16}
+                  className="size-4 shrink-0"
+                />
+
+                <span>
+                  {book.rating.toFixed(1)} ({book.ratingCount})
+                </span>
               </span>
             )}
           </div>
