@@ -121,7 +121,7 @@
   --color-auth-warm-overlay: var(--auth-warm-overlay);
   --color-auth-cool-overlay: var(--auth-cool-overlay);
 
-  --font-sans: var(--font-montserrat);
+  --font-sans: var(--font-bricolage-grotesque);
 
   --radius-sm: var(--radius);
   --radius-md: var(--radius);

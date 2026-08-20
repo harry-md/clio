@@ -111,14 +111,14 @@ const BookDetailPage = async ({ params }: BookDetailPageProps) => {
           href="/"
           className={cn(
             buttonVariants({ variant: "link" }),
-            "group h-auto gap-2 px-0 text-base",
+            "group h-auto gap-2 px-0 text-lg",
           )}
         >
           <ArrowLeftIcon
             aria-hidden="true"
             className="size-5 transition-transform group-hover:-translate-x-0.5"
           />
-          Quay lại
+          Trang chủ
         </Link>
 
         {error && (
@@ -160,7 +160,7 @@ const BookDetailPage = async ({ params }: BookDetailPageProps) => {
               </div>
 
               <div className="max-w-4xl">
-                <h1 className="mt-2 text-5xl font-semibold leading-tight text-foreground">
+                <h1 className="mt-2 text-6xl font-semibold leading-tight text-foreground">
                   {book.title}
                 </h1>
 
@@ -233,11 +233,11 @@ const BookDetailPage = async ({ params }: BookDetailPageProps) => {
 
             <section className="grid gap-12 py-14 lg:grid-cols-[minmax(0,1fr)_300px]">
               <div>
-                <h2 className="text-2xl font-semibold text-foreground">
+                <h2 className="text-3xl font-semibold text-foreground">
                   Giới thiệu
                 </h2>
 
-                <div className="mt-1 whitespace-pre-line leading-9 text-foreground">
+                <div className="text-lg mt-2 whitespace-pre-line leading-9 text-foreground">
                   {book.bookInfo?.description ||
                     "Chưa có phần giới thiệu cho sách này."}
                 </div>
@@ -254,9 +254,7 @@ const BookDetailPage = async ({ params }: BookDetailPageProps) => {
                       key={item.label}
                       className="flex justify-between gap-5 border-b border-border pb-4"
                     >
-                      <dt className="text-base text-muted-foreground">
-                        {item.label}
-                      </dt>
+                      <dt className="text-muted-foreground">{item.label}</dt>
 
                       <dd className="text-right text-secondary-foreground">
                         {item.value}

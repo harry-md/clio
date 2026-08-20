@@ -80,7 +80,7 @@ export const Header = () => {
                   href={item.href}
                   aria-current={isActive ? "page" : undefined}
                   className={cn(
-                    "flex min-h-18 items-center border-b-2 border-transparent text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground",
+                    "flex min-h-18 items-center border-b-2 border-transparent font-medium text-muted-foreground transition-colors hover:text-foreground",
                     isActive && "border-ring text-foreground",
                   )}
                 >

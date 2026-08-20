@@ -13,6 +13,8 @@ declare global {
 
 declare const self: ServiceWorkerGlobalScope;
 
+const OFFLINE_ROUTES = new Set(["/library", "/read"]);
+
 const serwist = new Serwist({
   precacheEntries: self.__SW_MANIFEST,
 
@@ -32,6 +34,13 @@ const serwist = new Serwist({
       matcher: ({ sameOrigin }) => !sameOrigin,
       handler: new NetworkOnly(),
     },
+    {
+      matcher: ({ request, sameOrigin, url }) =>
+        sameOrigin &&
+        !OFFLINE_ROUTES.has(url.pathname) &&
+        (request.mode === "navigate" || request.headers.get("RSC") === "1"),
+      handler: new NetworkOnly(),
+    },
 
     ...defaultCache,
   ],
@@ -44,15 +53,11 @@ serwist.setCatchHandler(async ({ request }) => {
 
   const { pathname } = new URL(request.url);
 
-  if (pathname === "/library") {
-    return (await serwist.matchPrecache("/library")) ?? Response.error();
+  if (OFFLINE_ROUTES.has(pathname)) {
+    return (await serwist.matchPrecache(pathname)) ?? Response.error();
   }
 
-  if (pathname === "/read") {
-    return (await serwist.matchPrecache("/read")) ?? Response.error();
-  }
-
-  return Response.error();
+  return Response.redirect(new URL("/library", request.url), 302);
 });
 
 serwist.addEventListeners();

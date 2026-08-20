@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { EmptyState } from "@/components/EmptyState";
 import LibraryBooks from "@/components/LibraryBooks";
@@ -23,7 +23,6 @@ const toLibraryItem = (book: BookData): LibraryItem => ({
 });
 
 export const LibraryPageClient = () => {
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   const { user, offlineAccount, initialized } = useAuth();
@@ -50,13 +49,8 @@ export const LibraryPageClient = () => {
       if (userId === undefined) {
         setLibraries([]);
         setPage(null);
-
-        if (navigator.onLine) {
-          router.replace("/login");
-        } else {
-          setError("Không thấy tài khoản đã đăng nhập.");
-        }
-
+        setOfflineSource(true);
+        setError("Không thấy tài khoản đã đăng nhập.");
         setLoading(false);
         return;
       }
@@ -139,7 +133,7 @@ export const LibraryPageClient = () => {
     return () => {
       active = false;
     };
-  }, [currentPage, initialized, router, user, userId]);
+  }, [currentPage, initialized, user, userId]);
 
   if (loading) {
     return <LoadingOverlay />;
@@ -157,7 +151,7 @@ export const LibraryPageClient = () => {
       </div>
 
       {error && (
-        <Alert variant="default" className="mt-8">
+        <Alert variant="destructive" className="mt-8">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
@@ -178,7 +172,7 @@ export const LibraryPageClient = () => {
       ) : (
         <EmptyState
           className="mt-8"
-          title={offlineSource ? "Chưa có sách offline" : "Thư viện đang trống"}
+          title={offlineSource ? "Chưa có sách" : "Thư viện đang trống"}
         />
       )}
     </>
