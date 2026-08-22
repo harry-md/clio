@@ -5,6 +5,7 @@ import com.harry.clio.dto.publisher.PublisherDto;
 import com.harry.clio.dto.publisher.PublisherForm;
 import com.harry.clio.dto.user.UserOption;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface PublisherService {
@@ -21,4 +22,6 @@ public interface PublisherService {
     AdminPublisherDto getPublisherAdmin(int userId);
 
     List<UserOption> getUserOptions();
+
+    void calculateBookRevenueToday(LocalDate today);
 }
