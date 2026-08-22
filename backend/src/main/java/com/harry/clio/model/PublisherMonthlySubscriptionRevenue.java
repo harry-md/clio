@@ -17,13 +17,13 @@ import java.time.Instant;
 @NoArgsConstructor
 @Entity
 @Table(
-        name = "publisher_monthly_revenues",
+        name = "publisher_monthly_subscription_revenues",
         uniqueConstraints = {
             @UniqueConstraint(
-                    name = "uq_publisher_monthly_revenues_monthly_revenue_publisher",
-                    columnNames = {"monthly_revenue_id", "publisher_id"})
+                    name = "uq_publisher_monthly_subscription_revenues_monthly_revenue_publisher",
+                    columnNames = {"monthly_subscription_revenue_id", "publisher_id"})
         })
-public class PublisherMonthlyRevenue {
+public class PublisherMonthlySubscriptionRevenue {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -33,8 +33,8 @@ public class PublisherMonthlyRevenue {
     private Publisher publisher;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "monthly_revenue_id", nullable = false)
-    private MonthlyRevenue monthlyRevenue;
+    @JoinColumn(name = "monthly_subscription_revenue_id", nullable = false)
+    private MonthlySubscriptionRevenue monthlySubscriptionRevenue;
 
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal amount = BigDecimal.ZERO;

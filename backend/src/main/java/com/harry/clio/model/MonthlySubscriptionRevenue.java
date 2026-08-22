@@ -2,9 +2,7 @@ package com.harry.clio.model;
 
 import jakarta.persistence.*;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -14,16 +12,18 @@ import java.time.Instant;
 
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(
-        name = "monthly_revenues",
+        name = "monthly_subscription_revenues",
         uniqueConstraints = {
             @UniqueConstraint(
-                    name = "uq_monthly_revenues_year_month",
+                    name = "uq_monthly_subscription_revenues_year_month",
                     columnNames = {"year", "month"})
         })
-public class MonthlyRevenue {
+public class MonthlySubscriptionRevenue {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -34,21 +34,26 @@ public class MonthlyRevenue {
     @Column(nullable = false)
     private Integer year;
 
+    @Builder.Default
     @Column(nullable = false, precision = 15, scale = 2)
-    private BigDecimal grossAmount = BigDecimal.ZERO;
+    private BigDecimal totalPublisherAmount = BigDecimal.ZERO;
 
+    @Builder.Default
     @Column(nullable = false, precision = 15, scale = 2)
-    private BigDecimal platformAmount = BigDecimal.ZERO;
+    private BigDecimal unallocatedAmount = BigDecimal.ZERO;
 
+    @Builder.Default
     @Column(nullable = false, precision = 15, scale = 2)
-    private BigDecimal publisherAmount = BigDecimal.ZERO;
+    private BigDecimal finalPublisherAmount = BigDecimal.ZERO;
 
+    @Builder.Default
     @Column(nullable = false)
     private Long totalPageCount = 0L;
 
+    @Builder.Default
     @Column(nullable = false, length = 10)
     @Enumerated(EnumType.STRING)
-    private MonthlyRevenueStatus status = MonthlyRevenueStatus.PENDING;
+    private MonthlySubscriptionRevenueStatus status = MonthlySubscriptionRevenueStatus.PENDING;
 
     @Column(nullable = false, updatable = false)
     @CreationTimestamp

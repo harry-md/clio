@@ -57,40 +57,35 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         default_batch_fetch_size: 30
         jdbc:
-          batch_size: 30
+          batch_size: 50
         connection:
           provider_disables_autocommit: true
         order_updates: true
         order_inserts: true
 
+
 jwt:
   secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION}
+
 cloudinary:
   cloud-name: ${CLOUDINARY_CLOUD_NAME}
   api-key: ${CLOUDINARY_API_KEY}
   api-secret: ${CLOUDINARY_API_SECRET}
+
 r2:
   bucket-name: ${R2_BUCKET_NAME}
   account-id: ${R2_ACCOUNT_ID}
   access-key: ${R2_ACCESS_KEY}
   secret-key: ${R2_SECRET_KEY}
+
 stripe:
   secret-key: ${STRIPE_SECRET_KEY}
   webhook-secret: ${STRIPE_WEBHOOK_SECRET}
   success-url: ${STRIPE_SUCCESS_URL}
   cancel-url: ${STRIPE_CANCEL_URL}
+
 clio:
   master-key: ${CLIO_MASTER_KEY}
   license-key: ${CLIO_LICENSE_KEY}
   book-workers: 2
-#logging:
-#  level:
-#    org:
-#      hibernate:
-#        SQL: DEBUG
-#        orm:
-#          jdbc:
-#            bind: TRACE
-#  file:
-#    name: app.log

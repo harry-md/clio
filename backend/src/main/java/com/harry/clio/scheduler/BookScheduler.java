@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 public class BookScheduler {
     private final BookService bookService;
 
-    @Scheduled(cron = "0 1 0 * * *")
+    @Scheduled(cron = "0 1 0 * * *", zone = "Asia/Ho_Chi_Minh")
     public void deleteFailedBooks() {
         int deletedBooks = bookService.deleteFailedBooks();
         log.info("Đã xóa {} sách upload thất bại", deletedBooks);

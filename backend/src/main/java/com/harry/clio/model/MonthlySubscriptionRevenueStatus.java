@@ -1,6 +1,6 @@
 package com.harry.clio.model;
 
-public enum MonthlyRevenueStatus {
+public enum MonthlySubscriptionRevenueStatus {
     PENDING,
     COMPLETED
 }
