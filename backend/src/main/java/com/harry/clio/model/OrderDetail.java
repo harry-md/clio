@@ -37,5 +37,5 @@ public class OrderDetail {
     @Builder.Default
     @Column(nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
-    private OrderDetailType type = OrderDetailType.BOOK;
+    private DetailType type = DetailType.BOOK;
 }

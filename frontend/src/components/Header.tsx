@@ -28,12 +28,21 @@ const navigationItems = [
   },
 ] as const;
 
+const publisherNavigationItem = {
+  href: "/publishers",
+  label: "NXB",
+} as const;
+
 export const Header = () => {
   const router = useRouter();
   const pathname = usePathname();
   const { user, offlineAccount, initialized, clearUser } = useAuth();
 
   const displayAccount = user ?? offlineAccount;
+  const visibleNavigationItems =
+    user?.role === "PUBLISHER"
+      ? [...navigationItems, publisherNavigationItem]
+      : navigationItems;
   const { books, clearCart } = useCart();
   const [navigating, setNavigating] = useState(false);
 
@@ -67,7 +76,7 @@ export const Header = () => {
           <Logo />
 
           <nav className="hidden items-center gap-7 lg:flex">
-            {navigationItems.map((item) => {
+            {visibleNavigationItems.map((item) => {
               const isActive =
                 item.href === "/"
                   ? pathname === "/"

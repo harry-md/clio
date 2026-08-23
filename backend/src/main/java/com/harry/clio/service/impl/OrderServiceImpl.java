@@ -155,7 +155,7 @@ public class OrderServiceImpl implements OrderService {
 
         List<OrderDetail> orderDetails =
                 orderDetailRepository.findAllWithItemByOrderId(order.getId());
-        OrderDetailType type = orderDetails.getFirst().getType();
+        DetailType type = orderDetails.getFirst().getType();
         switch (type) {
             case BOOK -> handleBookOrder(order, orderDetails);
             case SUBSCRIPTION -> handleSubscriptionOrder(order, orderDetails.getFirst());
@@ -287,7 +287,7 @@ public class OrderServiceImpl implements OrderService {
 
             Order existingOrder = orderRepository
                     .findSubOrderWithDetailByUserId(
-                            userId, OrderStatus.PENDING, OrderDetailType.SUBSCRIPTION)
+                            userId, OrderStatus.PENDING, DetailType.SUBSCRIPTION)
                     .orElse(null);
 
             if (existingOrder == null) {
@@ -305,7 +305,7 @@ public class OrderServiceImpl implements OrderService {
                         .order(order)
                         .subscriptionPlan(plan)
                         .price(plan.getPrice())
-                        .type(OrderDetailType.SUBSCRIPTION)
+                        .type(DetailType.SUBSCRIPTION)
                         .build();
                 orderDetailRepository.save(detail);
                 return new StripeSessionInput(
