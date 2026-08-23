@@ -1,6 +1,6 @@
 package com.harry.clio.model;
 
-public enum OrderDetailType {
+public enum DetailType {
     BOOK,
     SUBSCRIPTION
 }

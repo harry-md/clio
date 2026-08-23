@@ -1,7 +1,7 @@
 package com.harry.clio.repository;
 
+import com.harry.clio.model.DetailType;
 import com.harry.clio.model.Order;
-import com.harry.clio.model.OrderDetailType;
 import com.harry.clio.model.OrderStatus;
 
 import jakarta.persistence.LockModeType;
@@ -42,5 +42,5 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     Optional<Order> findSubOrderWithDetailByUserId(
             @Param("userId") Integer userId,
             @Param("status") OrderStatus status,
-            @Param("type") OrderDetailType type);
+            @Param("type") DetailType type);
 }

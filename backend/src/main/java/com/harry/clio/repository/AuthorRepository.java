@@ -3,9 +3,7 @@ package com.harry.clio.repository;
 import com.harry.clio.model.Author;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-import java.util.Collection;
-
-public interface AuthorRepository extends JpaRepository<Author, Integer> {
-    long countByIdIn(Collection<Integer> id);
-}
+public interface AuthorRepository
+        extends JpaRepository<Author, Integer>, JpaSpecificationExecutor<Author> {}
