@@ -27,8 +27,7 @@ public class BookWorker implements SmartLifecycle {
 
     private static final Duration POP_TIMEOUT = Duration.ofSeconds(5);
     private static final int MAX_ATTEMPTS = 3;
-    private static final Duration RETRY_DELAY = Duration.ofSeconds(5);
-
+    private static final Duration RETRY_DELAY = Duration.ofSeconds(30);
     private volatile boolean running = false;
 
     @Override
@@ -36,6 +35,9 @@ public class BookWorker implements SmartLifecycle {
         if (running) {
             return;
         }
+
+        int jobs = bookQueue.recoverProcessingJobs();
+        log.info("Recover {} jobs bị crash", jobs);
 
         running = true;
 
@@ -46,11 +48,15 @@ public class BookWorker implements SmartLifecycle {
 
     private void consumeLoop() {
         while (running && !Thread.currentThread().isInterrupted()) {
-            Integer bookId = bookQueue.dequeue(POP_TIMEOUT).orElse(null);
-            if (bookId == null) {
-                continue;
+            try {
+                Integer bookId = bookQueue.claim(POP_TIMEOUT).orElse(null);
+                if (bookId == null) {
+                    continue;
+                }
+                processWithRetries(bookId);
+            } catch (RuntimeException ex) {
+                log.error("Lỗi xử lý sách", ex);
             }
-            processWithRetries(bookId);
         }
     }
 
@@ -65,15 +71,17 @@ public class BookWorker implements SmartLifecycle {
                         Thread.currentThread().getName());
 
                 bookProcessService.process(bookId);
-                return;
+                break;
             } catch (InvalidEbookException ex) {
                 bookProcessService.handleBookFailed(bookId);
+                ack(bookId);
                 return;
             } catch (RuntimeException ex) {
                 log.error("Lỗi xử lý sách {}", bookId, ex);
 
                 if (i == MAX_ATTEMPTS) {
                     bookProcessService.handleBookFailed(bookId);
+                    ack(bookId);
                     log.error("Sách {} đã xử lý thất bại", bookId, ex);
                     return;
                 }
@@ -85,6 +93,13 @@ public class BookWorker implements SmartLifecycle {
                     return;
                 }
             }
+        }
+        ack(bookId);
+    }
+
+    private void ack(int bookId) {
+        if (!bookQueue.acknowledge(bookId)) {
+            log.error("Xóa job khỏi process queue thất bại");
         }
     }
 

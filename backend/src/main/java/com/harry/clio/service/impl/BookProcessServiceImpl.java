@@ -59,6 +59,7 @@ public class BookProcessServiceImpl implements BookProcessService {
         Path encryptedFile = null;
         String encryptedFileUrl = null;
         String thumbnailUrl = null;
+
         try {
             cleanFile = r2Service.downloadToTemp(book.getFileUrl());
 

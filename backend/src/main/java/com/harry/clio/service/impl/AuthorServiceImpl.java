@@ -7,12 +7,18 @@ import com.harry.clio.exception.ResourceNotFoundException;
 import com.harry.clio.mapper.AuthorMapper;
 import com.harry.clio.model.Author;
 import com.harry.clio.repository.AuthorRepository;
+import com.harry.clio.repository.specification.AuthorSpecification;
 import com.harry.clio.service.AuthorService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -22,6 +28,16 @@ public class AuthorServiceImpl implements AuthorService {
     private final AuthorMapper authorMapper;
     private final CloudinaryService cloudinaryService;
 
+    @Cacheable(cacheNames = "authors", condition = "#kw == null")
+    @Override
+    public List<AuthorResponse> getAllAuthors(String kw) {
+        Specification<Author> spec = AuthorSpecification.hasKw(kw);
+        return authorRepository.findAll(spec).stream()
+                .map(authorMapper::toResponse)
+                .toList();
+    }
+
+    @Cacheable(cacheNames = "author", key = "#authorId")
     @Override
     public AuthorResponse getAuthorById(int authorId) {
         return authorMapper.toResponse(getAuthorOrThrow(authorId));
@@ -33,26 +49,11 @@ public class AuthorServiceImpl implements AuthorService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tác giả"));
     }
 
+    @CacheEvict(cacheNames = "authors", allEntries = true)
     @Override
     public AuthorResponse createAuthor(CreateAuthorRequest request) {
-        String avatarUrl = null;
-        if (request.avatarFile() != null && !request.avatarFile().isEmpty()) {
-            avatarUrl = cloudinaryService.upload(request.avatarFile());
-        }
-
         Author author = authorMapper.toEntity(request);
-        if (avatarUrl != null) {
-            author.setAvatar(avatarUrl);
-        }
-
-        try {
-            return authorMapper.toResponse(authorRepository.save(author));
-        } catch (RuntimeException ex) {
-            if (avatarUrl != null) {
-                cloudinaryService.delete(avatarUrl);
-            }
-            throw ex;
-        }
+        return authorMapper.toResponse(authorRepository.save(author));
     }
 
     @Override

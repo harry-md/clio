@@ -57,6 +57,24 @@ export interface PageResponse<T> {
   page: PageMetadata;
 }
 
+export interface PublisherSummary {
+  userId: number;
+  balance: number;
+  bankAccountNumber: string;
+}
+
+export interface TopSellingBook {
+  bookId: number;
+  title: string;
+  thumbnail: string | null;
+  salesCount: number;
+}
+
+export interface PublisherDashboardData {
+  publisher: PublisherSummary;
+  topSellingBooks: TopSellingBook[];
+}
+
 export type UserLibraryType = "PURCHASED" | "SUBSCRIBED" | "UPLOADED";
 
 export interface LibraryItem {
@@ -67,4 +85,18 @@ export interface LibraryItem {
   title: string;
   thumbnail: string | null;
   authors: BookAuthor[];
+}
+
+export interface AuthorOption {
+  id: number;
+  fullName: string;
+  biography: string | null;
+  avatar: string;
+  verified: boolean;
+}
+
+export interface PresignedUpload {
+  objectKey: string;
+  uploadUrl: string;
+  contentType: string;
 }

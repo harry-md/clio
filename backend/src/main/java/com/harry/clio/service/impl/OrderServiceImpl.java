@@ -25,26 +25,27 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
 public class OrderServiceImpl implements OrderService {
+    private static final BigDecimal PUBLISHER_SHARE = new BigDecimal("0.7");
+    private static final ZoneId ZONE_ID = ZoneId.of("Asia/Ho_Chi_Minh");
+
     private final OrderRepository orderRepository;
     private final OrderDetailRepository orderDetailRepository;
     private final BookRepository bookRepository;
     private final UserRepository userRepository;
     private final UserLibraryRepository userLibraryRepository;
     private final PaymentService paymentService;
-    private final PublisherRepository publisherRepository;
     private final TransactionTemplate transactionTemplate;
     private final SubscriptionRepository subscriptionRepository;
     private final SubscriptionPlanRepository subscriptionPlanRepository;
     private final SubscriptionAllocationRepository subscriptionAllocationRepository;
-
-    private static final BigDecimal PUBLISHER_SHARE = new BigDecimal("0.7");
+    private final RevenueLogRepository revenueLogRepository;
 
     @Override
     public StripeCheckoutResponse createCheckout(Integer userId, BookPurchaseRequest request) {
@@ -132,7 +133,7 @@ public class OrderServiceImpl implements OrderService {
 
     private void handleFailedPayment(Session session) {
         Order order = orderRepository
-                .findById(Integer.parseInt(session.getClientReferenceId()))
+                .findByIdForUpdate(Integer.parseInt(session.getClientReferenceId()))
                 .orElseThrow(() -> new InvalidWebhookException("Không tìm thấy đơn hàng"));
         if (order.getStatus() == OrderStatus.PENDING) {
             order.setStatus(OrderStatus.CANCELED);
@@ -143,17 +144,18 @@ public class OrderServiceImpl implements OrderService {
         if (!"paid".equals(session.getPaymentStatus())) {
             return;
         }
-        Integer orderId = Integer.parseInt(session.getClientReferenceId());
+
         Order order = orderRepository
-                .findById(orderId)
+                .findByIdForUpdate(Integer.parseInt(session.getClientReferenceId()))
                 .orElseThrow(() -> new InvalidWebhookException("Không tìm thấy đơn hàng"));
+
         if (order.getStatus() != OrderStatus.PENDING) {
             return;
         }
 
         List<OrderDetail> orderDetails =
                 orderDetailRepository.findAllWithItemByOrderId(order.getId());
-        OrderDetailType type = orderDetails.getFirst().getType();
+        DetailType type = orderDetails.getFirst().getType();
         switch (type) {
             case BOOK -> handleBookOrder(order, orderDetails);
             case SUBSCRIPTION -> handleSubscriptionOrder(order, orderDetails.getFirst());
@@ -167,60 +169,73 @@ public class OrderServiceImpl implements OrderService {
         User user = order.getUser();
         List<UserLibrary> userLibraries = new ArrayList<>(orderDetails.size());
 
-        Map<Integer, BigDecimal> revenueByPublisher = new HashMap<>();
-        List<Integer> bookIds = new ArrayList<>();
+        List<Integer> alreadyInLibBookIds = new ArrayList<>();
+        List<RevenueLog> revenueLogs = new ArrayList<>(orderDetails.size());
 
         for (OrderDetail od : orderDetails) {
             Book book = od.getBook();
             Publisher publisher = book.getPublisher();
-            BigDecimal publisherRevenue =
-                    od.getPrice().multiply(PUBLISHER_SHARE).setScale(2, RoundingMode.HALF_UP);
-            revenueByPublisher.merge(publisher.getUserId(), publisherRevenue, BigDecimal::add);
 
-            bookIds.add(book.getId());
+            BigDecimal pubRevenue =
+                    od.getPrice().multiply(PUBLISHER_SHARE).setScale(2, RoundingMode.HALF_UP);
+            revenueLogs.add(RevenueLog.builder()
+                    .orderDetail(od)
+                    .amount(pubRevenue)
+                    .owner(RevenueLogOwner.PUBLISHER)
+                    .publisher(publisher)
+                    .build());
+            revenueLogs.add(RevenueLog.builder()
+                    .orderDetail(od)
+                    .amount(od.getPrice().subtract(pubRevenue))
+                    .owner(RevenueLogOwner.PLATFORM)
+                    .build());
+
+            alreadyInLibBookIds.add(book.getId());
             userLibraries.add(UserLibrary.builder()
                     .user(user)
                     .book(od.getBook())
                     .type(UserLibraryType.PURCHASED)
                     .build());
         }
-
-        revenueByPublisher.forEach((publisherId, amount) -> {
-            int result = publisherRepository.increaseBalance(publisherId, amount);
-            if (result != 1) {
-                throw new RuntimeException("Lỗi chỉnh sửa số dư tài khoản cho publisher");
-            }
-        });
+        revenueLogRepository.saveAll(revenueLogs);
 
         List<UserLibrary> existingLibraries =
-                userLibraryRepository.findAllByUserIdAndBookIdIn(user.getId(), bookIds);
-        Set<Integer> existingBookIds = existingLibraries.stream()
+                userLibraryRepository.findAllByUserIdAndBookIdIn(user.getId(), alreadyInLibBookIds);
+        List<Integer> existingBookIds = existingLibraries.stream()
                 .map(library -> {
                     if (library.getType() == UserLibraryType.SUBSCRIBED) {
                         library.setType(UserLibraryType.PURCHASED);
                     }
                     return library.getBook().getId();
                 })
-                .collect(Collectors.toSet());
+                .toList();
 
         userLibraries.removeIf(ul -> existingBookIds.contains(ul.getBook().getId()));
         userLibraryRepository.saveAll(userLibraries);
     }
 
     private void handleSubscriptionOrder(Order order, OrderDetail orderDetail) {
+        LocalDate today = LocalDate.now(ZONE_ID);
+
         SubscriptionPlan plan = orderDetail.getSubscriptionPlan();
         Subscription subscription = Subscription.builder()
                 .user(order.getUser())
-                .startDate(LocalDate.now())
-                .endDate(LocalDate.now().plusMonths(plan.getDuration()))
+                .startDate(today)
+                .endDate(today.plusMonths(plan.getDuration()))
                 .build();
         subscriptionRepository.save(subscription);
 
+        BigDecimal pubRevenue =
+                orderDetail.getPrice().multiply(PUBLISHER_SHARE).setScale(2, RoundingMode.HALF_UP);
+
+        revenueLogRepository.save(RevenueLog.builder()
+                .orderDetail(orderDetail)
+                .amount(orderDetail.getPrice().subtract(pubRevenue))
+                .owner(RevenueLogOwner.PLATFORM)
+                .build());
+
         subscriptionAllocationRepository.saveAll(allocateSubscription(
-                subscription,
-                subscription.getStartDate(),
-                subscription.getEndDate(),
-                order.getTotalAmount()));
+                subscription, subscription.getStartDate(), subscription.getEndDate(), pubRevenue));
     }
 
     private List<SubscriptionAllocation> allocateSubscription(
@@ -272,7 +287,7 @@ public class OrderServiceImpl implements OrderService {
 
             Order existingOrder = orderRepository
                     .findSubOrderWithDetailByUserId(
-                            userId, OrderStatus.PENDING, OrderDetailType.SUBSCRIPTION)
+                            userId, OrderStatus.PENDING, DetailType.SUBSCRIPTION)
                     .orElse(null);
 
             if (existingOrder == null) {
@@ -290,7 +305,7 @@ public class OrderServiceImpl implements OrderService {
                         .order(order)
                         .subscriptionPlan(plan)
                         .price(plan.getPrice())
-                        .type(OrderDetailType.SUBSCRIPTION)
+                        .type(DetailType.SUBSCRIPTION)
                         .build();
                 orderDetailRepository.save(detail);
                 return new StripeSessionInput(

@@ -1,7 +1,7 @@
 info:
   name: Login
   type: http
-  seq: 3
+  seq: 1
 
 http:
   method: POST
@@ -10,7 +10,7 @@ http:
     type: json
     data: |-
       {
-        "username": "user1",
+        "username": "pub1",
         "password": "1"
       }
   auth: inherit
@@ -20,3 +20,4 @@ settings:
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+  forwardAuthorizationHeader: true

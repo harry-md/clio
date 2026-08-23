@@ -4,8 +4,6 @@ CREATE INDEX IF NOT EXISTS idx_books_publisher_created_at_desc ON books (publish
 
 CREATE INDEX IF NOT EXISTS idx_book_authors_author ON book_authors (author_id);
 
-CREATE INDEX IF NOT EXISTS idx_book_recommendations_source_book_affinity ON book_recommendations (source_book_id, affinity DESC);
-
 CREATE INDEX IF NOT EXISTS idx_subs_end_date_active ON subscriptions (end_date) WHERE status = 'ACTIVE';
 CREATE INDEX IF NOT EXISTS idx_subs_user_end_date_active ON subscriptions (user_id, end_date) WHERE status = 'ACTIVE';
 
@@ -23,3 +21,7 @@ CREATE INDEX IF NOT EXISTS idx_order_details_order ON order_details (order_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_book ON reviews (book_id);
 
 CREATE UNIQUE INDEX IF NOT EXISTS uq_subscriptions_user_active ON subscriptions (user_id) WHERE status = 'ACTIVE';
+
+CREATE SEQUENCE IF NOT EXISTS revenue_log_seq START WITH 1 INCREMENT BY 50;
+
+CREATE INDEX IF NOT EXISTS idx_revenue_logs_pending_publisher_created_at ON revenue_logs (created_at, publisher_id) WHERE is_computed = false AND owner = 'PUBLISHER';
