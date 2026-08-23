@@ -10,17 +10,17 @@ http:
     type: json
     data: |-
       {
-        "title": "Hóa thân",
-        "price": 100000,
+        "title": "The Stranger",
+        "price": 60000,
         "authors": [
           {
-            "authorId": 7,
+            "authorId": 16,
             "role": "AUTHOR"
           }
         ],
-        "categoryIds": [7],
-        "language": "VI",
-        "objectKey": "books/origin/9d00477d-1000-4aad-9206-4d7bdc9119a5.epub"
+        "categoryIds": [21],
+        "language": "EN",
+        "objectKey": "books/origin/b783da7e-ed45-4bcb-981a-151248b336d6.epub"
       }
   auth: inherit
 
@@ -29,3 +29,4 @@ settings:
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+  forwardAuthorizationHeader: true
