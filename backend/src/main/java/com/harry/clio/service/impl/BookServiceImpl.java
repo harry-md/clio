@@ -7,9 +7,9 @@ import com.harry.clio.mapper.BookAuthorMapper;
 import com.harry.clio.mapper.BookInfoMapper;
 import com.harry.clio.mapper.BookMapper;
 import com.harry.clio.model.*;
+import com.harry.clio.queue.BookQueue;
 import com.harry.clio.repository.*;
 import com.harry.clio.repository.specification.BookSpecification;
-import com.harry.clio.service.BookQueue;
 import com.harry.clio.service.BookService;
 
 import lombok.RequiredArgsConstructor;

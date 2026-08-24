@@ -15,10 +15,10 @@ import java.time.ZoneId;
 @RequiredArgsConstructor
 @Component
 public class PublisherCalculatorScheduler {
+    private final PublisherService publisherService;
+
     private static final int MAX_ATTEMPTS = 3;
     private static final ZoneId ZONE_ID = ZoneId.of("Asia/Ho_Chi_Minh");
-
-    private final PublisherService publisherService;
 
     @Scheduled(cron = "0 1 0 * * *", zone = "Asia/Ho_Chi_Minh")
     public void calculateTodayBookRevenue() {

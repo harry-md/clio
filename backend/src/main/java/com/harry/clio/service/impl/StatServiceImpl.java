@@ -33,16 +33,11 @@ public class StatServiceImpl implements StatService {
     @Override
     public PublisherDashboardResponse getPublisherDashboard(int publisherId, int year, int month) {
         YearMonth yearMonth = YearMonth.of(year, month);
-        Instant startDate = yearMonth.atDay(1).atStartOfDay(ZONE_ID).toInstant();
-        Instant endDate = yearMonth.plusMonths(1).atDay(1).atStartOfDay(ZONE_ID).toInstant();
+        Instant start = yearMonth.atDay(1).atStartOfDay(ZONE_ID).toInstant();
+        Instant end = yearMonth.plusMonths(1).atDay(1).atStartOfDay(ZONE_ID).toInstant();
 
         List<TopSellingBookResponse> books = statRepository.findTopSellingBooksByPublisherId(
-                publisherId,
-                OrderStatus.PAID,
-                DetailType.BOOK,
-                startDate,
-                endDate,
-                PageRequest.of(0, 5));
+                publisherId, OrderStatus.PAID, DetailType.BOOK, start, end, PageRequest.of(0, 5));
 
         Publisher publisher = publisherRepository
                 .findById(publisherId)
