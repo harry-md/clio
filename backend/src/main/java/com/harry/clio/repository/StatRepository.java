@@ -22,8 +22,8 @@ public interface StatRepository extends JpaRepository<OrderDetail, Integer> {
         WHERE b.publisher.userId = :publisherId
             AND o.status = :orderStatus
             AND od.type = :detailType
-            AND o.createdAt >= :startDate
-            AND o.createdAt < :endDate
+            AND o.createdAt >= :start
+            AND o.createdAt < :end
         GROUP BY b.id
         ORDER BY COUNT(od.id) DESC, b.id DESC
         """)
@@ -31,7 +31,7 @@ public interface StatRepository extends JpaRepository<OrderDetail, Integer> {
             @Param("publisherId") int publisherId,
             @Param("orderStatus") OrderStatus orderStatus,
             @Param("detailType") DetailType detailType,
-            @Param("startDate") Instant startDate,
-            @Param("endDate") Instant endDate,
+            @Param("start") Instant start,
+            @Param("end") Instant end,
             Pageable pageable);
 }

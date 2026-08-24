@@ -37,12 +37,7 @@ public class SubscriptionAllocation {
 
     @Builder.Default
     @Column(nullable = false, precision = 15, scale = 2)
-    private BigDecimal grossAmount = BigDecimal.ZERO;
-
-    @Builder.Default
-    @Column(nullable = false, length = 10)
-    @Enumerated(EnumType.STRING)
-    private AllocationStatus status = AllocationStatus.PENDING;
+    private BigDecimal publisherAmount = BigDecimal.ZERO;
 
     @Column(nullable = false)
     private LocalDate startAllocateDate;

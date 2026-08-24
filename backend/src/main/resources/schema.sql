@@ -9,9 +9,9 @@ CREATE INDEX IF NOT EXISTS idx_subs_user_end_date_active ON subscriptions (user_
 
 CREATE INDEX IF NOT EXISTS idx_user_libraries_book_updated_at_desc ON user_libraries (book_id, updated_at DESC);
 
-CREATE INDEX IF NOT EXISTS idx_sub_allocations_year_month ON subscription_allocations ("year", "month") WHERE status = 'PENDING';
+CREATE INDEX IF NOT EXISTS idx_sub_allocations_year_month ON subscription_allocations ("year", "month");
 
-CREATE INDEX IF NOT EXISTS idx_sub_book_billings_created_at_book_id ON subscription_book_billings (created_at, book_id) WHERE is_computed = false;
+CREATE INDEX IF NOT EXISTS idx_sub_book_billings_created_at_book_id ON subscription_book_billings (created_at, book_id);
 
 CREATE INDEX IF NOT EXISTS idx_orders_user_created_at_desc ON orders (user_id, created_at DESC);
 

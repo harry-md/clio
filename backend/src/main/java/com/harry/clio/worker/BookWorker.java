@@ -1,8 +1,8 @@
 package com.harry.clio.worker;
 
 import com.harry.clio.exception.InvalidEbookException;
+import com.harry.clio.queue.BookQueue;
 import com.harry.clio.service.BookProcessService;
-import com.harry.clio.service.BookQueue;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -88,7 +88,7 @@ public class BookWorker implements SmartLifecycle {
 
                 try {
                     Thread.sleep(RETRY_DELAY);
-                } catch (InterruptedException e) {
+                } catch (InterruptedException _) {
                     Thread.currentThread().interrupt();
                     return;
                 }

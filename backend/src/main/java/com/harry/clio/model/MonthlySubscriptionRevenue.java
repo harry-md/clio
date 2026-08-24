@@ -50,11 +50,6 @@ public class MonthlySubscriptionRevenue {
     @Column(nullable = false)
     private Long totalPageCount = 0L;
 
-    @Builder.Default
-    @Column(nullable = false, length = 10)
-    @Enumerated(EnumType.STRING)
-    private MonthlySubscriptionRevenueStatus status = MonthlySubscriptionRevenueStatus.PENDING;
-
     @Column(nullable = false, updatable = false)
     @CreationTimestamp
     private Instant createdAt;
