@@ -20,8 +20,7 @@ public class MonthlySubscriptionRevenueScheduler {
 
     @Scheduled(cron = "0 1 0 1 * *", zone = "Asia/Ho_Chi_Minh")
     public void computeMonthlyRevenue() {
-        // DEBUG: YearMonth yearMonth = YearMonth.now().minusMonths(1);
-        YearMonth yearMonth = YearMonth.now();
+        YearMonth yearMonth = YearMonth.now().minusMonths(1);
         for (int i = 1; i <= MAX_ATTEMPTS; i++) {
             try {
                 subscriptionRevenueService.compute(yearMonth);
