@@ -2,9 +2,7 @@ package com.harry.clio.model;
 
 import jakarta.persistence.*;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -12,8 +10,10 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.math.BigDecimal;
 import java.time.Instant;
 
+@Builder
 @Getter
 @Setter
+@AllArgsConstructor
 @NoArgsConstructor
 @Entity
 @Table(
@@ -36,9 +36,11 @@ public class PublisherMonthlySubscriptionRevenue {
     @JoinColumn(name = "monthly_subscription_revenue_id", nullable = false)
     private MonthlySubscriptionRevenue monthlySubscriptionRevenue;
 
+    @Builder.Default
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal amount = BigDecimal.ZERO;
 
+    @Builder.Default
     @Column(nullable = false)
     private Long pageCount = 0L;
 

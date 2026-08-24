@@ -32,9 +32,6 @@ import java.util.*;
 @RequiredArgsConstructor
 @Service
 public class OrderServiceImpl implements OrderService {
-    private static final BigDecimal PUBLISHER_SHARE = new BigDecimal("0.7");
-    private static final ZoneId ZONE_ID = ZoneId.of("Asia/Ho_Chi_Minh");
-
     private final OrderRepository orderRepository;
     private final OrderDetailRepository orderDetailRepository;
     private final BookRepository bookRepository;
@@ -44,8 +41,11 @@ public class OrderServiceImpl implements OrderService {
     private final TransactionTemplate transactionTemplate;
     private final SubscriptionRepository subscriptionRepository;
     private final SubscriptionPlanRepository subscriptionPlanRepository;
-    private final SubscriptionAllocationRepository subscriptionAllocationRepository;
+    private final SubscriptionAllocationRepository allocationRepository;
     private final RevenueLogRepository revenueLogRepository;
+
+    private static final BigDecimal PUBLISHER_SHARE = new BigDecimal("0.7");
+    private static final ZoneId ZONE_ID = ZoneId.of("Asia/Ho_Chi_Minh");
 
     @Override
     public StripeCheckoutResponse createCheckout(Integer userId, BookPurchaseRequest request) {
@@ -234,7 +234,7 @@ public class OrderServiceImpl implements OrderService {
                 .owner(RevenueLogOwner.PLATFORM)
                 .build());
 
-        subscriptionAllocationRepository.saveAll(allocateSubscription(
+        allocationRepository.saveAll(allocateSubscription(
                 subscription, subscription.getStartDate(), subscription.getEndDate(), pubRevenue));
     }
 
@@ -266,7 +266,7 @@ public class OrderServiceImpl implements OrderService {
                     .subscription(subscription)
                     .month(current.getMonthValue())
                     .year(current.getYear())
-                    .grossAmount(sliceAmount)
+                    .publisherAmount(sliceAmount)
                     .startAllocateDate(current)
                     .endAllocateDate(sliceEnd)
                     .build());

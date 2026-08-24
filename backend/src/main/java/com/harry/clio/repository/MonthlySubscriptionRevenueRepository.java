@@ -8,5 +8,7 @@ import java.util.Optional;
 
 public interface MonthlySubscriptionRevenueRepository
         extends JpaRepository<MonthlySubscriptionRevenue, Integer> {
-    Optional<MonthlySubscriptionRevenue> findByMonthAndYear(int month, int year);
+    Optional<MonthlySubscriptionRevenue> findByYearAndMonth(int year, int month);
+
+    boolean existsByYearAndMonth(int year, int month);
 }

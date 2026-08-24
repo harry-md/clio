@@ -1,4 +1,4 @@
-package com.harry.clio.service;
+package com.harry.clio.queue;
 
 import lombok.RequiredArgsConstructor;
 

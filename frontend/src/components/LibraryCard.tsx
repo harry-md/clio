@@ -70,7 +70,7 @@ const LibraryCard = ({
 
           {!downloaded && (
             <div className="absolute inset-0 flex items-end bg-background/35 p-3">
-              <span className="bg-overlay px-3 py-1.5 text-xs">
+              <span className="bg-overlay px-3 py-1.5 text-sm">
                 {libraryType[library.type]}
               </span>
             </div>

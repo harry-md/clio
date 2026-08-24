@@ -16,6 +16,7 @@ import java.time.ZoneId;
 @Component
 public class SubscriptionScheduler {
     private final SubscriptionService subscriptionService;
+
     private static final ZoneId ZONE_ID = ZoneId.of("Asia/Ho_Chi_Minh");
 
     @Scheduled(cron = "0 1 0 * * *", zone = "Asia/Ho_Chi_Minh")

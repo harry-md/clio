@@ -37,10 +37,6 @@ public class SubscriptionBookBilling {
     @Column(nullable = false)
     private Long pageCount = 0L;
 
-    @Builder.Default
-    @Column(name = "is_computed", nullable = false)
-    private boolean computed = false;
-
     @Column(nullable = false, updatable = false)
     @CreationTimestamp
     private Instant createdAt;
