@@ -11,19 +11,19 @@ http:
     data:
       - name: username
         type: text
-        value: user1
+        value: user15
       - name: password
         type: text
         value: "1"
       - name: firstName
         type: text
-        value: Normal
+        value: User
       - name: lastName
         type: text
-        value: user
+        value: "15"
       - name: email
         type: text
-        value: u1@gmail.com
+        value: user15@gmail.com
       - name: avatar
         type: file
         value:

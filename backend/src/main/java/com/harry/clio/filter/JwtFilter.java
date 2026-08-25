@@ -14,14 +14,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
 
 @RequiredArgsConstructor
-@Component
 public class JwtFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
     private static final String JWT_COOKIE_NAME = "jwt_token";
