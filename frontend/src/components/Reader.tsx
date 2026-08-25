@@ -553,11 +553,10 @@ export const Reader = ({ bookId }: ReaderProps) => {
 
         {phase === "error" && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-background px-6 text-center">
-            <p className="text-2xl font-semibold text-foreground">
+            <p className="text-4xl font-semibold text-foreground">
               Lỗi khi mở sách
             </p>
-
-            <p className="max-w-xl text-muted-foreground">{error}</p>
+            <p className="max-w-xl text-2xl text-muted-foreground">{error}</p>
           </div>
         )}
       </div>
