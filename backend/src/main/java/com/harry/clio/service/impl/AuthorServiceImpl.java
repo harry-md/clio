@@ -7,7 +7,7 @@ import com.harry.clio.exception.ResourceNotFoundException;
 import com.harry.clio.mapper.AuthorMapper;
 import com.harry.clio.model.Author;
 import com.harry.clio.repository.AuthorRepository;
-import com.harry.clio.repository.specification.AuthorSpecification;
+import com.harry.clio.repository.specification.AuthorSpec;
 import com.harry.clio.service.AuthorService;
 
 import lombok.RequiredArgsConstructor;
@@ -31,7 +31,7 @@ public class AuthorServiceImpl implements AuthorService {
     @Cacheable(cacheNames = "authors", condition = "#kw == null")
     @Override
     public List<AuthorResponse> getAllAuthors(String kw) {
-        Specification<Author> spec = AuthorSpecification.hasKw(kw);
+        Specification<Author> spec = AuthorSpec.hasKw(kw);
         return authorRepository.findAll(spec).stream()
                 .map(authorMapper::toResponse)
                 .toList();

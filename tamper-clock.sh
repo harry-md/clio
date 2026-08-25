@@ -3,18 +3,16 @@
 set -euo pipefail
 
 show_time() {
-    echo "System time: $(date --iso-8601=seconds)"
+    echo "$(date --iso-8601=seconds)"
 }
 
 case "${1:-}" in
 rollback)
-    echo "Current time:"
     show_time
 
     sudo timedatectl set-ntp false
     sudo date --set="1 hour ago"
 
-    echo "Current time:"
     show_time
     ;;
 
@@ -27,7 +25,6 @@ restore)
         sudo systemctl restart systemd-timesyncd.service
     fi
 
-    echo "Current time:"
     show_time
     ;;
 
@@ -37,9 +34,9 @@ status)
     ;;
 
 *)
-    echo "  $0 rollback"
-    echo "  $0 restore"
-    echo "  $0 status"
+    echo "$0 rollback"
+    echo "$0 restore"
+    echo "$0 status"
     exit 1
     ;;
 esac

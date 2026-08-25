@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
 @ControllerAdvice
-public class AdminViewModelAdvice {
+public class AdminControllerAdvice {
     @ModelAttribute
     public void addCurrentAdmin(Model model, @AuthenticationPrincipal CustomUser principal) {
         if (principal != null) {
