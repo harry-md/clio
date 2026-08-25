@@ -1,20 +1,23 @@
 package com.harry.clio.config;
 
-import org.springframework.beans.factory.annotation.Value;
+import com.harry.clio.config.properties.BookWorkerProperties;
+
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+@RequiredArgsConstructor
 @Configuration
 public class WorkerConfig {
-    @Value("${clio.book-workers}")
-    private int bookWorkers;
+    private final BookWorkerProperties workerProps;
 
     @Bean
     public ThreadPoolTaskExecutor bookExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(bookWorkers);
-        executor.setMaxPoolSize(bookWorkers);
+        executor.setCorePoolSize(workerProps.count());
+        executor.setMaxPoolSize(workerProps.count());
         executor.setQueueCapacity(0);
         executor.setThreadNamePrefix("book-worker-");
         executor.initialize();

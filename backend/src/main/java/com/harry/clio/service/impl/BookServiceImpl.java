@@ -9,7 +9,7 @@ import com.harry.clio.mapper.BookMapper;
 import com.harry.clio.model.*;
 import com.harry.clio.queue.BookQueue;
 import com.harry.clio.repository.*;
-import com.harry.clio.repository.specification.BookSpecification;
+import com.harry.clio.repository.specification.BookSpec;
 import com.harry.clio.service.BookService;
 
 import lombok.RequiredArgsConstructor;
@@ -118,9 +118,9 @@ public class BookServiceImpl implements BookService {
             """)
     @Override
     public Page<BookListResponse> getAllBooks(BookFilterRequest request, Pageable pageable) {
-        Specification<Book> spec = Specification.where(BookSpecification.hasType(BookType.SYSTEM)
-                .and(BookSpecification.hasStatus(BookStatus.COMPLETED))
-                .and(BookSpecification.isActive(true).and(BookSpecification.buildFilter(request))));
+        Specification<Book> spec = Specification.where(BookSpec.hasType(BookType.SYSTEM)
+                .and(BookSpec.hasStatus(BookStatus.COMPLETED))
+                .and(BookSpec.isActive(true).and(BookSpec.buildFilter(request))));
 
         Pageable normalizedPageable = applyNullHandling(pageable);
         return bookRepository.findAll(spec, normalizedPageable).map(bookMapper::toListResponse);
@@ -163,9 +163,8 @@ public class BookServiceImpl implements BookService {
     @Override
     public Page<AdminBookListResponse> getAllAdminBooks(
             BookFilterRequest request, Pageable pageable) {
-        Specification<Book> specification = Specification.where(
-                        BookSpecification.hasType(BookType.SYSTEM))
-                .and(BookSpecification.buildFilter(request));
+        Specification<Book> specification = Specification.where(BookSpec.hasType(BookType.SYSTEM))
+                .and(BookSpec.buildFilter(request));
 
         Pageable normalizedPageable = applyNullHandling(pageable);
 

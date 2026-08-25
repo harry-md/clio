@@ -1,5 +1,6 @@
 package com.harry.clio.worker;
 
+import com.harry.clio.config.properties.BookWorkerProperties;
 import com.harry.clio.exception.InvalidEbookException;
 import com.harry.clio.queue.BookQueue;
 import com.harry.clio.service.BookProcessService;
@@ -7,28 +8,20 @@ import com.harry.clio.service.BookProcessService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Component;
-
-import java.time.Duration;
 
 @Slf4j
 @RequiredArgsConstructor
 @Component
 public class BookWorker implements SmartLifecycle {
-    @Value("${clio.book-workers}")
-    private int bookWorkers;
-
+    private final BookWorkerProperties workerProps;
     private final BookQueue bookQueue;
     private final BookProcessService bookProcessService;
     private final TaskExecutor bookExecutor;
 
-    private static final Duration POP_TIMEOUT = Duration.ofSeconds(5);
-    private static final int MAX_ATTEMPTS = 3;
-    private static final Duration RETRY_DELAY = Duration.ofSeconds(30);
-    private volatile boolean running = false;
+    private boolean running = false;
 
     @Override
     public void start() {
@@ -41,7 +34,7 @@ public class BookWorker implements SmartLifecycle {
 
         running = true;
 
-        for (int i = 0; i < bookWorkers; i++) {
+        for (int i = 0; i < workerProps.count(); i++) {
             bookExecutor.execute(this::consumeLoop);
         }
     }
@@ -49,7 +42,7 @@ public class BookWorker implements SmartLifecycle {
     private void consumeLoop() {
         while (running && !Thread.currentThread().isInterrupted()) {
             try {
-                Integer bookId = bookQueue.claim(POP_TIMEOUT).orElse(null);
+                Integer bookId = bookQueue.claim(workerProps.timeout()).orElse(null);
                 if (bookId == null) {
                     continue;
                 }
@@ -61,13 +54,13 @@ public class BookWorker implements SmartLifecycle {
     }
 
     private void processWithRetries(int bookId) {
-        for (int i = 1; i <= MAX_ATTEMPTS; i++) {
+        for (int i = 1; i <= workerProps.maxAttempts(); i++) {
             try {
                 log.info(
                         "Xử lý sách {}, lần {}/{}, worker {}",
                         bookId,
                         i,
-                        MAX_ATTEMPTS,
+                        workerProps.maxAttempts(),
                         Thread.currentThread().getName());
 
                 bookProcessService.process(bookId);
@@ -79,7 +72,7 @@ public class BookWorker implements SmartLifecycle {
             } catch (RuntimeException ex) {
                 log.error("Lỗi xử lý sách {}", bookId, ex);
 
-                if (i == MAX_ATTEMPTS) {
+                if (i == workerProps.maxAttempts()) {
                     bookProcessService.handleBookFailed(bookId);
                     ack(bookId);
                     log.error("Sách {} đã xử lý thất bại", bookId, ex);
@@ -87,7 +80,7 @@ public class BookWorker implements SmartLifecycle {
                 }
 
                 try {
-                    Thread.sleep(RETRY_DELAY);
+                    Thread.sleep(workerProps.retryDelay());
                 } catch (InterruptedException _) {
                     Thread.currentThread().interrupt();
                     return;

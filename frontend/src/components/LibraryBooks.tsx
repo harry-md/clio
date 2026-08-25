@@ -14,7 +14,6 @@ interface LibraryBooksProps {
 
 interface DownloadResponse {
   downloadUrl: string;
-  urlExpiredAt: string;
   license: string;
 }
 

@@ -5,6 +5,7 @@ import com.harry.clio.service.SubscriptionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -17,11 +18,12 @@ import java.time.ZoneId;
 public class SubscriptionScheduler {
     private final SubscriptionService subscriptionService;
 
-    private static final ZoneId ZONE_ID = ZoneId.of("Asia/Ho_Chi_Minh");
+    @Value("${clio.schedulers.zone-id}")
+    private String zoneId;
 
-    @Scheduled(cron = "0 1 0 * * *", zone = "Asia/Ho_Chi_Minh")
+    @Scheduled(cron = "${clio.schedulers.daily-cron}", zone = "${clio.schedulers.zone-id}")
     public void expireSubscriptions() {
-        int expiredSubs = subscriptionService.expireSubscriptions(LocalDate.now(ZONE_ID));
+        int expiredSubs = subscriptionService.expireSubscriptions(LocalDate.now(ZoneId.of(zoneId)));
         log.info("Đã expire {} subscription", expiredSubs);
     }
 }

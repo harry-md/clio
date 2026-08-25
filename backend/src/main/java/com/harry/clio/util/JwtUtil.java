@@ -21,10 +21,10 @@ import java.util.Date;
 @RequiredArgsConstructor
 @Component
 public class JwtUtil {
-    private final JwtProperties properties;
+    private final JwtProperties jwtProps;
 
     public String generateToken(CustomUser principal) throws JOSEException {
-        JWSSigner signer = new MACSigner(properties.secret());
+        JWSSigner signer = new MACSigner(jwtProps.secret());
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                 .subject(principal.getUsername())
                 .claim("userId", principal.getId())
@@ -32,7 +32,7 @@ public class JwtUtil {
                 .claim("firstName", principal.getFirstName())
                 .claim("lastName", principal.getLastName())
                 .claim("avatar", principal.getAvatar())
-                .expirationTime(new Date(System.currentTimeMillis() + properties.expiration()))
+                .expirationTime(new Date(System.currentTimeMillis() + jwtProps.expiration()))
                 .issueTime(new Date())
                 .build();
 
@@ -43,7 +43,7 @@ public class JwtUtil {
 
     private JWTClaimsSet validateToken(String token) throws Exception {
         SignedJWT signedJWT = SignedJWT.parse(token);
-        JWSVerifier verifier = new MACVerifier(properties.secret());
+        JWSVerifier verifier = new MACVerifier(jwtProps.secret());
 
         if (signedJWT.verify(verifier)) {
             Date expiration = signedJWT.getJWTClaimsSet().getExpirationTime();

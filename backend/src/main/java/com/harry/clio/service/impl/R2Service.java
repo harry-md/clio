@@ -31,14 +31,14 @@ import java.util.UUID;
 @Service
 public class R2Service {
     private static final int EPUBCHECK_FATAL = 4;
-    private final R2Properties r2Properties;
+    private final R2Properties r2Props;
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
 
     public PresignedUpload createOriginUploadUrl() {
         String objectKey = "books/origin/" + UUID.randomUUID() + ".epub";
         PutObjectRequest req = PutObjectRequest.builder()
-                .bucket(r2Properties.bucketName())
+                .bucket(r2Props.bucketName())
                 .key(objectKey)
                 .contentType("application/epub+zip")
                 .build();
@@ -60,7 +60,7 @@ public class R2Service {
             Files.deleteIfExists(tmpFile);
 
             GetObjectRequest req = GetObjectRequest.builder()
-                    .bucket(r2Properties.bucketName())
+                    .bucket(r2Props.bucketName())
                     .key(objectKey)
                     .build();
 
@@ -78,7 +78,7 @@ public class R2Service {
         String objectKey = "books/encrypted/" + UUID.randomUUID();
         try {
             PutObjectRequest req = PutObjectRequest.builder()
-                    .bucket(r2Properties.bucketName())
+                    .bucket(r2Props.bucketName())
                     .key(objectKey)
                     .contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE)
                     .build();
@@ -98,7 +98,7 @@ public class R2Service {
 
         try {
             DeleteObjectRequest req = DeleteObjectRequest.builder()
-                    .bucket(r2Properties.bucketName())
+                    .bucket(r2Props.bucketName())
                     .key(objectKey)
                     .build();
             s3Client.deleteObject(req);
@@ -109,7 +109,7 @@ public class R2Service {
 
     public String getPresignedUrl(String objectKey) {
         GetObjectRequest objectRequest = GetObjectRequest.builder()
-                .bucket(r2Properties.bucketName())
+                .bucket(r2Props.bucketName())
                 .key(objectKey)
                 .build();
 
