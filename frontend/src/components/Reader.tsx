@@ -13,7 +13,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { useAuth } from "@/context/AuthContext";
-import { BOOK_STORE, decryptFile, get, verifyLicense } from "@/lib/offline";
+import {
+  BOOK_STORE,
+  decryptFile,
+  get,
+  save,
+  verifyLicense,
+} from "@/lib/offline";
 
 interface ReaderProps {
   bookId: number;
@@ -141,23 +147,28 @@ const applyReaderSettings = (
       "background-color": `${palette.background} !important`,
       color: `${palette.foreground} !important`,
     },
+
     body: {
       "font-family": `${font.family} !important`,
       "font-size": `${settings.fontSize}px !important`,
       "font-weight": `${settings.fontWeight} !important`,
       "line-height": `${settings.lineHeight} !important`,
+      "user-select": "none !important",
+      "-webkit-user-select": "none !important",
+      "-webkit-touch-callout": "none !important",
     },
+
     "body *": {
       color: `${palette.foreground} !important`,
       "font-family": `${font.family} !important`,
+      "user-select": "none !important",
+      "-webkit-user-select": "none !important",
+      "-webkit-touch-callout": "none !important",
     },
+
     "p, li, blockquote, dd, dt, td": {
       "font-weight": `${settings.fontWeight} !important`,
       "line-height": `${settings.lineHeight} !important`,
-    },
-    "::selection": {
-      "background-color": `${palette.selection} !important`,
-      color: `${palette.foreground} !important`,
     },
   });
 
@@ -402,7 +413,18 @@ export const Reader = ({ bookId }: ReaderProps) => {
           throw new Error("Sách chưa được tải xuống.");
         }
 
-        const license = await verifyLicense(bookData.license, userId, bookId);
+        const { license, updatedClockState } = await verifyLicense(
+          bookData,
+          userId,
+          bookId,
+        );
+
+        if (updatedClockState !== undefined) {
+          await save(BOOK_STORE, {
+            ...bookData,
+            clockState: updatedClockState,
+          });
+        }
 
         const originFile = await decryptFile(
           userId,
@@ -531,11 +553,10 @@ export const Reader = ({ bookId }: ReaderProps) => {
 
         {phase === "error" && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-background px-6 text-center">
-            <p className="text-2xl font-semibold text-foreground">
+            <p className="text-4xl font-semibold text-foreground">
               Lỗi khi mở sách
             </p>
-
-            <p className="max-w-xl text-muted-foreground">{error}</p>
+            <p className="max-w-xl text-2xl text-muted-foreground">{error}</p>
           </div>
         )}
       </div>
