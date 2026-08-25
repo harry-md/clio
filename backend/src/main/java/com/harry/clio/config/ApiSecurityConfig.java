@@ -1,11 +1,13 @@
 package com.harry.clio.config;
 
 import com.harry.clio.filter.JwtFilter;
+import com.harry.clio.util.JwtUtil;
 
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -15,6 +17,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.SessionManagementConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -30,15 +33,16 @@ import java.util.List;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class ApiSecurityConfig {
-    private final JwtFilter jwtFilter;
-
-    @Bean(name = "apiFilterChain")
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    @Order(1)
+    @Bean
+    public SecurityFilterChain apiFilterChain(HttpSecurity http, JwtUtil jwtUtil) throws Exception {
         http.securityMatcher("/api/**")
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(
-                        session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(session -> session.sessionCreationPolicy(
+                                SessionCreationPolicy.STATELESS)
+                        .sessionFixation(
+                                SessionManagementConfigurer.SessionFixationConfigurer::none))
                 .exceptionHandling(ex -> ex.authenticationEntryPoint((req, res, e) -> {
                             res.setStatus(HttpStatus.UNAUTHORIZED.value());
                             res.setContentType(MediaType.APPLICATION_JSON_VALUE);
@@ -79,7 +83,7 @@ public class ApiSecurityConfig {
                         .permitAll()
                         .anyRequest()
                         .authenticated())
-                .addFilterBefore(jwtFilter, BasicAuthenticationFilter.class);
+                .addFilterBefore(new JwtFilter(jwtUtil), BasicAuthenticationFilter.class);
         return http.build();
     }
 
