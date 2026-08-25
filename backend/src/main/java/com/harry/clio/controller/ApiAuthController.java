@@ -29,7 +29,7 @@ public class ApiAuthController {
         ResponseCookie cookie = ResponseCookie.from("jwt_token", result.token())
                 .httpOnly(true)
                 .secure(false)
-                .path("/")
+                .path("/api")
                 .maxAge(604800)
                 .sameSite("Strict")
                 .build();
@@ -43,7 +43,7 @@ public class ApiAuthController {
         ResponseCookie cookie = ResponseCookie.from("jwt_token", "")
                 .httpOnly(true)
                 .secure(false)
-                .path("/")
+                .path("/api")
                 .maxAge(0)
                 .sameSite("Strict")
                 .build();
