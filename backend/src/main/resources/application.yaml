@@ -88,6 +88,7 @@ stripe:
   cancel-url: ${STRIPE_CANCEL_URL}
 
 clio:
+  publisher-share: 0.7
   master-key: ${CLIO_MASTER_KEY}
   book-workers:
     count: 2
