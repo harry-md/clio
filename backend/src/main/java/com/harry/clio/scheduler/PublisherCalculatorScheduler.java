@@ -5,6 +5,8 @@ import com.harry.clio.service.PublisherService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -14,16 +16,24 @@ import java.time.ZoneId;
 @Slf4j
 @RequiredArgsConstructor
 @Component
+@ConditionalOnProperty(
+        prefix = "clio.schedulers",
+        name = "enabled",
+        havingValue = "true",
+        matchIfMissing = true)
 public class PublisherCalculatorScheduler {
     private final PublisherService publisherService;
 
-    private static final int MAX_ATTEMPTS = 3;
-    private static final ZoneId ZONE_ID = ZoneId.of("Asia/Ho_Chi_Minh");
+    @Value("${clio.schedulers.max-attempts}")
+    private int maxAttempts;
 
-    @Scheduled(cron = "0 1 0 * * *", zone = "Asia/Ho_Chi_Minh")
+    @Value("${clio.schedulers.zone-id}")
+    private String zoneId;
+
+    @Scheduled(cron = "${clio.schedulers.daily-cron}", zone = "${clio.schedulers.zone-id}")
     public void calculateTodayBookRevenue() {
-        LocalDate today = LocalDate.now(ZONE_ID);
-        for (int i = 1; i <= MAX_ATTEMPTS; i++) {
+        LocalDate today = LocalDate.now(ZoneId.of(zoneId));
+        for (int i = 1; i <= maxAttempts; i++) {
             try {
                 publisherService.calculateBookRevenueToday(today);
                 return;
@@ -32,13 +42,13 @@ public class PublisherCalculatorScheduler {
                         "Tính doanh thu sách ngày {} cho NXB thất bại lần thứ {}/{}:",
                         today,
                         i,
-                        MAX_ATTEMPTS,
+                        maxAttempts,
                         ex);
-                if (i == MAX_ATTEMPTS) {
+                if (i == maxAttempts) {
                     log.error(
                             "Tính doanh thu sách ngày {} cho NXB thất bại sau {} lần thử",
                             today,
-                            MAX_ATTEMPTS,
+                            maxAttempts,
                             ex);
                 }
             }

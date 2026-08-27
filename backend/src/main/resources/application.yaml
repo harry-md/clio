@@ -88,6 +88,20 @@ stripe:
   cancel-url: ${STRIPE_CANCEL_URL}
 
 clio:
+  publisher-share: 0.7
   master-key: ${CLIO_MASTER_KEY}
-  license-key: ${CLIO_LICENSE_KEY}
-  book-workers: 2
+  book-workers:
+    count: 2
+    timeout: 5s
+    max-attempts: 3
+    retry-delay: 30s
+
+  schedulers:
+    max-attempts: 3
+    zone-id: Asia/Ho_Chi_Minh
+    daily-cron: "0 1 0 * * *"
+    monthly-cron: "0 1 0 1 * *"
+
+  license:
+    key: ${CLIO_LICENSE_KEY}
+    offline-duration: 7d

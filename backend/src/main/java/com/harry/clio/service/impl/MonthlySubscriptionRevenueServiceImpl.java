@@ -8,6 +8,7 @@ import com.harry.clio.service.MonthlySubscriptionRevenueService;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -22,7 +23,8 @@ public class MonthlySubscriptionRevenueServiceImpl implements MonthlySubscriptio
     private final SubscriptionAllocationRepository allocationRepository;
     private final SubscriptionBookBillingRepository bookBillingRepository;
 
-    private static final ZoneId ZONE_ID = ZoneId.of("Asia/Ho_Chi_Minh");
+    @Value("${clio.schedulers.zone-id}")
+    private String zoneId;
 
     @Override
     public boolean checkThisMonthExist(YearMonth yearMonth) {
@@ -36,8 +38,9 @@ public class MonthlySubscriptionRevenueServiceImpl implements MonthlySubscriptio
                 allocationRepository.findTotalPublisherAmountByMonthAndYearAndStatus(
                         yearMonth.getYear(), yearMonth.getMonthValue());
 
-        Instant start = yearMonth.atDay(1).atStartOfDay(ZONE_ID).toInstant();
-        Instant end = yearMonth.plusMonths(1).atDay(1).atStartOfDay(ZONE_ID).toInstant();
+        Instant start = yearMonth.atDay(1).atStartOfDay(ZoneId.of(zoneId)).toInstant();
+        Instant end =
+                yearMonth.plusMonths(1).atDay(1).atStartOfDay(ZoneId.of(zoneId)).toInstant();
         Long totalPageCount = bookBillingRepository.findMonthlyTotalPageCount(start, end);
 
         YearMonth prevYearMonth = yearMonth.minusMonths(1);

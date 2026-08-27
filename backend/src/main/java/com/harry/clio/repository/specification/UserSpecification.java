@@ -10,8 +10,6 @@ import org.springframework.data.jpa.domain.Specification;
 import java.util.Locale;
 
 public final class UserSpecification {
-    private UserSpecification() {}
-
     public static Specification<User> buildFilter(UserFilterRequest request) {
         return (root, query, cb) -> {
             if (request.keyword() == null || request.keyword().isBlank()) {

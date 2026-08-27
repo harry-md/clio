@@ -22,7 +22,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Service
 public class PaymentServiceImpl implements PaymentService {
-    private final StripeProperties stripeProperties;
+    private final StripeProperties stripeProps;
 
     @Override
     public Session createCheckoutSession(Integer orderId, List<StripeLineItem> items) {
@@ -32,15 +32,15 @@ public class PaymentServiceImpl implements PaymentService {
 
             SessionCreateParams params = SessionCreateParams.builder()
                     .setMode(SessionCreateParams.Mode.PAYMENT)
-                    .setSuccessUrl(stripeProperties.successUrl())
-                    .setCancelUrl(stripeProperties.cancelUrl())
+                    .setSuccessUrl(stripeProps.successUrl())
+                    .setCancelUrl(stripeProps.cancelUrl())
                     .setClientReferenceId(orderId.toString())
                     .putMetadata("orderId", orderId.toString())
                     .addAllLineItem(lineItems)
                     .build();
 
             RequestOptions requestOptions = RequestOptions.builder()
-                    .setApiKey(stripeProperties.secretKey())
+                    .setApiKey(stripeProps.secretKey())
                     .setIdempotencyKey(orderId.toString())
                     .build();
             return Session.create(params, requestOptions);
@@ -72,7 +72,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public Event constructWebhookEvent(String sigHeader, String payload) {
         try {
-            return Webhook.constructEvent(payload, sigHeader, stripeProperties.webhookSecret());
+            return Webhook.constructEvent(payload, sigHeader, stripeProps.webhookSecret());
         } catch (SignatureVerificationException ex) {
             throw new InvalidWebhookException("Webhook không hợp lệ");
         }

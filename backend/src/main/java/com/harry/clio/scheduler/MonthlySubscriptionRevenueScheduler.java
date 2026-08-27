@@ -5,6 +5,8 @@ import com.harry.clio.service.SubscriptionRevenueService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -13,15 +15,21 @@ import java.time.YearMonth;
 @Slf4j
 @RequiredArgsConstructor
 @Component
+@ConditionalOnProperty(
+        prefix = "clio.schedulers",
+        name = "enabled",
+        havingValue = "true",
+        matchIfMissing = true)
 public class MonthlySubscriptionRevenueScheduler {
     private final SubscriptionRevenueService subscriptionRevenueService;
 
-    private static final int MAX_ATTEMPTS = 3;
+    @Value("${clio.schedulers.max-attempts}")
+    private int maxAttempts;
 
-    @Scheduled(cron = "0 1 0 1 * *", zone = "Asia/Ho_Chi_Minh")
+    @Scheduled(cron = "${clio.schedulers.monthly-cron}", zone = "${clio.schedulers.zone-id}")
     public void computeMonthlyRevenue() {
         YearMonth yearMonth = YearMonth.now().minusMonths(1);
-        for (int i = 1; i <= MAX_ATTEMPTS; i++) {
+        for (int i = 1; i <= maxAttempts; i++) {
             try {
                 subscriptionRevenueService.compute(yearMonth);
                 return;
@@ -31,15 +39,15 @@ public class MonthlySubscriptionRevenueScheduler {
                         yearMonth.getMonthValue(),
                         yearMonth.getYear(),
                         i,
-                        MAX_ATTEMPTS,
+                        maxAttempts,
                         ex);
 
-                if (i == MAX_ATTEMPTS) {
+                if (i == maxAttempts) {
                     log.error(
                             "Tính doanh thu tháng {}/{} cho NXB bị thất bại sau {} lần thử",
                             yearMonth.getMonthValue(),
                             yearMonth.getYear(),
-                            MAX_ATTEMPTS,
+                            maxAttempts,
                             ex);
                 }
             }

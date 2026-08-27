@@ -1,5 +1,6 @@
 package com.harry.clio.service.impl;
 
+import com.harry.clio.config.properties.LicenseProperties;
 import com.harry.clio.exception.BadRequestException;
 import com.harry.clio.exception.CryptoException;
 import com.harry.clio.model.LicenseType;
@@ -12,7 +13,6 @@ import com.nimbusds.jwt.SignedJWT;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -24,7 +24,6 @@ import java.nio.file.Path;
 import java.security.*;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.*;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 
@@ -40,13 +39,11 @@ import javax.crypto.spec.SecretKeySpec;
 public class CryptoServiceImpl implements CryptoService {
     private final SecureRandom secureRandom;
     private final SecretKey masterKey;
+    private final LicenseProperties licenseProps;
 
     private static final int AES_KEY_LENGTH = 256;
     private static final int GCM_NONCE_LENGTH = 12;
     private static final int GCM_TAG_LENGTH = 128;
-
-    @Value("${clio.license-key}")
-    private String licenseKey;
 
     @Override
     public SecretKey generateContentKey() {
@@ -201,7 +198,7 @@ public class CryptoServiceImpl implements CryptoService {
 
     private String signLicense(Integer userId, Integer bookId, String wrappedContentKey) {
         try {
-            String pem = new String(Base64.getDecoder().decode(licenseKey));
+            String pem = new String(Base64.getDecoder().decode(licenseProps.key()));
             PrivateKey privateKey = parseLicensePrivateKey(pem);
             JWSSigner signer = new RSASSASigner(privateKey);
 
@@ -228,7 +225,7 @@ public class CryptoServiceImpl implements CryptoService {
             Instant expiredAt,
             String wrappedContentKey) {
         try {
-            String pem = new String(Base64.getDecoder().decode(licenseKey));
+            String pem = new String(Base64.getDecoder().decode(licenseProps.key()));
             PrivateKey privateKey = parseLicensePrivateKey(pem);
             JWSSigner signer = new RSASSASigner(privateKey);
 
@@ -243,7 +240,7 @@ public class CryptoServiceImpl implements CryptoService {
                     .claim(
                             "offlineUntil",
                             Math.min(
-                                    now.plus(Duration.ofDays(7)).getEpochSecond(),
+                                    now.plus(licenseProps.offlineDuration()).getEpochSecond(),
                                     expiredAt.getEpochSecond()))
                     .expirationTime(new Date(expiredAt.toEpochMilli()))
                     .build();
