@@ -17,7 +17,7 @@ import org.springframework.data.jpa.domain.Specification;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BookSpec {
+public class BookSpecification {
     public static Specification<Book> buildFilter(BookFilterRequest request) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();

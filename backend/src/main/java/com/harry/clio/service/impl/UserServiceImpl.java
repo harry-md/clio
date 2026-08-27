@@ -13,7 +13,7 @@ import com.harry.clio.model.User;
 import com.harry.clio.model.UserRole;
 import com.harry.clio.repository.SubscriptionRepository;
 import com.harry.clio.repository.UserRepository;
-import com.harry.clio.repository.specification.UserSpec;
+import com.harry.clio.repository.specification.UserSpecification;
 import com.harry.clio.service.UserService;
 
 import lombok.RequiredArgsConstructor;
@@ -106,7 +106,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     public Page<AdminUserListResponse> getAllAdminUsers(
             UserFilterRequest request, Pageable pageable) {
 
-        Specification<User> specification = Specification.where(UserSpec.buildFilter(request));
+        Specification<User> specification =
+                Specification.where(UserSpecification.buildFilter(request));
         return userRepository.findAll(specification, pageable).map(userMapper::toAdminListResponse);
     }
 }

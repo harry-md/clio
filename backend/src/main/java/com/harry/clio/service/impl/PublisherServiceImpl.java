@@ -15,6 +15,7 @@ import com.harry.clio.service.PublisherService;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +35,9 @@ public class PublisherServiceImpl implements PublisherService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final RevenueLogRepository revenueLogRepository;
+
+    @Value("${clio.schedulers.zone-id}")
+    private String zoneId;
 
     private Publisher getPublisherOrThrow(int userId) {
         return publisherRepository
@@ -72,7 +76,7 @@ public class PublisherServiceImpl implements PublisherService {
     @Transactional
     @Override
     public void calculateBookRevenueToday(LocalDate today) {
-        Instant startOfDay = today.atStartOfDay(ZoneId.of("Asia/Ho_Chi_Minh")).toInstant();
+        Instant startOfDay = today.atStartOfDay(ZoneId.of(zoneId)).toInstant();
         List<RevenueLog> revenueLogs = revenueLogRepository.findAllWithPublisherBefore(
                 false, startOfDay, RevenueLogOwner.PUBLISHER);
 

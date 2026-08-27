@@ -13,6 +13,7 @@ import com.harry.clio.service.StatService;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -24,17 +25,19 @@ import java.util.List;
 @RequiredArgsConstructor
 @Service
 public class StatServiceImpl implements StatService {
-    private static final ZoneId ZONE_ID = ZoneId.of("Asia/Ho_Chi_Minh");
-
     private final StatRepository statRepository;
     private final PublisherRepository publisherRepository;
     private final PublisherMapper publisherMapper;
 
+    @Value("${clio.schedulers.zone-id}")
+    private String zoneId;
+
     @Override
     public PublisherDashboardResponse getPublisherDashboard(int publisherId, int year, int month) {
         YearMonth yearMonth = YearMonth.of(year, month);
-        Instant start = yearMonth.atDay(1).atStartOfDay(ZONE_ID).toInstant();
-        Instant end = yearMonth.plusMonths(1).atDay(1).atStartOfDay(ZONE_ID).toInstant();
+        Instant start = yearMonth.atDay(1).atStartOfDay(ZoneId.of(zoneId)).toInstant();
+        Instant end =
+                yearMonth.plusMonths(1).atDay(1).atStartOfDay(ZoneId.of(zoneId)).toInstant();
 
         List<TopSellingBookResponse> books = statRepository.findTopSellingBooksByPublisherId(
                 publisherId, OrderStatus.PAID, DetailType.BOOK, start, end, PageRequest.of(0, 5));
