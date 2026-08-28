@@ -28,10 +28,10 @@ public class ApiAuthController {
         LoginResult result = authService.login(request);
         ResponseCookie cookie = ResponseCookie.from("jwt_token", result.token())
                 .httpOnly(true)
-                .secure(true)
+                .secure(false)
                 .path("/api")
                 .maxAge(604800)
-                .sameSite("None")
+                .sameSite("Strict")
                 .build();
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
@@ -42,10 +42,10 @@ public class ApiAuthController {
     public ResponseEntity<Void> logout() {
         ResponseCookie cookie = ResponseCookie.from("jwt_token", "")
                 .httpOnly(true)
-                .secure(true)
+                .secure(false)
                 .path("/api")
                 .maxAge(0)
-                .sameSite("None")
+                .sameSite("Strict")
                 .build();
         return ResponseEntity.noContent()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())

@@ -5,7 +5,7 @@ info:
 
 http:
   method: PATCH
-  url: http://localhost:8080/api/authors/22
+  url: "{{LOCAL_API_URL}}/authors/22"
   body:
     type: multipart-form
     data:

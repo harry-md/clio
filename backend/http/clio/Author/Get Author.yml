@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: http://localhost:8080/api/authors/1
+  url: "{{LOCAL_API_URL}}/authors/1"
   auth: inherit
 
 settings:

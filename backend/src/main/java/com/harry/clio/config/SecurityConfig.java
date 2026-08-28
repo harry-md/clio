@@ -12,6 +12,8 @@ public class SecurityConfig {
         http.authorizeHttpRequests(
                         auth -> auth.requestMatchers("/login", "/assets/**", "/favicon.ico")
                                 .permitAll()
+                                .requestMatchers("/actuator/health")
+                                .permitAll()
                                 .anyRequest()
                                 .hasRole("ADMIN"))
                 .formLogin(form -> form.loginPage("/login")
