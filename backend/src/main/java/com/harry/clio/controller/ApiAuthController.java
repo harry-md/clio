@@ -31,7 +31,7 @@ public class ApiAuthController {
                 .secure(true)
                 .path("/api")
                 .maxAge(604800)
-                .sameSite("None")
+                .sameSite("Strict")
                 .build();
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
@@ -45,7 +45,7 @@ public class ApiAuthController {
                 .secure(true)
                 .path("/api")
                 .maxAge(0)
-                .sameSite("None")
+                .sameSite("Strict")
                 .build();
         return ResponseEntity.noContent()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
