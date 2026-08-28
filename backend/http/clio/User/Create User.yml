@@ -5,7 +5,7 @@ info:
 
 http:
   method: POST
-  url: http://localhost:8080/api/users
+  url: "{{LOCAL_API_URL}}/users"
   body:
     type: multipart-form
     data:
