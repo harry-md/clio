@@ -85,7 +85,7 @@ const fetchBooks = async (
   });
 
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/books?${params.toString()}`,
+    `${process.env.BACKEND_URL}/api/books?${params.toString()}`,
   );
 
   if (!res.ok) {

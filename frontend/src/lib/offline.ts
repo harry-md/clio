@@ -414,7 +414,7 @@ async function verifyLicenseClaims(
   expectedUserId: number,
   expectedBookId: number,
 ): Promise<LibraryLicense> {
-  const publicKeyBase64 = process.env.NEXT_PUBLIC_PUBLIC_LICENSE_KEY;
+  const publicKeyBase64 = process.env.LICENSE_KEY;
   if (!publicKeyBase64) {
     throw new Error("Không tìm thấy license public key");
   }
