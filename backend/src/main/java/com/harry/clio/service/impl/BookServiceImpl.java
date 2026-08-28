@@ -45,7 +45,7 @@ public class BookServiceImpl implements BookService {
     private final BookAuthorMapper bookAuthorMapper;
     private final CategoryRepository categoryRepository;
     private final PublisherRepository publisherRepository;
-    private final BookQueue bookProcessingQueue;
+    private final BookQueue bookQueue;
 
     private record BookWithInfo(Book book, BookInfo info) {}
 
@@ -75,7 +75,7 @@ public class BookServiceImpl implements BookService {
             return new BookWithInfo(book, bookInfo);
         });
 
-        bookProcessingQueue.enqueue(bookWithInfo.book.getId());
+        bookQueue.enqueue(bookWithInfo.book.getId());
         return bookMapper.toDetailResponse(
                 bookWithInfo.book, bookInfoMapper.toResponse(bookWithInfo.info));
     }
