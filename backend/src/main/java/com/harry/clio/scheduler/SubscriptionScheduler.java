@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -15,6 +16,11 @@ import java.time.ZoneId;
 @Slf4j
 @RequiredArgsConstructor
 @Component
+@ConditionalOnProperty(
+        prefix = "clio.schedulers",
+        name = "enabled",
+        havingValue = "true",
+        matchIfMissing = true)
 public class SubscriptionScheduler {
     private final SubscriptionService subscriptionService;
 

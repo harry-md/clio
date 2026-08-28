@@ -13,6 +13,7 @@ import com.harry.clio.service.UserLibraryService;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,9 @@ public class UserLibraryServiceImpl implements UserLibraryService {
     private final CryptoService cryptoService;
     private final BookInfoRepository bookInfoRepository;
     private final SubscriptionBookBillingRepository subscriptionBookBillingRepository;
+
+    @Value("${clio.schedulers.zone-id}")
+    private String zoneId;
 
     @Transactional
     @Override
@@ -111,9 +115,7 @@ public class UserLibraryServiceImpl implements UserLibraryService {
                         userId,
                         bookId,
                         sub.getId(),
-                        sub.getEndDate()
-                                .atStartOfDay(ZoneId.of("Asia/Ho_Chi_Minh"))
-                                .toInstant(),
+                        sub.getEndDate().atStartOfDay(ZoneId.of(zoneId)).toInstant(),
                         book.getEncryptedContentKey(),
                         request.publicKeySpki());
             }

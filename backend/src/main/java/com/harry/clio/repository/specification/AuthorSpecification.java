@@ -4,7 +4,7 @@ import com.harry.clio.model.Author;
 
 import org.springframework.data.jpa.domain.Specification;
 
-public class AuthorSpec {
+public class AuthorSpecification {
     public static Specification<Author> hasKw(String kw) {
         return (root, query, cb) -> {
             if (kw == null || kw.isBlank()) {

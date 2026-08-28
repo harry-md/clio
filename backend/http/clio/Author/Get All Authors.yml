@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: http://localhost:8080/api/authors
+  url: "{{LOCAL_API_URL}}/authors"
   params:
     - name: kw
       value: Leo

@@ -18,6 +18,7 @@ import com.stripe.model.checkout.Session;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -44,8 +45,11 @@ public class OrderServiceImpl implements OrderService {
     private final SubscriptionAllocationRepository allocationRepository;
     private final RevenueLogRepository revenueLogRepository;
 
-    private static final BigDecimal PUBLISHER_SHARE = new BigDecimal("0.7");
-    private static final ZoneId ZONE_ID = ZoneId.of("Asia/Ho_Chi_Minh");
+    @Value("${clio.publisher-share}")
+    private BigDecimal publisherShare;
+
+    @Value("${clio.schedulers.zone-id}")
+    private String zoneId;
 
     @Override
     public StripeCheckoutResponse createCheckout(Integer userId, BookPurchaseRequest request) {
@@ -177,7 +181,7 @@ public class OrderServiceImpl implements OrderService {
             Publisher publisher = book.getPublisher();
 
             BigDecimal pubRevenue =
-                    od.getPrice().multiply(PUBLISHER_SHARE).setScale(2, RoundingMode.HALF_UP);
+                    od.getPrice().multiply(publisherShare).setScale(2, RoundingMode.HALF_UP);
             revenueLogs.add(RevenueLog.builder()
                     .orderDetail(od)
                     .amount(pubRevenue)
@@ -215,7 +219,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private void handleSubscriptionOrder(Order order, OrderDetail orderDetail) {
-        LocalDate today = LocalDate.now(ZONE_ID);
+        LocalDate today = LocalDate.now(ZoneId.of(zoneId));
 
         SubscriptionPlan plan = orderDetail.getSubscriptionPlan();
         Subscription subscription = Subscription.builder()
@@ -226,7 +230,7 @@ public class OrderServiceImpl implements OrderService {
         subscriptionRepository.save(subscription);
 
         BigDecimal pubRevenue =
-                orderDetail.getPrice().multiply(PUBLISHER_SHARE).setScale(2, RoundingMode.HALF_UP);
+                orderDetail.getPrice().multiply(publisherShare).setScale(2, RoundingMode.HALF_UP);
 
         revenueLogRepository.save(RevenueLog.builder()
                 .orderDetail(orderDetail)

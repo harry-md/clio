@@ -10,6 +10,7 @@ import com.harry.clio.service.PublisherMonthlySubscriptionRevenueService;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -27,15 +28,17 @@ public class PublisherMonthlySubscriptionRevenueServiceImpl
     private final SubscriptionBookBillingRepository billingRepository;
     private final PublisherRepository publisherRepository;
 
-    private static final ZoneId ZONE_ID = ZoneId.of("Asia/Ho_Chi_Minh");
+    @Value("${clio.schedulers.zone-id}")
+    private String zoneId;
 
     @Override
     public void computePublisherMonthlyRevenue(
             MonthlySubscriptionRevenue monthlySubscriptionRevenue) {
         YearMonth yearMonth = YearMonth.of(
                 monthlySubscriptionRevenue.getYear(), monthlySubscriptionRevenue.getMonth());
-        Instant start = yearMonth.atDay(1).atStartOfDay(ZONE_ID).toInstant();
-        Instant end = yearMonth.plusMonths(1).atDay(1).atStartOfDay(ZONE_ID).toInstant();
+        Instant start = yearMonth.atDay(1).atStartOfDay(ZoneId.of(zoneId)).toInstant();
+        Instant end =
+                yearMonth.plusMonths(1).atDay(1).atStartOfDay(ZoneId.of(zoneId)).toInstant();
 
         List<SubscriptionBookBilling> billings =
                 billingRepository.findAllWithBookInMonth(start, end);
