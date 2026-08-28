@@ -5,7 +5,7 @@ interface ApiError {
 }
 
 export const Api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  baseURL: "/api",
   withCredentials: true,
   paramsSerializer: {
     indexes: null,
