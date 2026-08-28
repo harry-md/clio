@@ -122,14 +122,14 @@ export const PublisherDashboard = () => {
         >
           <PlusIcon data-icon="inline-start" />
 
-          {showUploadForm ? "Ẩn đăng sách" : "Đăng sách mới"}
+          {showUploadForm ? "Ẩn đăng sách" : "Đăng tải sách"}
         </Button>
       </div>
 
       {showUploadForm && (
         <section className="mt-8 border border-border-strong bg-card p-5 md:p-8">
           <h2 className="text-3xl font-semibold text-foreground">
-            Đăng sách mới
+            Đăng tải sách
           </h2>
 
           <PublisherBookUploadForm />
