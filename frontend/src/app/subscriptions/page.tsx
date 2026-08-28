@@ -12,7 +12,7 @@ const fetchSubscriptionPlans = async (): Promise<SubscriptionPlan[]> => {
 
   try {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/subscription-plans`,
+      `${process.env.BACKEND_URL}/api/subscription-plans`,
     );
 
     if (!res.ok) {

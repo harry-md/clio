@@ -48,7 +48,7 @@ const fetchBookDetail = async (bookId: string): Promise<BookDetail | null> => {
   "use cache";
   cacheLife({ revalidate: 300 });
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/books/${bookId}`);
+  const res = await fetch(`${process.env.BACKEND_URL}/api/books/${bookId}`);
 
   if (res.status === 404) {
     return null;
