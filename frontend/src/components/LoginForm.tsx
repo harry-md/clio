@@ -18,8 +18,8 @@ interface LoginFormFields {
 }
 
 const initialForm: LoginFormFields = {
-  username: "",
-  password: "",
+  username: "user",
+  password: "1",
 };
 
 const MAX_FIELD_LENGTH = 255;

@@ -63,7 +63,7 @@ const languages: Array<{ value: Language; label: string }> = [
   { value: "ES", label: "Tiếng Tây Ban Nha" },
 ];
 
-const MAX_EPUB_SIZE = 100 * 1024 * 1024;
+const MAX_FILE_SIZE = 100 * 1024 * 1024;
 
 export const PublisherBookUploadForm = () => {
   const [form, setForm] = useState(initialForm);
@@ -243,8 +243,8 @@ export const PublisherBookUploadForm = () => {
     if (!form.epubFile) {
       return "Vui lòng chọn file EPUB.";
     }
-    if (form.epubFile.size <= 0 || form.epubFile.size > MAX_EPUB_SIZE) {
-      return "Kích thước không hợp lệ";
+    if (form.epubFile.size <= 0 || form.epubFile.size > MAX_FILE_SIZE) {
+      return "Kích thước file không hợp lệ";
     }
     if (!form.title.trim()) {
       return "Vui lòng nhập tên sách.";
@@ -372,7 +372,7 @@ export const PublisherBookUploadForm = () => {
         </Field>
 
         <Field className="md:col-span-2">
-          <FieldLabel htmlFor="book-title">Tên sách</FieldLabel>
+          <FieldLabel htmlFor="book-title">Tựa sách</FieldLabel>
 
           <Input
             id="book-title"
