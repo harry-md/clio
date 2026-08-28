@@ -1,0 +1,8 @@
+name: Clio
+variables:
+  - name: DEPLOY_API_URL
+    value: https://clio-backend-fe5e9b73de99.herokuapp.com/api
+    description: ""
+  - name: LOCAL_API_URL
+    value: http://localhost:8080/api
+    description: ""
