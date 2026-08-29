@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -23,12 +24,15 @@ import org.springframework.web.bind.annotation.RestController;
 public class ApiAuthController {
     private final AuthService authService;
 
+    @Value("${clio.auth.cookie-secure}")
+    private boolean cookieSecure;
+
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         LoginResult result = authService.login(request);
         ResponseCookie cookie = ResponseCookie.from("jwt_token", result.token())
                 .httpOnly(true)
-                .secure(false)
+                .secure(cookieSecure)
                 .path("/api")
                 .maxAge(604800)
                 .sameSite("Strict")
@@ -42,7 +46,7 @@ public class ApiAuthController {
     public ResponseEntity<Void> logout() {
         ResponseCookie cookie = ResponseCookie.from("jwt_token", "")
                 .httpOnly(true)
-                .secure(false)
+                .secure(cookieSecure)
                 .path("/api")
                 .maxAge(0)
                 .sameSite("Strict")
