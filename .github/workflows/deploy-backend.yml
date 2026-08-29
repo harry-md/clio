@@ -1,0 +1,26 @@
+name: Deploy backend to Heroku
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+      - ".github/workflows/deploy-backend.yml"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Deploy backend to Heroku
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+        run: |
+          git remote add heroku https://heroku:$HEROKU_API_KEY@git.heroku.com/clio-backend-fe5e9b73de99.git
+          git subtree push --prefix backend heroku main
