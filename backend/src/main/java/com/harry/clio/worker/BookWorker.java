@@ -47,7 +47,7 @@ public class BookWorker implements SmartLifecycle {
                     continue;
                 }
                 processWithRetries(bookId);
-            } catch (RuntimeException ex) {
+            } catch (RuntimeException | Error ex) {
                 log.error("Lỗi xử lý sách", ex);
             }
         }

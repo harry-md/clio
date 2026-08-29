@@ -92,7 +92,7 @@ public class R2Service {
     }
 
     public void delete(String objectKey) {
-        if (objectKey == null || objectKey.isEmpty()) {
+        if (objectKey == null || objectKey.isBlank()) {
             return;
         }
 
@@ -122,7 +122,7 @@ public class R2Service {
         return presignedRequest.url().toExternalForm();
     }
 
-    public void validateEbook(Path path) {
+    public void validateEpub(Path path) {
         EpubCheck epubCheck = new EpubCheck(path.toFile());
         int result = epubCheck.doValidate();
 

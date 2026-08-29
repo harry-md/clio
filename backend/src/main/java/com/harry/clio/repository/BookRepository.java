@@ -65,4 +65,22 @@ public interface BookRepository
     int deleteFailedBooks(@Param("status") BookStatus status);
 
     Optional<Book> findByIdAndType(Integer bookId, BookType type);
+
+    @Transactional
+    @Modifying
+    @Query("""
+        UPDATE Book b
+        SET b.encryptedFileUrl = :encryptedFileUrl,
+            b.encryptedContentKey = :encryptedContentKey,
+            b.status = :status,
+            b.thumbnail = COALESCE(:thumbnail, b.thumbnail),
+            b.updatedAt = CURRENT_TIMESTAMP
+        WHERE b.id = :id
+        """)
+    int updateInfo(
+            @Param("id") int id,
+            @Param("encryptedFileUrl") String encryptedFileUrl,
+            @Param("encryptedContentKey") String encryptedContentKey,
+            @Param("thumbnail") String thumbnail,
+            @Param("status") BookStatus status);
 }
