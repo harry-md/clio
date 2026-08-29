@@ -106,13 +106,13 @@ public class BookServiceImpl implements BookService {
                 .toList();
     }
 
-    @Cacheable(cacheNames = "homepage-books", key = """
+    @Cacheable(cacheNames = "books", key = """
         'page=' + #pageable.pageNumber +
         '|size=' + #pageable.pageSize +
         '|sort=' +  #pageable.sort.toString()
         """, condition = """
             #pageable.paged &&
-            #pageable.pageNumber == 0 &&
+            (#pageable.pageNumber == 0 || #pageable.pageNumber == 1 || #pageable.pageNumber == 2) &&
             #pageable.pageSize == 12 &&
             #request.hasNoFilters()
             """)
@@ -142,7 +142,7 @@ public class BookServiceImpl implements BookService {
         return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(orders));
     }
 
-    @Cacheable(cacheNames = "book-details", key = "#bookId")
+    @Cacheable(cacheNames = "book-detail", key = "#bookId")
     @Override
     public BookDetailResponse getBookDetail(int bookId) {
         Book book = bookRepository
@@ -178,8 +178,8 @@ public class BookServiceImpl implements BookService {
     @Transactional
     @Caching(
             evict = {
-                @CacheEvict(cacheNames = "homepage-books", allEntries = true),
-                @CacheEvict(cacheNames = "book-details", key = "#bookId")
+                @CacheEvict(cacheNames = "books", allEntries = true),
+                @CacheEvict(cacheNames = "book-detail", key = "#bookId")
             })
     public void updateBookActive(int bookId, boolean active) {
         Book book = bookRepository
