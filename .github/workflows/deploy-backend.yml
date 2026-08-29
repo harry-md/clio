@@ -23,4 +23,5 @@ jobs:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
         run: |
           git remote add heroku "https://:$HEROKU_API_KEY@git.heroku.com/clio-backend.git"
-          git subtree push --prefix backend heroku main
+          git subtree split --prefix backend -b heroku-deploy
+          git push heroku heroku-deploy:main --force
