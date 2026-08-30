@@ -4,10 +4,7 @@ import com.harry.clio.model.Book;
 import com.harry.clio.model.BookStatus;
 import com.harry.clio.model.BookType;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,7 +20,7 @@ public interface BookRepository
         WHERE b.id = :bookId AND b.active = true AND b.type = :type AND b.status = :status
         """)
     Optional<Book> findWithCategoryById(
-            @Param(value = "bookId") Integer bookId,
+            @Param(value = "bookId") int bookId,
             @Param("type") BookType type,
             @Param("status") BookStatus status);
 
@@ -44,15 +41,15 @@ public interface BookRepository
         SET b.status = :status
         WHERE b.id = :bookId
         """)
-    int updateStatus(@Param("bookId") Integer bookId, @Param("status") BookStatus status);
+    int updateStatus(@Param("bookId") int bookId, @Param("status") BookStatus status);
 
     @Query("""
         SELECT b
         FROM Book b
         WHERE b.active = true AND b.status = :status AND b.type = :type AND b.id = :bookId
         """)
-    Optional<Book> findAddableBookById(
-            @Param("bookId") Integer bookId,
+    Optional<Book> findAvailableBookById(
+            @Param("bookId") int bookId,
             @Param("status") BookStatus status,
             @Param("type") BookType type);
 
@@ -64,5 +61,43 @@ public interface BookRepository
         """)
     int deleteFailedBooks(@Param("status") BookStatus status);
 
-    Optional<Book> findByIdAndType(Integer bookId, BookType type);
+    Optional<Book> findByIdAndType(int bookId, BookType type);
+
+    @Transactional
+    @Modifying
+    @Query("""
+        UPDATE Book b
+        SET b.encryptedFileUrl = :encryptedFileUrl,
+            b.encryptedContentKey = :encryptedContentKey,
+            b.status = :status,
+            b.thumbnail = COALESCE(:thumbnail, b.thumbnail),
+            b.updatedAt = CURRENT_TIMESTAMP
+        WHERE b.id = :id
+        """)
+    int updateInfo(
+            @Param("id") int id,
+            @Param("encryptedFileUrl") String encryptedFileUrl,
+            @Param("encryptedContentKey") String encryptedContentKey,
+            @Param("thumbnail") String thumbnail,
+            @Param("status") BookStatus status);
+
+    @Transactional
+    @Modifying
+    @Query("""
+        UPDATE Book b
+        SET b.rating =
+            CASE
+                WHEN b.ratingCount + :countDelta = 0 THEN 0
+                ELSE
+                    (COALESCE(b.rating, 0.0) * b.ratingCount + :ratingDelta) / (b.ratingCount + :countDelta)
+            END,
+            b.ratingCount = b.ratingCount + :countDelta
+        WHERE b.id = :id AND b.status = :status AND b.type = :type
+        """)
+    int updateBookRating(
+            @Param("id") int id,
+            @Param("ratingDelta") int ratingDelta,
+            @Param("countDelta") int countDelta,
+            @Param("status") BookStatus status,
+            @Param("type") BookType type);
 }

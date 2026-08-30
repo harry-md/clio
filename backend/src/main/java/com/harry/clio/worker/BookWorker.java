@@ -21,7 +21,7 @@ public class BookWorker implements SmartLifecycle {
     private final BookProcessService bookProcessService;
     private final TaskExecutor bookExecutor;
 
-    private boolean running = false;
+    private volatile boolean running = false;
 
     @Override
     public void start() {
@@ -47,7 +47,7 @@ public class BookWorker implements SmartLifecycle {
                     continue;
                 }
                 processWithRetries(bookId);
-            } catch (RuntimeException ex) {
+            } catch (RuntimeException | Error ex) {
                 log.error("Lỗi xử lý sách", ex);
             }
         }

@@ -84,7 +84,7 @@ export const PublisherDashboard = () => {
     };
   }, [initialized, user, year, month]);
 
-  if (!initialized || loading) {
+  if (!initialized) {
     return <LoadingOverlay />;
   }
 
@@ -92,7 +92,7 @@ export const PublisherDashboard = () => {
     return (
       <Alert variant="destructive">
         <AlertDescription>
-          Bạn cần đăng nhập bằng tài khoản nhà xuất bản.
+          Cần đăng nhập bằng tài khoản nhà xuất bản.
         </AlertDescription>
       </Alert>
     );
@@ -106,6 +106,10 @@ export const PublisherDashboard = () => {
         </AlertDescription>
       </Alert>
     );
+  }
+
+  if (loading) {
+    return <LoadingOverlay />;
   }
 
   return (
@@ -144,6 +148,35 @@ export const PublisherDashboard = () => {
 
       {dashboard && (
         <>
+          <section className="mt-8 grid gap-5 md:grid-cols-2">
+            <div className="border border-border-strong bg-card p-6 md:p-8">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <WalletIcon className="size-5" />
+
+                <span className="text-sm font-semibold uppercase tracking-[0.16em]">
+                  Số dư hiện tại
+                </span>
+              </div>
+
+              <p className="mt-5 text-5xl font-semibold text-price">
+                {moneyFormatter.format(Number(dashboard.publisher.balance))}đ
+              </p>
+            </div>
+
+            <div className="border border-border-strong bg-card p-6 md:p-8">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <WalletIcon className="size-5" />
+
+                <span className="text-sm font-semibold uppercase tracking-[0.16em]">
+                  Tài khoản ngân hàng
+                </span>
+              </div>
+
+              <p className="mt-5 break-all text-2xl font-semibold text-foreground">
+                {dashboard.publisher.bankAccountNumber || "Chưa cập nhật"}
+              </p>
+            </div>
+          </section>
           <div className="mt-8 flex flex-col gap-4 border-b border-border pb-6 md:flex-row md:items-end md:justify-between">
             <div>
               <p className="text-sm font-semibold text-muted-foreground">
@@ -189,36 +222,6 @@ export const PublisherDashboard = () => {
               </label>
             </div>
           </div>
-
-          <section className="mt-8 grid gap-5 md:grid-cols-2">
-            <div className="border border-border-strong bg-card p-6 md:p-8">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <WalletIcon className="size-5" />
-
-                <span className="text-sm font-semibold uppercase tracking-[0.16em]">
-                  Số dư hiện tại
-                </span>
-              </div>
-
-              <p className="mt-5 text-5xl font-semibold text-price">
-                {moneyFormatter.format(Number(dashboard.publisher.balance))}đ
-              </p>
-            </div>
-
-            <div className="border border-border-strong bg-card p-6 md:p-8">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <WalletIcon className="size-5" />
-
-                <span className="text-sm font-semibold uppercase tracking-[0.16em]">
-                  Tài khoản ngân hàng
-                </span>
-              </div>
-
-              <p className="mt-5 break-all text-2xl font-semibold text-foreground">
-                {dashboard.publisher.bankAccountNumber || "Chưa cập nhật"}
-              </p>
-            </div>
-          </section>
 
           <section className="mt-12">
             <div className="flex items-end justify-between gap-5 border-b border-border pb-6">

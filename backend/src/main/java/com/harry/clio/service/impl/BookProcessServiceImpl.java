@@ -3,7 +3,6 @@ package com.harry.clio.service.impl;
 import com.harry.clio.exception.InvalidEbookException;
 import com.harry.clio.exception.ResourceNotFoundException;
 import com.harry.clio.model.Book;
-import com.harry.clio.model.BookInfo;
 import com.harry.clio.model.BookStatus;
 import com.harry.clio.repository.BookInfoRepository;
 import com.harry.clio.repository.BookRepository;
@@ -42,15 +41,17 @@ public class BookProcessServiceImpl implements BookProcessService {
 
     private static final long MAX_FILE_SIZE = 100 * 1024 * 1024;
 
-    private record EpubExtractData(long wordCount, byte[] coverImage) {}
+    private record ExtractedData(long wordCount, byte[] coverImage) {}
 
-    @CacheEvict(cacheNames = "homepage-books", allEntries = true)
+    private record EncryptedData(
+            String encryptedContentKey, Path encryptedFile, String encryptedFileUrl) {}
+
+    @CacheEvict(cacheNames = "books", allEntries = true)
     @Override
     public void process(int bookId) {
         Book book = bookRepository
                 .findById(bookId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sách"));
-
         if (book.getStatus() == BookStatus.COMPLETED || book.getStatus() == BookStatus.FAILED) {
             return;
         }
@@ -59,45 +60,32 @@ public class BookProcessServiceImpl implements BookProcessService {
         Path encryptedFile = null;
         String encryptedFileUrl = null;
         String thumbnailUrl = null;
-
         try {
             cleanFile = r2Service.downloadToTemp(book.getFileUrl());
 
-            long fileSize = Files.size(cleanFile);
-            if (fileSize <= 0 || fileSize > MAX_FILE_SIZE) {
-                throw new InvalidEbookException("Kích thước file không hợp lệ");
+            final long fileSize = validate(cleanFile);
+
+            ExtractedData data = extractEpubData(cleanFile);
+            final long wordCount = data.wordCount();
+            if (data.coverImage() != null) {
+                thumbnailUrl = cloudinaryService.upload(data.coverImage());
             }
 
-            r2Service.validateEbook(cleanFile);
+            EncryptedData encryptedData = encryptAndUpload(cleanFile);
+            encryptedFile = encryptedData.encryptedFile();
+            encryptedFileUrl = encryptedData.encryptedFileUrl();
+            final String encryptedContentKey = encryptedData.encryptedContentKey;
 
-            EpubExtractData extractResult = extractEpubData(cleanFile);
-            long wordCount = extractResult.wordCount();
-            if (extractResult.coverImage() != null) {
-                thumbnailUrl = cloudinaryService.upload(extractResult.coverImage());
-            }
-
-            SecretKey contentKey = cryptoService.generateContentKey();
-            encryptedFile = cryptoService.encryptFile(cleanFile, contentKey);
-
-            encryptedFileUrl = r2Service.uploadEncryptedEbook(encryptedFile);
-            String encryptedContentKey = cryptoService.encryptContentKey(contentKey);
-
-            final String finalEncryptedFileUrl = encryptedFileUrl;
-            final String finalEncryptedContentKey = encryptedContentKey;
             final String finalThumbnailUrl = thumbnailUrl;
-
+            final String finalEncryptedFileUrl = encryptedFileUrl;
             transactionTemplate.executeWithoutResult(status -> {
-                Book managedBook = bookRepository.getReferenceById(bookId);
-                managedBook.setEncryptedFileUrl(finalEncryptedFileUrl);
-                managedBook.setEncryptedContentKey(finalEncryptedContentKey);
-                managedBook.setStatus(BookStatus.COMPLETED);
-                if (finalThumbnailUrl != null) {
-                    managedBook.setThumbnail(finalThumbnailUrl);
-                }
-
-                BookInfo info = bookInfoRepository.getReferenceById(bookId);
-                info.setFileSize(fileSize);
-                info.setWordCount(wordCount);
+                updateBookAndInfo(
+                        bookId,
+                        finalEncryptedFileUrl,
+                        encryptedContentKey,
+                        finalThumbnailUrl,
+                        fileSize,
+                        wordCount);
             });
         } catch (InvalidEbookException ex) {
             throw ex;
@@ -125,8 +113,38 @@ public class BookProcessServiceImpl implements BookProcessService {
         }
     }
 
-    private EpubExtractData extractEpubData(Path path) throws IOException {
-        try (InputStream inputStream = Files.newInputStream(path)) {
+    private void updateBookAndInfo(
+            int id,
+            String encryptedFileUrl,
+            String encryptedContentKey,
+            String thumbnail,
+            long fileSize,
+            long wordCount) {
+        int updatedBook = bookRepository.updateInfo(
+                id, encryptedFileUrl, encryptedContentKey, thumbnail, BookStatus.COMPLETED);
+        int updatedInfo = bookInfoRepository.updateInfo(id, fileSize, wordCount);
+        if (updatedBook != 1 || updatedInfo != 1) {
+            throw new RuntimeException("Lỗi khi cập nhật thông tin sách");
+        }
+    }
+
+    private EncryptedData encryptAndUpload(Path cleanFile) {
+        Path encryptedFile = null;
+        try {
+            SecretKey contentKey = cryptoService.generateContentKey();
+            encryptedFile = cryptoService.encryptFile(cleanFile, contentKey);
+
+            String encryptedContentKey = cryptoService.encryptContentKey(contentKey);
+            String encryptedFileUrl = r2Service.uploadEncryptedEbook(encryptedFile);
+            return new EncryptedData(encryptedContentKey, encryptedFile, encryptedFileUrl);
+        } catch (RuntimeException ex) {
+            deleteTmpFile(encryptedFile);
+            throw ex;
+        }
+    }
+
+    private ExtractedData extractEpubData(Path file) throws IOException {
+        try (InputStream inputStream = Files.newInputStream(file)) {
             nl.siegmann.epublib.domain.Book book = new EpubReader().readEpub(inputStream);
             long wordCount = 0;
 
@@ -142,7 +160,7 @@ public class BookProcessServiceImpl implements BookProcessService {
             if (coverResource != null) {
                 coverImage = coverResource.getData();
             }
-            return new EpubExtractData(wordCount, coverImage);
+            return new ExtractedData(wordCount, coverImage);
         }
     }
 
@@ -154,5 +172,14 @@ public class BookProcessServiceImpl implements BookProcessService {
                 log.error("Lỗi xóa file tạm", ex);
             }
         }
+    }
+
+    private long validate(Path file) throws IOException {
+        long fileSize = Files.size(file);
+        if (fileSize <= 0 || fileSize > MAX_FILE_SIZE) {
+            throw new InvalidEbookException("Kích thước file không hợp lệ");
+        }
+        r2Service.validateEpub(file);
+        return fileSize;
     }
 }

@@ -58,6 +58,7 @@ const fetchSearchBooks = async (
   sort: string,
 ): Promise<PageResponse<Book>> => {
   const { data } = await Api.get<PageResponse<Book>>("/books", {
+    baseURL: `${process.env.BACKEND_URL}/api`,
     params: {
       ...filters,
       page: 0,
@@ -93,6 +94,7 @@ export const SearchPageContent = async ({
       books = data.content;
     } catch (requestError: unknown) {
       error = getApiErrorMessage(requestError, "Có lỗi khi tìm kiếm sách.");
+      console.log(requestError);
     }
   }
 

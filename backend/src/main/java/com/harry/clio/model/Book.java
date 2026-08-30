@@ -61,11 +61,11 @@ public class Book {
     @Builder.Default
     @Column(nullable = false)
     @ColumnDefault("0")
-    private Long ratingCount = 0L;
+    private long ratingCount = 0L;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(nullable = true, columnDefinition = "JSONB")
-    private List<BookAuthorResponse> authors;
+    private List<BookAuthorInfo> authors;
 
     @Builder.Default
     @Column(nullable = false, length = 20)

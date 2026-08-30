@@ -55,7 +55,7 @@ public class BookServiceImpl implements BookService {
             Set<Category> categories =
                     new HashSet<>(categoryRepository.findAllById(request.categoryIds()));
 
-            List<BookAuthorResponse> authorSnapshots = buildAuthorSnapshot(request.authors());
+            List<BookAuthorInfo> authorSnapshots = buildAuthorSnapshot(request.authors());
 
             Book book = bookRepository.save(bookMapper.toEntity(
                     request,
@@ -80,9 +80,9 @@ public class BookServiceImpl implements BookService {
                 bookWithInfo.book, bookInfoMapper.toResponse(bookWithInfo.info));
     }
 
-    private List<BookAuthorResponse> buildAuthorSnapshot(List<BookAuthorResponse> request) {
+    private List<BookAuthorInfo> buildAuthorSnapshot(List<BookAuthorInfo> request) {
         Set<Integer> authorIds =
-                request.stream().map(BookAuthorResponse::authorId).collect(Collectors.toSet());
+                request.stream().map(BookAuthorInfo::authorId).collect(Collectors.toSet());
 
         Map<Integer, Author> authors = authorRepository.findAllById(authorIds).stream()
                 .collect(Collectors.toMap(Author::getId, author -> author));
@@ -96,7 +96,7 @@ public class BookServiceImpl implements BookService {
                 .toList();
     }
 
-    private List<BookAuthor> buildBookAuthors(Book book, List<BookAuthorResponse> authorSnapshots) {
+    private List<BookAuthor> buildBookAuthors(Book book, List<BookAuthorInfo> authorSnapshots) {
         return authorSnapshots.stream()
                 .map(snapshot -> BookAuthor.builder()
                         .book(book)
@@ -106,13 +106,13 @@ public class BookServiceImpl implements BookService {
                 .toList();
     }
 
-    @Cacheable(cacheNames = "homepage-books", key = """
+    @Cacheable(cacheNames = "books", key = """
         'page=' + #pageable.pageNumber +
         '|size=' + #pageable.pageSize +
         '|sort=' +  #pageable.sort.toString()
         """, condition = """
             #pageable.paged &&
-            #pageable.pageNumber == 0 &&
+            (#pageable.pageNumber == 0 || #pageable.pageNumber == 1 || #pageable.pageNumber == 2) &&
             #pageable.pageSize == 12 &&
             #request.hasNoFilters()
             """)
@@ -120,17 +120,17 @@ public class BookServiceImpl implements BookService {
     public Page<BookListResponse> getAllBooks(BookFilterRequest request, Pageable pageable) {
         Specification<Book> spec = Specification.where(BookSpecification.hasType(BookType.SYSTEM)
                 .and(BookSpecification.hasStatus(BookStatus.COMPLETED))
-                .and(BookSpecification.isActive(true).and(BookSpecification.buildFilter(request))));
+                .and(BookSpecification.isActive(true))
+                .and(BookSpecification.buildFilter(request)));
 
-        Pageable normalizedPageable = applyNullHandling(pageable);
+        Pageable normalizedPageable = handleRatingNull(pageable);
         return bookRepository.findAll(spec, normalizedPageable).map(bookMapper::toListResponse);
     }
 
-    private Pageable applyNullHandling(Pageable pageable) {
+    private Pageable handleRatingNull(Pageable pageable) {
         if (pageable.isUnpaged()) {
             return pageable;
         }
-
         List<Sort.Order> orders = pageable.getSort().stream()
                 .map(order -> {
                     if ("rating".equals(order.getProperty())) {
@@ -142,7 +142,7 @@ public class BookServiceImpl implements BookService {
         return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(orders));
     }
 
-    @Cacheable(cacheNames = "book-details", key = "#bookId")
+    @Cacheable(cacheNames = "book-detail", key = "#bookId")
     @Override
     public BookDetailResponse getBookDetail(int bookId) {
         Book book = bookRepository
@@ -167,7 +167,7 @@ public class BookServiceImpl implements BookService {
                         BookSpecification.hasType(BookType.SYSTEM))
                 .and(BookSpecification.buildFilter(request));
 
-        Pageable normalizedPageable = applyNullHandling(pageable);
+        Pageable normalizedPageable = handleRatingNull(pageable);
 
         return bookRepository
                 .findAll(specification, normalizedPageable)
@@ -178,14 +178,13 @@ public class BookServiceImpl implements BookService {
     @Transactional
     @Caching(
             evict = {
-                @CacheEvict(cacheNames = "homepage-books", allEntries = true),
-                @CacheEvict(cacheNames = "book-details", key = "#bookId")
+                @CacheEvict(cacheNames = "books", allEntries = true),
+                @CacheEvict(cacheNames = "book-detail", key = "#bookId")
             })
     public void updateBookActive(int bookId, boolean active) {
         Book book = bookRepository
                 .findByIdAndType(bookId, BookType.SYSTEM)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sách hệ thống"));
-
         book.setActive(active);
     }
 }

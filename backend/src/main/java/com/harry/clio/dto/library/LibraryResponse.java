@@ -1,6 +1,6 @@
 package com.harry.clio.dto.library;
 
-import com.harry.clio.model.BookAuthorResponse;
+import com.harry.clio.model.BookAuthorInfo;
 import com.harry.clio.model.UserLibraryType;
 
 import java.util.List;
@@ -12,4 +12,4 @@ public record LibraryResponse(
         Integer bookId,
         String title,
         String thumbnail,
-        List<BookAuthorResponse> authors) {}
+        List<BookAuthorInfo> authors) {}

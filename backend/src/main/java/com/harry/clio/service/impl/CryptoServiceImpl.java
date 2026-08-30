@@ -41,9 +41,9 @@ public class CryptoServiceImpl implements CryptoService {
     private final SecretKey masterKey;
     private final LicenseProperties licenseProps;
 
-    private static final int AES_KEY_LENGTH = 256;
+    private static final int AES_KEY_LENGTH = 32 * 8;
     private static final int GCM_NONCE_LENGTH = 12;
-    private static final int GCM_TAG_LENGTH = 128;
+    private static final int GCM_TAG_LENGTH = 16 * 8;
 
     @Override
     public SecretKey generateContentKey() {

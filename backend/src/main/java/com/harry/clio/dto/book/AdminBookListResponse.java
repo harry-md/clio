@@ -1,6 +1,6 @@
 package com.harry.clio.dto.book;
 
-import com.harry.clio.model.BookAuthorResponse;
+import com.harry.clio.model.BookAuthorInfo;
 import com.harry.clio.model.BookStatus;
 
 import java.math.BigDecimal;
@@ -14,7 +14,7 @@ public record AdminBookListResponse(
         String thumbnail,
         Double rating,
         Long ratingCount,
-        List<BookAuthorResponse> authors,
+        List<BookAuthorInfo> authors,
         BookStatus status,
         boolean active,
         Instant createdAt) {}

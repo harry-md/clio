@@ -86,7 +86,6 @@ public class OrderServiceImpl implements OrderService {
 
         List<Book> books = bookRepository.findAllPurchasableByIdIn(
                 bookIds, BookStatus.COMPLETED, BookType.SYSTEM);
-
         if (books.size() != bookIds.size()) {
             throw new BadRequestException("Có sách không thể mua");
         }
@@ -152,7 +151,6 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository
                 .findByIdForUpdate(Integer.parseInt(session.getClientReferenceId()))
                 .orElseThrow(() -> new InvalidWebhookException("Không tìm thấy đơn hàng"));
-
         if (order.getStatus() != OrderStatus.PENDING) {
             return;
         }
@@ -205,6 +203,7 @@ public class OrderServiceImpl implements OrderService {
 
         List<UserLibrary> existingLibraries =
                 userLibraryRepository.findAllByUserIdAndBookIdIn(user.getId(), alreadyInLibBookIds);
+
         List<Integer> existingBookIds = existingLibraries.stream()
                 .map(library -> {
                     if (library.getType() == UserLibraryType.SUBSCRIBED) {

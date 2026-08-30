@@ -34,6 +34,7 @@ public class PaymentServiceImpl implements PaymentService {
                     .setMode(SessionCreateParams.Mode.PAYMENT)
                     .setSuccessUrl(stripeProps.successUrl())
                     .setCancelUrl(stripeProps.cancelUrl())
+                    .setExpiresAt((System.currentTimeMillis() / 1000) + 1800)
                     .setClientReferenceId(orderId.toString())
                     .putMetadata("orderId", orderId.toString())
                     .addAllLineItem(lineItems)

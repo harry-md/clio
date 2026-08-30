@@ -5,8 +5,8 @@ spring:
   cache:
     type: redis
     cache-names:
-      - homepage-books
-      - book-details
+      - books
+      - book-detail
       - subscription-plans
       - categories
       - authors

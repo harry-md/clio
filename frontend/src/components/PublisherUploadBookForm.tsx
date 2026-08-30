@@ -345,18 +345,6 @@ export const PublisherBookUploadForm = () => {
 
   return (
     <form className="mt-6 space-y-8" onSubmit={handleSubmit}>
-      {(dataError || submitError) && (
-        <Alert variant="destructive">
-          <AlertDescription>{dataError || submitError}</AlertDescription>
-        </Alert>
-      )}
-
-      {success && (
-        <Alert>
-          <AlertDescription>{success}</AlertDescription>
-        </Alert>
-      )}
-
       <section className="grid gap-6 md:grid-cols-2">
         <Field className="md:col-span-2">
           <FieldLabel htmlFor="book-file">File</FieldLabel>
@@ -634,6 +622,17 @@ export const PublisherBookUploadForm = () => {
           </div>
         )}
       </section>
+
+      {success && (
+        <Alert>
+          <AlertDescription>{success}</AlertDescription>
+        </Alert>
+      )}
+      {(dataError || submitError) && (
+        <Alert variant="destructive">
+          <AlertDescription>{dataError || submitError}</AlertDescription>
+        </Alert>
+      )}
 
       <Button type="submit" size="lg" disabled={submitting}>
         {submitting && <Spinner data-icon="inline-start" />}
