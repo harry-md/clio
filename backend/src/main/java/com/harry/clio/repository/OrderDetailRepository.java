@@ -16,5 +16,5 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Intege
         LEFT JOIN FETCH od.subscriptionPlan
         WHERE od.order.id = :orderId
         """)
-    List<OrderDetail> findAllWithItemByOrderId(@Param("orderId") Integer orderId);
+    List<OrderDetail> findAllWithItemByOrderId(@Param("orderId") int orderId);
 }

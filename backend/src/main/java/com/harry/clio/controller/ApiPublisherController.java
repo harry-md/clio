@@ -38,11 +38,4 @@ public class ApiPublisherController {
         return ResponseEntity.ok(
                 statsService.getPublisherDashboard(principal.getId(), year, month));
     }
-
-    @PreAuthorize("hasRole('PUBLISHER')")
-    @PatchMapping("/current-publisher")
-    public ResponseEntity<PublisherDto> update(
-            @AuthenticationPrincipal CustomUser principal, @RequestBody PublisherDto publisherDto) {
-        return ResponseEntity.ok(publisherService.updatePublisher(principal.getId(), publisherDto));
-    }
 }

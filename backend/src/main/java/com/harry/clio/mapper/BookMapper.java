@@ -21,7 +21,7 @@ public interface BookMapper {
             CreateBookMetadataRequest request,
             Publisher publisher,
             String fileUrl,
-            List<BookAuthorResponse> authorList,
+            List<BookAuthorInfo> authorList,
             Set<Category> categories);
 
     BookListResponse toListResponse(Book book);

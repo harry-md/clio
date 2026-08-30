@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.io.Serializable;
 
-public record BookAuthorResponse(
+public record BookAuthorInfo(
         @NotNull(message = "Id tác giả không được để trống") Integer authorId,
 
         String authorFullname,

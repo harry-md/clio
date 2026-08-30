@@ -1,6 +1,6 @@
 package com.harry.clio.dto.book;
 
-import com.harry.clio.model.BookAuthorResponse;
+import com.harry.clio.model.BookAuthorInfo;
 import com.harry.clio.model.Language;
 
 import jakarta.validation.Valid;
@@ -21,7 +21,7 @@ public record CreateBookMetadataRequest(
         BigDecimal price,
 
         @Valid @NotEmpty(message = "Tác giả không được để trống")
-        List<BookAuthorResponse> authors,
+        List<BookAuthorInfo> authors,
 
         @NotEmpty(message = "Danh mục sách không được để trống")
         Set<@NotNull Integer> categoryIds,

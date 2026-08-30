@@ -25,7 +25,7 @@ public class SubscriptionPlan {
     private BigDecimal price;
 
     @Column(nullable = false)
-    private Integer duration = 1;
+    private int duration = 1;
 
     @Column(nullable = true, length = 500)
     private String description;

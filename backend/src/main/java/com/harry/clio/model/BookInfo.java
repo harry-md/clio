@@ -40,11 +40,11 @@ public class BookInfo {
 
     @Builder.Default
     @Column(nullable = false)
-    private Long fileSize = 0L;
+    private long fileSize = 0L;
 
     @Builder.Default
     @Column(nullable = false)
-    private Long wordCount = 0L;
+    private long wordCount = 0L;
 
     @Column(nullable = true)
     private String isbn;

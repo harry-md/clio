@@ -15,7 +15,15 @@ import java.util.Optional;
 public interface SubscriptionRepository extends JpaRepository<Subscription, Integer> {
     boolean existsByUserIdAndStatus(Integer userId, SubscriptionStatus status);
 
-    Optional<Subscription> findByUserIdAndStatus(Integer userId, SubscriptionStatus status);
+    @Query("""
+        SELECT s
+        FROM Subscription s
+        WHERE s.user.id = :userId AND s.status = :status AND s.endDate > :endDate
+        """)
+    Optional<Subscription> findActiveSubscriptionByUserId(
+            @Param("userId") int userId,
+            @Param("status") SubscriptionStatus status,
+            LocalDate endDate);
 
     @Transactional
     @Modifying

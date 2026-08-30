@@ -1,6 +1,6 @@
 package com.harry.clio.dto.book;
 
-import com.harry.clio.model.BookAuthorResponse;
+import com.harry.clio.model.BookAuthorInfo;
 import com.harry.clio.model.BookType;
 
 import java.io.Serializable;
@@ -15,5 +15,5 @@ public record BookListResponse(
         BookType type,
         Double rating,
         Long ratingCount,
-        List<BookAuthorResponse> authors)
+        List<BookAuthorInfo> authors)
         implements Serializable {}

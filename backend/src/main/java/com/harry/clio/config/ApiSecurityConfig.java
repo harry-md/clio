@@ -75,6 +75,8 @@ public class ApiSecurityConfig {
                         .authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/books/upload-url")
                         .authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/books/*/reviews")
+                        .permitAll()
                         .requestMatchers("/api/books/**")
                         .permitAll()
                         .requestMatchers("/api/subscription-plans/**")

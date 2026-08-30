@@ -241,15 +241,16 @@ const encryptClockState = async (
   const iv = new ArrayBuffer(CLOCK_IV_LENGTH);
   crypto.getRandomValues(new Uint8Array(iv));
 
-  const encodedPayload = new TextEncoder().encode(
-    JSON.stringify({
-      userId,
-      bookId,
-      lastSeenAt,
-    }),
+  const plaintext = copyToArrayBuffer(
+    new TextEncoder().encode(
+      JSON.stringify({
+        userId,
+        bookId,
+        lastSeenAt,
+      }),
+    ),
   );
 
-  const plaintext = copyToArrayBuffer(encodedPayload);
   const ciphertext = await crypto.subtle.encrypt(
     {
       name: "AES-GCM",
@@ -409,12 +410,12 @@ export type LibraryLicense =
       exp: number;
     });
 
-async function verifyLicenseClaims(
+const verifyLicenseClaims = async (
   license: string,
   expectedUserId: number,
   expectedBookId: number,
-): Promise<LibraryLicense> {
-  const publicKeyBase64 = process.env.LICENSE_KEY;
+): Promise<LibraryLicense> => {
+  const publicKeyBase64 = process.env.NEXT_PUBLIC_LICENSE_KEY;
   if (!publicKeyBase64) {
     throw new Error("Không tìm thấy license public key");
   }
@@ -480,7 +481,7 @@ async function verifyLicenseClaims(
     offlineUntil: payload.offlineUntil,
     exp: payload.exp,
   };
-}
+};
 
 interface VerifyLicenseResult {
   license: LibraryLicense;
@@ -526,7 +527,7 @@ export const verifyLicense = async (
 
   const effectiveNow = Math.max(deviceNow, trustedAt);
   if (effectiveNow >= license.offlineUntil || effectiveNow >= license.exp) {
-    throw new Error("Subscription license đã hết hạn");
+    throw new Error("License đã hết hạn");
   }
 
   const updatedClockState = await encryptClockState(
