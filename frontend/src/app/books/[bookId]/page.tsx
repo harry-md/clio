@@ -1,8 +1,8 @@
 import { ArrowLeftIcon } from "lucide-react";
-import { cacheLife } from "next/cache";
 import Image from "next/image";
 import Link from "next/link";
 import { BookActions } from "@/components/BookActions";
+import { BookReviews } from "@/components/BookReviews";
 import { Header } from "@/components/Header";
 import { Rating } from "@/components/Rating";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -20,6 +20,13 @@ const langMap: Record<string, string> = {
   ZH: "Tiếng Trung",
   KO: "Tiếng Hàn",
   ES: "Tiếng Tây Ban Nha",
+} as const;
+
+const roleMap: Record<string, string> = {
+  AUTHOR: "Tác giả",
+  COAUTHOR: "Đồng tác giả",
+  ARTIST: "Minh họa tranh",
+  TRANSLATOR: "Dịch giả",
 };
 
 interface BookDetailPageProps {
@@ -45,9 +52,6 @@ const formatFileSize = (bytes: number) => {
 };
 
 const fetchBookDetail = async (bookId: string): Promise<BookDetail | null> => {
-  "use cache";
-  cacheLife({ revalidate: 300 });
-
   const res = await fetch(`${process.env.BACKEND_URL}/api/books/${bookId}`);
 
   if (res.status === 404) {
@@ -178,7 +182,7 @@ const BookDetailPage = async ({ params }: BookDetailPageProps) => {
                           }}
                           className="text-link transition hover:text-foreground hover:underline"
                         >
-                          {author.authorFullname}
+                          {roleMap[author.role]} {author.authorFullname}
                         </Link>
 
                         {index < book.authors.length - 1 && ", "}
@@ -264,6 +268,7 @@ const BookDetailPage = async ({ params }: BookDetailPageProps) => {
                 </dl>
               </aside>
             </section>
+            <BookReviews bookId={book.id} />
           </>
         )}
       </div>

@@ -19,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Optional;
 
@@ -52,7 +53,7 @@ public class UserLibraryServiceImpl implements UserLibraryService {
         }
 
         Book book = bookRepository
-                .findAddableBookById(bookId, BookStatus.COMPLETED, BookType.SYSTEM)
+                .findAvailableBookById(bookId, BookStatus.COMPLETED, BookType.SYSTEM)
                 .orElseThrow(
                         () -> new ResourceNotFoundException("Sách không thể thêm vào thư viện"));
 
@@ -108,8 +109,9 @@ public class UserLibraryServiceImpl implements UserLibraryService {
 
             case SUBSCRIBED -> {
                 Subscription sub = subscriptionRepository
-                        .findByUserIdAndStatus(userId, SubscriptionStatus.ACTIVE)
-                        .orElseThrow(() -> new BadRequestException("Chưa có gói đăng ký hợp lệ"));
+                        .findActiveSubscriptionByUserId(
+                                userId, SubscriptionStatus.ACTIVE, LocalDate.now(ZoneId.of(zoneId)))
+                        .orElseThrow(() -> new BadRequestException("Gói đọc sách đã hết hạn"));
 
                 license = cryptoService.createLicense(
                         userId,

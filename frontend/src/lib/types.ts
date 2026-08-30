@@ -91,7 +91,6 @@ export interface AuthorOption {
   id: number;
   fullName: string;
   biography: string | null;
-  avatar: string;
   verified: boolean;
 }
 
@@ -99,4 +98,13 @@ export interface PresignedUpload {
   objectKey: string;
   uploadUrl: string;
   contentType: string;
+}
+
+export interface Review {
+  id: number;
+  userId: number;
+  username: string;
+  avatar: string | null;
+  rating: number;
+  comment: string | null;
 }

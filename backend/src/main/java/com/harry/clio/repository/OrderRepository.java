@@ -28,7 +28,7 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
         HAVING COUNT(od.id) = :size AND (SELECT COUNT(od2.id) FROM OrderDetail od2 WHERE od2.order = o) = :size
         """)
     Optional<Order> findWithDetailsByUserIdAndBookIdsIn(
-            @Param("userId") Integer userId,
+            @Param("userId") int userId,
             @Param("bookIds") List<Integer> bookIds,
             @Param("status") OrderStatus status,
             @Param("size") long size);
@@ -40,7 +40,7 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
         WHERE o.user.id = :userId AND o.status = :status AND od.type = :type
         """)
     Optional<Order> findSubOrderWithDetailByUserId(
-            @Param("userId") Integer userId,
+            @Param("userId") int userId,
             @Param("status") OrderStatus status,
             @Param("type") DetailType type);
 }

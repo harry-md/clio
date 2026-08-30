@@ -160,13 +160,29 @@ const applyReaderSettings = (
 
     "body *": {
       color: `${palette.foreground} !important`,
+      "font-size": `${settings.fontSize}px !important`,
       "font-family": `${font.family} !important`,
       "user-select": "none !important",
       "-webkit-user-select": "none !important",
       "-webkit-touch-callout": "none !important",
     },
+    h1: {
+      "font-size": `${settings.fontSize * 2}px !important`,
+    },
 
+    h2: {
+      "font-size": `${settings.fontSize * 1.6}px !important`,
+    },
+
+    h3: {
+      "font-size": `${settings.fontSize * 1.3}px !important`,
+    },
+
+    "small, sup, sub": {
+      "font-size": `${settings.fontSize * 0.75}px !important`,
+    },
     "p, li, blockquote, dd, dt, td": {
+      "font-size": `${settings.fontSize} !important`,
       "font-weight": `${settings.fontWeight} !important`,
       "line-height": `${settings.lineHeight} !important`,
     },

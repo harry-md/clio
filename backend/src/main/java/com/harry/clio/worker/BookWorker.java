@@ -21,7 +21,7 @@ public class BookWorker implements SmartLifecycle {
     private final BookProcessService bookProcessService;
     private final TaskExecutor bookExecutor;
 
-    private boolean running = false;
+    private volatile boolean running = false;
 
     @Override
     public void start() {

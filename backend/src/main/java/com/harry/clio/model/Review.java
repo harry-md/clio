@@ -2,6 +2,13 @@ package com.harry.clio.model;
 
 import jakarta.persistence.*;
 
+import lombok.*;
+
+@Builder
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
 @Table(
         name = "reviews",
@@ -24,7 +31,7 @@ public class Review {
     private Book book;
 
     @Column(name = "rating", nullable = false)
-    private Integer rating;
+    private int rating;
 
     @Column(name = "comment", length = 500)
     private String comment;

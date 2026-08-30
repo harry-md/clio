@@ -8,54 +8,90 @@ import com.harry.clio.model.Category;
 
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.Predicate;
 
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaExpression;
+import org.hibernate.query.criteria.JpaJsonExistsExpression;
 import org.springframework.data.jpa.domain.Specification;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.math.BigDecimal;
 
 public class BookSpecification {
     public static Specification<Book> buildFilter(BookFilterRequest request) {
+        return Specification.allOf(
+                searchKeyword(request.keyword()),
+                fromPrice(request.fromPrice()),
+                toPrice(request.toPrice()),
+                fromRating(request.fromRating()),
+                toRating(request.toRating()),
+                hasCategoryId(request.categoryId()),
+                hasAuthorId(request.authorId()));
+    }
+
+    public static Specification<Book> searchKeyword(String keyword) {
+        if (keyword == null || keyword.isBlank()) {
+            return Specification.unrestricted();
+        }
+
         return (root, query, cb) -> {
-            List<Predicate> predicates = new ArrayList<>();
-            if (request.keyword() != null && !request.keyword().isBlank()) {
-                Expression<String> authorsText = ((HibernateCriteriaBuilder) cb)
-                        .cast((JpaExpression<Object>) root.get("authors"), String.class);
+            Expression<String> authorText = ((HibernateCriteriaBuilder) cb)
+                    .cast((JpaExpression<Object>) root.get("authors"), String.class);
 
-                String keyword = String.format("%%%s%%", request.keyword().toLowerCase());
-                predicates.add(cb.or(
-                        cb.like(cb.lower(root.get("title")), keyword),
-                        cb.like(cb.lower(authorsText), keyword)));
-            }
-            if (request.fromPrice() != null) {
-                predicates.add(cb.greaterThanOrEqualTo(root.get("price"), request.fromPrice()));
-            }
-            if (request.toPrice() != null) {
-                predicates.add(cb.lessThanOrEqualTo(root.get("price"), request.toPrice()));
-            }
-            if (request.fromRating() != null) {
-                predicates.add(cb.greaterThanOrEqualTo(root.get("rating"), request.fromRating()));
-            }
-            if (request.toRating() != null) {
-                predicates.add(cb.lessThanOrEqualTo(root.get("rating"), request.toRating()));
-            }
-            if (request.categoryId() != null) {
-                Join<Book, Category> categoryJoin = root.join("categories");
-                predicates.add(cb.equal(categoryJoin.get("id"), request.categoryId()));
-            }
+            String pattern = String.format("%%%s%%", keyword.toLowerCase());
+            return cb.or(
+                    cb.like(cb.lower(root.get("title")), pattern),
+                    cb.like(cb.lower(authorText), pattern));
+        };
+    }
 
-            if (request.authorId() != null) {
-                HibernateCriteriaBuilder hcb = (HibernateCriteriaBuilder) cb;
-                var authorExists = hcb.jsonExists(
-                                root.get("authors"), "$[*] ? (@.authorId == $authorId)")
-                        .passing("authorId", cb.literal(request.authorId()));
-                predicates.add(cb.isTrue(authorExists));
-            }
+    public static Specification<Book> fromPrice(BigDecimal fromPrice) {
+        if (fromPrice == null) {
+            return Specification.unrestricted();
+        }
+        return (root, query, cb) -> cb.greaterThanOrEqualTo(root.get("price"), fromPrice);
+    }
 
-            return cb.and(predicates.toArray(Predicate[]::new));
+    public static Specification<Book> toPrice(BigDecimal toPrice) {
+        if (toPrice == null) {
+            return Specification.unrestricted();
+        }
+        return (root, query, cb) -> cb.lessThanOrEqualTo(root.get("price"), toPrice);
+    }
+
+    public static Specification<Book> fromRating(Integer fromRating) {
+        if (fromRating == null) {
+            return Specification.unrestricted();
+        }
+        return (root, query, cb) -> cb.greaterThanOrEqualTo(root.get("rating"), fromRating);
+    }
+
+    public static Specification<Book> toRating(Integer toRating) {
+        if (toRating == null) {
+            return Specification.unrestricted();
+        }
+        return (root, query, cb) -> cb.lessThanOrEqualTo(root.get("rating"), toRating);
+    }
+
+    public static Specification<Book> hasCategoryId(Integer categoryId) {
+        if (categoryId == null) {
+            return Specification.unrestricted();
+        }
+        return (root, query, cb) -> {
+            Join<Book, Category> categoryJoin = root.join("categories");
+            return cb.equal(categoryJoin.get("id"), categoryId);
+        };
+    }
+
+    public static Specification<Book> hasAuthorId(Integer authorId) {
+        if (authorId == null) {
+            return Specification.unrestricted();
+        }
+        return (root, query, cb) -> {
+            HibernateCriteriaBuilder hcb = (HibernateCriteriaBuilder) cb;
+            JpaJsonExistsExpression expression = hcb.jsonExists(
+                            root.get("authors"), "$[*] ? (@.authorId == $authorId)")
+                    .passing("authorId", cb.literal(authorId));
+            return cb.isTrue(expression);
         };
     }
 
