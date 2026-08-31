@@ -88,6 +88,8 @@ stripe:
   cancel-url: ${STRIPE_CANCEL_URL}
 
 clio:
+  reading-progress:
+    flush-delay: 5m
   auth:
     cookie-secure: ${COOKIE_SECURE:false}
   publisher-share: 0.7

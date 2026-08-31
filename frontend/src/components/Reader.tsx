@@ -1,7 +1,8 @@
 "use client";
 
-import type { Contents, Book as EpubBook, Rendition } from "epubjs";
+import type { Contents, Book as EpubBook, Location, Rendition } from "epubjs";
 import { ArrowLeft, Settings2 } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import {
   DEFAULT_READER_SETTINGS,
@@ -13,11 +14,19 @@ import {
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { useAuth } from "@/context/AuthContext";
+import { Api, getApiErrorMessage } from "@/lib/api";
 import {
+  applyRemoteReadingProgress,
   BOOK_STORE,
+  type BookData,
   decryptFile,
   get,
-  save,
+  getOrCreateKey,
+  installRefreshedLicense,
+  LicenseRefreshRequiredError,
+  markReadingProgressSynced,
+  updateLocalReadingProgress,
+  updateStoredClockState,
   verifyLicense,
 } from "@/lib/offline";
 
@@ -39,6 +48,15 @@ interface ReaderFontConfig {
   googleStylesheet?: string;
 }
 
+interface LicenseResponse {
+  license: string;
+}
+
+interface ReadingProgressResponse {
+  cfiPosition: string | null;
+}
+
+const PROGRESS_DEBOUNCE_MS = 2_000;
 const READER_SETTINGS_STORAGE_KEY = "clio-reader-settings";
 
 const GOOGLE_READER_FONTS = new Set<ReaderFontFamily>([
@@ -303,6 +321,120 @@ export const Reader = ({ bookId }: ReaderProps) => {
     let accumulatedWheelDelta = 0;
     let wheelResetTimer: ReturnType<typeof setTimeout> | null = null;
 
+    let progressSyncTimer: ReturnType<typeof setTimeout> | null = null;
+    let latestCfiPosition: string | null = null;
+    let pendingRemoteCfiPosition: string | null = null;
+
+    let localProgressQueue: Promise<void> = Promise.resolve();
+    let remoteProgressQueue: Promise<void> = Promise.resolve();
+
+    const pushReadingProgress = async (cfiPosition: string) => {
+      await Api.put<ReadingProgressResponse>(`/libraries/${bookId}/progress`, {
+        cfiPosition,
+      });
+
+      await markReadingProgressSynced(userId, bookId, cfiPosition);
+    };
+
+    const enqueueRemoteProgress = (cfiPosition: string) => {
+      remoteProgressQueue = remoteProgressQueue
+        .then(async () => {
+          await localProgressQueue;
+          await pushReadingProgress(cfiPosition);
+        })
+        .catch((error: unknown) => {
+          console.warn("Không đồng bộ được tiến độ đọc", error);
+        });
+    };
+
+    const flushPendingRemoteProgress = () => {
+      if (!pendingRemoteCfiPosition || !user || !navigator.onLine) {
+        return;
+      }
+
+      const cfiPosition = pendingRemoteCfiPosition;
+      pendingRemoteCfiPosition = null;
+
+      enqueueRemoteProgress(cfiPosition);
+    };
+
+    const scheduleRemoteProgress = (cfiPosition: string) => {
+      if (!user || !navigator.onLine) {
+        return;
+      }
+
+      pendingRemoteCfiPosition = cfiPosition;
+
+      if (progressSyncTimer) {
+        clearTimeout(progressSyncTimer);
+      }
+
+      progressSyncTimer = setTimeout(() => {
+        progressSyncTimer = null;
+        flushPendingRemoteProgress();
+      }, PROGRESS_DEBOUNCE_MS);
+    };
+
+    const handleRelocated = (location: Location) => {
+      const cfiPosition = location.start.cfi;
+
+      console.debug("[reading-progress] relocated", {
+        previousCfi: latestCfiPosition,
+        startCfi: location.start.cfi,
+        endCfi: location.end.cfi,
+        displayedPage: location.start.displayed.page,
+        displayedTotal: location.start.displayed.total,
+      });
+
+      if (!cfiPosition || cfiPosition === latestCfiPosition) {
+        return;
+      }
+
+      latestCfiPosition = cfiPosition;
+
+      localProgressQueue = localProgressQueue
+        .then(async () => {
+          await updateLocalReadingProgress(userId, bookId, cfiPosition);
+        })
+        .catch((error: unknown) => {
+          console.error("Không lưu được CFI vào IndexedDB", error);
+        });
+
+      scheduleRemoteProgress(cfiPosition);
+    };
+
+    const reconcileReadingProgress = async (
+      bookData: BookData,
+    ): Promise<BookData> => {
+      if (!user || !navigator.onLine) {
+        return bookData;
+      }
+
+      try {
+        if (bookData.progressDirty && bookData.cfiPosition) {
+          await pushReadingProgress(bookData.cfiPosition);
+
+          return (await get(BOOK_STORE, [userId, bookId])) ?? bookData;
+        }
+        const { data } = await Api.get<ReadingProgressResponse>(
+          `/libraries/${bookId}/progress`,
+        );
+
+        if (!data.cfiPosition) {
+          return bookData;
+        }
+
+        return await applyRemoteReadingProgress(
+          userId,
+          bookId,
+          data.cfiPosition,
+        );
+      } catch (error: unknown) {
+        console.warn("Không đồng bộ được tiến độ ban đầu", error);
+        return bookData;
+      }
+    };
+
     const wheelHandlers = new Map<Document, (event: WheelEvent) => void>();
 
     const turnPage = async (direction: PageDirection) => {
@@ -402,6 +534,7 @@ export const Reader = ({ bookId }: ReaderProps) => {
     const cleanupInteractions = () => {
       window.removeEventListener("keydown", handleKeyDown);
       activeRendition?.off("keydown", handleKeyDown);
+      activeRendition?.off("relocated", handleRelocated);
 
       for (const [epubDocument, handleWheel] of wheelHandlers) {
         epubDocument.removeEventListener("wheel", handleWheel);
@@ -416,6 +549,13 @@ export const Reader = ({ bookId }: ReaderProps) => {
       if (navigationUnlockTimer) {
         clearTimeout(navigationUnlockTimer);
       }
+
+      if (progressSyncTimer) {
+        clearTimeout(progressSyncTimer);
+        progressSyncTimer = null;
+      }
+
+      flushPendingRemoteProgress();
     };
 
     const openBook = async () => {
@@ -423,28 +563,69 @@ export const Reader = ({ bookId }: ReaderProps) => {
         setPhase("loading");
         setError("");
 
-        const bookData = await get(BOOK_STORE, [userId, bookId]);
-
+        let bookData = await get(BOOK_STORE, [userId, bookId]);
         if (!bookData) {
           throw new Error("Sách chưa được tải xuống.");
         }
 
-        const { license, updatedClockState } = await verifyLicense(
-          bookData,
-          userId,
-          bookId,
-        );
+        let verification: Awaited<ReturnType<typeof verifyLicense>>;
+        try {
+          verification = await verifyLicense(bookData, userId, bookId);
+        } catch (verificationError: unknown) {
+          const canRefresh =
+            verificationError instanceof LicenseRefreshRequiredError &&
+            user !== null &&
+            navigator.onLine;
 
-        if (updatedClockState !== undefined) {
-          await save(BOOK_STORE, {
-            ...bookData,
-            clockState: updatedClockState,
-          });
+          if (!canRefresh) {
+            throw verificationError;
+          }
+
+          const accountKey = await getOrCreateKey(user.id);
+
+          let refreshedLicense: string;
+
+          try {
+            const { data } = await Api.post<LicenseResponse>(
+              `/libraries/${bookId}/license/refresh`,
+              {
+                publicKeySpki: accountKey.publicKeySpki,
+              },
+            );
+
+            refreshedLicense = data.license;
+          } catch (refreshError: unknown) {
+            throw new Error(
+              getApiErrorMessage(refreshError, "Không thể làm mới license."),
+            );
+          }
+
+          const refreshed = await installRefreshedLicense(
+            userId,
+            bookId,
+            refreshedLicense,
+          );
+
+          bookData = refreshed.bookData;
+
+          verification = {
+            license: refreshed.license,
+          };
         }
+
+        if (verification.updatedClockState) {
+          bookData = await updateStoredClockState(
+            userId,
+            bookId,
+            verification.updatedClockState,
+          );
+        }
+
+        bookData = await reconcileReadingProgress(bookData);
 
         const originFile = await decryptFile(
           userId,
-          license.wrappedContentKey,
+          verification.license.wrappedContentKey,
           bookData.encryptedFile,
         );
 
@@ -486,7 +667,18 @@ export const Reader = ({ bookId }: ReaderProps) => {
         rendition.on("keydown", handleKeyDown);
         window.addEventListener("keydown", handleKeyDown);
 
-        await rendition.display();
+        latestCfiPosition = bookData.cfiPosition ?? null;
+        rendition.on("relocated", handleRelocated);
+
+        if (bookData.cfiPosition) {
+          try {
+            await rendition.display(bookData.cfiPosition);
+          } catch {
+            await rendition.display();
+          }
+        } else {
+          await rendition.display();
+        }
 
         if (!disposed) {
           setPhase("ready");
@@ -519,18 +711,18 @@ export const Reader = ({ bookId }: ReaderProps) => {
       renditionRef.current = null;
       readerElementRef.current?.replaceChildren();
     };
-  }, [bookId, initialized, userId]);
+  }, [bookId, initialized, user, userId]);
 
   return (
     <section className="relative flex h-dvh w-full flex-col overflow-hidden bg-background text-foreground">
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-background px-4 lg:px-8">
-        <a
+        <Link
           href="/library"
           className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground transition hover:text-foreground"
         >
           <ArrowLeft className="size-4" />
           Thư viện
-        </a>
+        </Link>
 
         <Button
           type="button"

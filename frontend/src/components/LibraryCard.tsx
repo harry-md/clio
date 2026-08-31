@@ -1,5 +1,6 @@
 import { DownloadIcon } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import type { LibraryItem, UserLibraryType } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
@@ -32,7 +33,7 @@ const LibraryCard = ({
 
   return (
     <article className="group min-w-0">
-      <a
+      <Link
         href={`/read?bookId=${library.bookId}`}
         className="group block min-w-0 cursor-pointer"
       >
@@ -86,7 +87,7 @@ const LibraryCard = ({
             {authorNames}
           </p>
         </div>
-      </a>
+      </Link>
 
       {!downloaded && (
         <div className="mt-3 border-t border-border pt-3">

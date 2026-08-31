@@ -3,6 +3,7 @@ package com.harry.clio.service.impl;
 import com.harry.clio.dto.book.DownloadRequest;
 import com.harry.clio.dto.book.DownloadResponse;
 import com.harry.clio.dto.library.LibraryResponse;
+import com.harry.clio.dto.library.LicenseResponse;
 import com.harry.clio.exception.BadRequestException;
 import com.harry.clio.exception.ResourceNotFoundException;
 import com.harry.clio.mapper.UserLibraryMapper;
@@ -43,7 +44,7 @@ public class UserLibraryServiceImpl implements UserLibraryService {
     @Override
     public LibraryResponse addToLibrary(Integer userId, Integer bookId) {
         Optional<UserLibrary> existingLibrary =
-                userLibraryRepository.findByUserIdAndBookId(userId, bookId);
+                userLibraryRepository.findWithBookByUserIdAndBookId(userId, bookId);
         if (existingLibrary.isPresent()) {
             return userLibraryMapper.toResponse(existingLibrary.get());
         }
@@ -88,42 +89,59 @@ public class UserLibraryServiceImpl implements UserLibraryService {
     @Override
     public Page<LibraryResponse> getUserLibraries(int userId, Pageable pageable) {
         return userLibraryRepository
-                .findAllByUserId(userId, pageable)
+                .findAllWithBookByUserId(userId, pageable)
                 .map(userLibraryMapper::toResponse);
+    }
+
+    private UserLibrary getLibraryOrThrow(int userId, int bookId) {
+        return userLibraryRepository
+                .findWithBookByUserIdAndBookId(userId, bookId)
+                .orElseThrow(() -> new BadRequestException("Chưa có sách này trong thư viện"));
     }
 
     @Override
     public DownloadResponse downloadBook(int userId, DownloadRequest request) {
-        int bookId = request.bookId();
-        UserLibrary library = userLibraryRepository
-                .findByUserIdAndBookId(userId, bookId)
-                .orElseThrow(() -> new BadRequestException("Chưa có sách này trong thư viện"));
+        UserLibrary library = getLibraryOrThrow(userId, request.bookId());
 
+        String license = createCurrentLicense(userId, library, request.publicKeySpki());
+        String downloadUrl = r2Service.getPresignedUrl(library.getBook().getEncryptedFileUrl());
+        return new DownloadResponse(downloadUrl, license);
+    }
+
+    @Override
+    public LicenseResponse refreshLicense(int userId, int bookId, String publicKeySpki) {
+        UserLibrary library = getLibraryOrThrow(userId, bookId);
+        return new LicenseResponse(createCurrentLicense(userId, library, publicKeySpki));
+    }
+
+    private String createCurrentLicense(int userId, UserLibrary library, String publicKeySpki) {
         Book book = library.getBook();
+        int bookId = book.getId();
 
-        String license;
         switch (library.getType()) {
-            case PURCHASED ->
-                license = cryptoService.createLicense(
-                        userId, bookId, book.getEncryptedContentKey(), request.publicKeySpki());
+            case PURCHASED -> {
+                return cryptoService.createLicense(
+                        userId, bookId, book.getEncryptedContentKey(), publicKeySpki);
+            }
 
             case SUBSCRIBED -> {
-                Subscription sub = subscriptionRepository
+                ZoneId zone = ZoneId.of(zoneId);
+                LocalDate currentDate = LocalDate.now(zone);
+
+                Subscription subscription = subscriptionRepository
                         .findActiveSubscriptionByUserId(
-                                userId, SubscriptionStatus.ACTIVE, LocalDate.now(ZoneId.of(zoneId)))
+                                userId, SubscriptionStatus.ACTIVE, currentDate)
                         .orElseThrow(() -> new BadRequestException("Gói đọc sách đã hết hạn"));
 
-                license = cryptoService.createLicense(
+                return cryptoService.createLicense(
                         userId,
                         bookId,
-                        sub.getId(),
-                        sub.getEndDate().atStartOfDay(ZoneId.of(zoneId)).toInstant(),
+                        subscription.getId(),
+                        subscription.getEndDate().atStartOfDay(zone).toInstant(),
                         book.getEncryptedContentKey(),
-                        request.publicKeySpki());
+                        publicKeySpki);
             }
             default -> throw new BadRequestException("Sách không hợp lệ");
         }
-        String downloadUrl = r2Service.getPresignedUrl(book.getEncryptedFileUrl());
-        return new DownloadResponse(downloadUrl, license);
     }
 }
