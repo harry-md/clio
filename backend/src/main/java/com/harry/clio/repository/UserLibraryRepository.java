@@ -22,7 +22,7 @@ public interface UserLibraryRepository extends JpaRepository<UserLibrary, Intege
         JOIN FETCH ul.book
         WHERE ul.user.id = :userId AND ul.book.id = :bookId
         """)
-    Optional<UserLibrary> findByUserIdAndBookId(
+    Optional<UserLibrary> findWithBookByUserIdAndBookId(
             @Param("userId") int userId, @Param("bookId") int bookId);
 
     List<UserLibrary> findAllByUserIdAndBookIdIn(int userId, List<Integer> bookIds);
@@ -37,7 +37,7 @@ public interface UserLibraryRepository extends JpaRepository<UserLibrary, Intege
             FROM UserLibrary ul
             WHERE ul.user.id = :userId
             """)
-    Page<UserLibrary> findAllByUserId(@Param("userId") int userId, Pageable pageable);
+    Page<UserLibrary> findAllWithBookByUserId(@Param("userId") int userId, Pageable pageable);
 
     boolean existsByUserIdAndBookId(int userId, int bookId);
 }

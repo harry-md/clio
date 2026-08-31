@@ -31,8 +31,11 @@ public class UserLibrary {
     @Enumerated(EnumType.STRING)
     private UserLibraryType type;
 
-    @Column(nullable = true)
+    @Column(nullable = true, columnDefinition = "TEXT")
     private String cfiPosition;
+
+    @Column
+    private Instant cfiUpdatedAt;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)

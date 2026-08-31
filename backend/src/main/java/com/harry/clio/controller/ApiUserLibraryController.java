@@ -3,8 +3,8 @@ package com.harry.clio.controller;
 import com.harry.clio.dto.CustomUser;
 import com.harry.clio.dto.book.DownloadRequest;
 import com.harry.clio.dto.book.DownloadResponse;
-import com.harry.clio.dto.library.LibraryRequest;
-import com.harry.clio.dto.library.LibraryResponse;
+import com.harry.clio.dto.library.*;
+import com.harry.clio.service.ReadingProgressService;
 import com.harry.clio.service.UserLibraryService;
 
 import jakarta.validation.Valid;
@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api")
 public class ApiUserLibraryController {
     private final UserLibraryService userLibraryService;
+    private final ReadingProgressService readingProgressService;
 
     @PostMapping("/libraries")
     public ResponseEntity<LibraryResponse> addToLibrary(
@@ -46,5 +47,29 @@ public class ApiUserLibraryController {
             @AuthenticationPrincipal CustomUser principal,
             @Valid @RequestBody DownloadRequest request) {
         return ResponseEntity.ok(userLibraryService.downloadBook(principal.getId(), request));
+    }
+
+    @PostMapping("/libraries/{bookId}/license/refresh")
+    public ResponseEntity<LicenseResponse> refreshLicense(
+            @AuthenticationPrincipal CustomUser principal,
+            @PathVariable int bookId,
+            @Valid @RequestBody LicenseRefreshRequest request) {
+        return ResponseEntity.ok(userLibraryService.refreshLicense(
+                principal.getId(), bookId, request.publicKeySpki()));
+    }
+
+    @GetMapping("/libraries/{bookId}/progress")
+    public ResponseEntity<ReadingProgressResponse> getProgress(
+            @AuthenticationPrincipal CustomUser principal, @PathVariable int bookId) {
+        return ResponseEntity.ok(readingProgressService.getProgress(principal.getId(), bookId));
+    }
+
+    @PutMapping("/libraries/{bookId}/progress")
+    public ResponseEntity<ReadingProgressResponse> updateProgress(
+            @AuthenticationPrincipal CustomUser principal,
+            @PathVariable int bookId,
+            @Valid @RequestBody ReadingProgressRequest request) {
+        return ResponseEntity.ok(readingProgressService.updateProgress(
+                principal.getId(), bookId, request.cfiPosition()));
     }
 }
