@@ -33,7 +33,7 @@ public class ReadingProgressScheduler {
         try {
             snapshot = progressBuffer.snapshot();
         } catch (DataAccessException ex) {
-            log.error("Không đọc được reading progress từ Redis", ex);
+            log.error("Không đọc được reading progress", ex);
             return;
         }
 
@@ -49,20 +49,11 @@ public class ReadingProgressScheduler {
         }
 
         int removed = 0;
-
         for (PendingReadingProgress progress : snapshot) {
-            try {
-                if (progressBuffer.removeIfUnchanged(progress)) {
-                    removed++;
-                }
-            } catch (DataAccessException ex) {
-                log.error(
-                        "Không xóa được progress đã flush khỏi Redis " + "userId={}, bookId={}",
-                        progress.userId(),
-                        progress.bookId(),
-                        ex);
+            if (progressBuffer.removeIfUnchanged(progress)) {
+                removed++;
             }
         }
-        log.info("Đã flush {} reading progress, xóa {} Redis entries", snapshot.size(), removed);
+        log.info("Đã lưu xuống {} reading progress, xóa {} entries", snapshot.size(), removed);
     }
 }

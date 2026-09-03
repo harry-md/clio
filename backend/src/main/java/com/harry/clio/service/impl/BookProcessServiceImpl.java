@@ -1,5 +1,6 @@
 package com.harry.clio.service.impl;
 
+import com.adobe.epubcheck.api.EpubCheck;
 import com.harry.clio.exception.InvalidEbookException;
 import com.harry.clio.exception.ResourceNotFoundException;
 import com.harry.clio.model.Book;
@@ -40,6 +41,7 @@ public class BookProcessServiceImpl implements BookProcessService {
     private final TransactionTemplate transactionTemplate;
 
     private static final long MAX_FILE_SIZE = 100 * 1024 * 1024;
+    private static final int EPUBCHECK_FATAL = 4;
 
     private record ExtractedData(long wordCount, byte[] coverImage) {}
 
@@ -179,7 +181,14 @@ public class BookProcessServiceImpl implements BookProcessService {
         if (fileSize <= 0 || fileSize > MAX_FILE_SIZE) {
             throw new InvalidEbookException("Kích thước file không hợp lệ");
         }
-        r2Service.validateEpub(file);
+
+        EpubCheck epubCheck = new EpubCheck(file.toFile());
+        int result = epubCheck.doValidate();
+
+        boolean isFatal = (result & EPUBCHECK_FATAL) != 0;
+        if (isFatal) {
+            throw new InvalidEbookException("File ebook có lỗi");
+        }
         return fileSize;
     }
 }

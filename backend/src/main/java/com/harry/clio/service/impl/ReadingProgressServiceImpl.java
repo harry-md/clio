@@ -1,7 +1,7 @@
 package com.harry.clio.service.impl;
 
 import com.harry.clio.dto.library.ReadingProgressResponse;
-import com.harry.clio.exception.BadRequestException;
+import com.harry.clio.exception.ResourceNotFoundException;
 import com.harry.clio.model.UserLibrary;
 import com.harry.clio.repository.UserLibraryRepository;
 import com.harry.clio.service.ReadingProgressService;
@@ -21,7 +21,6 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Service
 public class ReadingProgressServiceImpl implements ReadingProgressService {
-
     private final UserLibraryRepository userLibraryRepository;
     private final ReadingProgressBuffer progressBuffer;
     private final ReadingProgressBatchWriter batchWriter;
@@ -34,33 +33,27 @@ public class ReadingProgressServiceImpl implements ReadingProgressService {
                 return new ReadingProgressResponse(pendingProgress.get().cfiPosition());
             }
         } catch (DataAccessException ex) {
-            log.warn("Redis lỗi khi đọc progress userId={}, bookId={}", userId, bookId, ex);
+            log.warn("Lỗi khi đọc progress user {} book {}", userId, bookId, ex);
         }
 
         UserLibrary library = userLibraryRepository
                 .findWithBookByUserIdAndBookId(userId, bookId)
-                .orElseThrow(() -> new BadRequestException("Sách không có trong thư viện"));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Không tìm thấy sách trong thư viện"));
         return new ReadingProgressResponse(library.getCfiPosition());
     }
 
     @Override
     public ReadingProgressResponse updateProgress(int userId, int bookId, String cfiPosition) {
         if (!userLibraryRepository.existsByUserIdAndBookId(userId, bookId)) {
-            throw new BadRequestException("Sách không có trong thư viện");
+            throw new ResourceNotFoundException("Không tìm thấy sách trong thư viện");
         }
 
         PendingReadingProgress progress =
                 PendingReadingProgress.create(userId, bookId, cfiPosition);
-
         try {
             progressBuffer.put(progress);
         } catch (DataAccessException ex) {
-            log.warn(
-                    "Redis lỗi, fallback ghi progress trực tiếp xuống DB " + "userId={}, bookId={}",
-                    userId,
-                    bookId,
-                    ex);
-
             batchWriter.writeOne(progress);
         }
         return new ReadingProgressResponse(cfiPosition);

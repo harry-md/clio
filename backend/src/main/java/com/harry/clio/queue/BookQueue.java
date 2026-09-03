@@ -21,7 +21,7 @@ public class BookQueue {
         redisTemplate.opsForList().leftPush(READY_QUEUE_KEY, bookId.toString());
     }
 
-    public Optional<Integer> claim(Duration timeout) {
+    public Optional<Integer> claimJob(Duration timeout) {
         String bookId = redisTemplate
                 .opsForList()
                 .move(
@@ -37,11 +37,11 @@ public class BookQueue {
         return Optional.of(Integer.parseInt(bookId));
     }
 
-    public boolean acknowledge(int bookId) {
+    public boolean removeJob(int bookId) {
         return redisTemplate.opsForList().remove(PROCESS_QUEUE_KEY, 1, String.valueOf(bookId)) == 1;
     }
 
-    public int recoverProcessingJobs() {
+    public int recoverJobs() {
         int jobs = 0;
         while (true) {
             String bookId = redisTemplate

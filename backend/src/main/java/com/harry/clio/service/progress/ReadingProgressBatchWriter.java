@@ -14,6 +14,8 @@ import java.util.List;
 @RequiredArgsConstructor
 @Service
 public class ReadingProgressBatchWriter {
+    private final JdbcTemplate jdbcTemplate;
+
     private static final String UPDATE_SQL = """
         UPDATE user_libraries
         SET cfi_position = ?,
@@ -26,10 +28,7 @@ public class ReadingProgressBatchWriter {
               OR cfi_updated_at < ?
           )
         """;
-
     private static final int BATCH_SIZE = 100;
-
-    private final JdbcTemplate jdbcTemplate;
 
     @Transactional
     public void writeBatch(List<PendingReadingProgress> progressList) {
