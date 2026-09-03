@@ -29,7 +29,7 @@ public class BookWorker implements SmartLifecycle {
             return;
         }
 
-        int jobs = bookQueue.recoverProcessingJobs();
+        int jobs = bookQueue.recoverJobs();
         log.info("Recover {} jobs bị crash", jobs);
 
         running = true;
@@ -42,7 +42,7 @@ public class BookWorker implements SmartLifecycle {
     private void consumeLoop() {
         while (running && !Thread.currentThread().isInterrupted()) {
             try {
-                Integer bookId = bookQueue.claim(workerProps.timeout()).orElse(null);
+                Integer bookId = bookQueue.claimJob(workerProps.timeout()).orElse(null);
                 if (bookId == null) {
                     continue;
                 }
@@ -67,14 +67,14 @@ public class BookWorker implements SmartLifecycle {
                 break;
             } catch (InvalidEbookException ex) {
                 bookProcessService.handleBookFailed(bookId);
-                ack(bookId);
+                remove(bookId);
                 return;
             } catch (RuntimeException ex) {
                 log.error("Lỗi xử lý sách {}", bookId, ex);
 
                 if (i == workerProps.maxAttempts()) {
                     bookProcessService.handleBookFailed(bookId);
-                    ack(bookId);
+                    remove(bookId);
                     log.error("Sách {} đã xử lý thất bại", bookId, ex);
                     return;
                 }
@@ -87,11 +87,11 @@ public class BookWorker implements SmartLifecycle {
                 }
             }
         }
-        ack(bookId);
+        remove(bookId);
     }
 
-    private void ack(int bookId) {
-        if (!bookQueue.acknowledge(bookId)) {
+    private void remove(int bookId) {
+        if (!bookQueue.removeJob(bookId)) {
             log.error("Xóa job khỏi process queue thất bại");
         }
     }

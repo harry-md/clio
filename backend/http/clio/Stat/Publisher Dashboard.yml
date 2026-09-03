@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: http://localhost:8080/api/publishers/current-publisher/dashboard?year=2026&month=8
+  url: "{{LOCAL_API_URL}}/publishers/current-publisher/dashboard?year=2026&month=8"
   params:
     - name: year
       value: "2026"

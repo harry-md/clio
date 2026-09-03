@@ -35,7 +35,7 @@ public class SubscriptionBookBilling {
     private User user;
 
     @Column(nullable = false)
-    private Long pageCount = 0L;
+    private long pageCount = 0L;
 
     @Column(nullable = false, updatable = false)
     @CreationTimestamp

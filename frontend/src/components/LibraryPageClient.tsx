@@ -19,7 +19,7 @@ const toLibraryItem = (book: BookData): LibraryItem => ({
   authors: book.metadata.authors,
   type: book.metadata.type,
   thumbnail: null,
-  cfiPosition: null,
+  cfiPosition: book.cfiPosition ?? null,
 });
 
 export const LibraryPageClient = () => {

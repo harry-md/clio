@@ -1,9 +1,7 @@
 package com.harry.clio.service.impl;
 
-import com.adobe.epubcheck.api.EpubCheck;
 import com.harry.clio.config.properties.R2Properties;
 import com.harry.clio.dto.book.PresignedUpload;
-import com.harry.clio.exception.InvalidEbookException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +28,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Service
 public class R2Service {
-    private static final int EPUBCHECK_FATAL = 4;
     private final R2Properties r2Props;
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
@@ -120,16 +117,6 @@ public class R2Service {
 
         PresignedGetObjectRequest presignedRequest = s3Presigner.presignGetObject(presignRequest);
         return presignedRequest.url().toExternalForm();
-    }
-
-    public void validateEpub(Path path) {
-        EpubCheck epubCheck = new EpubCheck(path.toFile());
-        int result = epubCheck.doValidate();
-
-        boolean isFatal = (result & EPUBCHECK_FATAL) != 0;
-        if (isFatal) {
-            throw new InvalidEbookException("File ebook có lỗi");
-        }
     }
 
     private void deleteTmpFile(Path tmpFile) {

@@ -54,20 +54,20 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public StripeCheckoutResponse createCheckout(Integer userId, BookPurchaseRequest request) {
         List<Integer> bookIds = request.bookIds();
-        Order existingOrder = orderRepository
+        Order oldOrder = orderRepository
                 .findWithDetailsByUserIdAndBookIdsIn(
                         userId, request.bookIds(), OrderStatus.PENDING, bookIds.size())
                 .orElse(null);
 
         Integer orderId;
         List<StripeLineItem> stripeItems;
-        if (existingOrder == null) {
+        if (oldOrder == null) {
             StripeSessionInput stripeSessionInput =
                     transactionTemplate.execute(status -> createPendingOrder(userId, request));
             orderId = stripeSessionInput.orderId();
             stripeItems = stripeSessionInput.items();
         } else {
-            orderId = existingOrder.getId();
+            orderId = oldOrder.getId();
             stripeItems = orderDetailRepository.findAllWithItemByOrderId(orderId).stream()
                     .map(d -> new StripeLineItem(
                             d.getBook().getId(), d.getBook().getTitle(), d.getPrice()))
@@ -87,7 +87,7 @@ public class OrderServiceImpl implements OrderService {
         List<Book> books = bookRepository.findAllPurchasableByIdIn(
                 bookIds, BookStatus.COMPLETED, BookType.SYSTEM);
         if (books.size() != bookIds.size()) {
-            throw new BadRequestException("Có sách không thể mua");
+            throw new BadRequestException("Có sách không thể mua.");
         }
 
         User user = userRepository.getReferenceById(userId);
@@ -144,10 +144,6 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private void handleSucceededPayment(Session session) {
-        if (!"paid".equals(session.getPaymentStatus())) {
-            return;
-        }
-
         Order order = orderRepository
                 .findByIdForUpdate(Integer.parseInt(session.getClientReferenceId()))
                 .orElseThrow(() -> new InvalidWebhookException("Không tìm thấy đơn hàng"));
@@ -171,7 +167,7 @@ public class OrderServiceImpl implements OrderService {
         User user = order.getUser();
         List<UserLibrary> userLibraries = new ArrayList<>(orderDetails.size());
 
-        List<Integer> alreadyInLibBookIds = new ArrayList<>();
+        List<Integer> bookIdsInOrder = new ArrayList<>();
         List<RevenueLog> revenueLogs = new ArrayList<>(orderDetails.size());
 
         for (OrderDetail od : orderDetails) {
@@ -192,7 +188,8 @@ public class OrderServiceImpl implements OrderService {
                     .owner(RevenueLogOwner.PLATFORM)
                     .build());
 
-            alreadyInLibBookIds.add(book.getId());
+            bookIdsInOrder.add(book.getId());
+
             userLibraries.add(UserLibrary.builder()
                     .user(user)
                     .book(od.getBook())
@@ -202,13 +199,11 @@ public class OrderServiceImpl implements OrderService {
         revenueLogRepository.saveAll(revenueLogs);
 
         List<UserLibrary> existingLibraries =
-                userLibraryRepository.findAllByUserIdAndBookIdIn(user.getId(), alreadyInLibBookIds);
+                userLibraryRepository.findAllByUserIdAndBookIdIn(user.getId(), bookIdsInOrder);
 
         List<Integer> existingBookIds = existingLibraries.stream()
                 .map(library -> {
-                    if (library.getType() == UserLibraryType.SUBSCRIBED) {
-                        library.setType(UserLibraryType.PURCHASED);
-                    }
+                    library.setType(UserLibraryType.PURCHASED);
                     return library.getBook().getId();
                 })
                 .toList();

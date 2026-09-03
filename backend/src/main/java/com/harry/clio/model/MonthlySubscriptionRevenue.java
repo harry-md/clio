@@ -29,10 +29,10 @@ public class MonthlySubscriptionRevenue {
     private Integer id;
 
     @Column(nullable = false)
-    private Integer month;
+    private int month;
 
     @Column(nullable = false)
-    private Integer year;
+    private int year;
 
     @Builder.Default
     @Column(nullable = false, precision = 15, scale = 2)
@@ -48,7 +48,7 @@ public class MonthlySubscriptionRevenue {
 
     @Builder.Default
     @Column(nullable = false)
-    private Long totalPageCount = 0L;
+    private long totalPageCount = 0L;
 
     @Column(nullable = false, updatable = false)
     @CreationTimestamp

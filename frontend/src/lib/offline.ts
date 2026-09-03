@@ -6,7 +6,7 @@ import {
   type StoreNames,
   type StoreValue,
 } from "idb";
-import { base64url, importSPKI, jwtVerify } from "jose";
+import { base64url, compactVerify, importSPKI, type JWTPayload } from "jose";
 import type { LibraryItem } from "./types";
 
 const DB_NAME = "offline";
@@ -48,6 +48,8 @@ export interface BookData {
   encryptedFile: Blob;
   downloadedAt: string;
   clockState?: EncryptedClockState;
+  cfiPosition?: string | null;
+  progressDirty?: boolean;
 }
 
 export interface OfflineAccount {
@@ -340,9 +342,93 @@ export const getBooksByUser = async (userId: number): Promise<BookData[]> => {
   return db.getAll(BOOK_STORE, range);
 };
 
+const updateStoredBook = async (
+  userId: number,
+  bookId: number,
+  updater: (current: BookData) => BookData,
+): Promise<BookData> => {
+  const db = await getDatabase();
+  const transaction = db.transaction(BOOK_STORE, "readwrite");
+  const key: [number, number] = [userId, bookId];
+
+  const current = await transaction.store.get(key);
+
+  if (!current) {
+    throw new Error("Sách chưa được tải xuống.");
+  }
+
+  const updated = updater(current);
+
+  await transaction.store.put(updated, key);
+  await transaction.done;
+
+  return updated;
+};
+
+export const updateLocalReadingProgress = (
+  userId: number,
+  bookId: number,
+  cfiPosition: string,
+): Promise<BookData> => {
+  return updateStoredBook(userId, bookId, (current) => ({
+    ...current,
+    cfiPosition,
+    progressDirty: true,
+  }));
+};
+
+export const markReadingProgressSynced = (
+  userId: number,
+  bookId: number,
+  syncedCfiPosition: string,
+): Promise<BookData> => {
+  return updateStoredBook(userId, bookId, (current) => {
+    if (current.cfiPosition !== syncedCfiPosition) {
+      return current;
+    }
+
+    return {
+      ...current,
+      progressDirty: false,
+    };
+  });
+};
+
+export const applyRemoteReadingProgress = (
+  userId: number,
+  bookId: number,
+  remoteCfiPosition: string,
+): Promise<BookData> => {
+  return updateStoredBook(userId, bookId, (current) => {
+    if (current.progressDirty) {
+      return current;
+    }
+
+    return {
+      ...current,
+      cfiPosition: remoteCfiPosition,
+      progressDirty: false,
+    };
+  });
+};
+
+export const updateStoredClockState = (
+  userId: number,
+  bookId: number,
+  clockState: EncryptedClockState,
+): Promise<BookData> => {
+  return updateStoredBook(userId, bookId, (current) => ({
+    ...current,
+    clockState,
+  }));
+};
+
 export const storeBook = async (
   userId: number,
-  book: Pick<LibraryItem, "bookId" | "title" | "authors" | "type">,
+  book: Pick<
+    LibraryItem,
+    "bookId" | "title" | "authors" | "type" | "cfiPosition"
+  >,
   license: string,
   downloadUrl: string,
 ) => {
@@ -390,6 +476,8 @@ export const storeBook = async (
     encryptedFile,
     downloadedAt: new Date().toISOString(),
     clockState,
+    cfiPosition: book.cfiPosition,
+    progressDirty: false,
   };
   await save(BOOK_STORE, bookData);
 };
@@ -416,15 +504,33 @@ const verifyLicenseClaims = async (
   expectedBookId: number,
 ): Promise<LibraryLicense> => {
   const publicKeyBase64 = process.env.NEXT_PUBLIC_LICENSE_KEY;
+
   if (!publicKeyBase64) {
     throw new Error("Không tìm thấy license public key");
   }
+
   const publicKeyPem = atob(publicKeyBase64);
   const publicKey = await importSPKI(publicKeyPem, "RS256");
 
-  const { payload } = await jwtVerify(license, publicKey, {
+  const { payload: encodedPayload } = await compactVerify(license, publicKey, {
     algorithms: ["RS256"],
   });
+
+  let payload: JWTPayload;
+
+  try {
+    const parsed: unknown = JSON.parse(
+      new TextDecoder().decode(encodedPayload),
+    );
+
+    if (typeof parsed !== "object" || parsed === null) {
+      throw new Error();
+    }
+
+    payload = parsed as JWTPayload;
+  } catch {
+    throw new Error("Payload license không hợp lệ");
+  }
 
   if (
     payload.sub !== String(expectedUserId) ||
@@ -468,7 +574,7 @@ const verifyLicenseClaims = async (
   }
 
   if (
-    payload.offlineUntil < payload.iat ||
+    payload.offlineUntil <= payload.iat ||
     payload.exp < payload.offlineUntil
   ) {
     throw new Error("Thời hạn license không hợp lệ");
@@ -486,6 +592,13 @@ const verifyLicenseClaims = async (
 interface VerifyLicenseResult {
   license: LibraryLicense;
   updatedClockState?: EncryptedClockState;
+}
+
+export class LicenseRefreshRequiredError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "LicenseRefreshRequiredError";
+  }
 }
 
 export const verifyLicense = async (
@@ -522,12 +635,12 @@ export const verifyLicense = async (
   const trustedAt = Math.max(license.iat, lastSeenAt);
   const deviceNow = Math.floor(Date.now() / 1000);
   if (deviceNow < trustedAt - 300) {
-    throw new Error("Đồng hồ đã bị chỉnh sửa");
+    throw new LicenseRefreshRequiredError("Đồng hồ đã bị chỉnh sửa.");
   }
 
   const effectiveNow = Math.max(deviceNow, trustedAt);
   if (effectiveNow >= license.offlineUntil || effectiveNow >= license.exp) {
-    throw new Error("License đã hết hạn");
+    throw new LicenseRefreshRequiredError("License cần được làm mới.");
   }
 
   const updatedClockState = await encryptClockState(
@@ -571,4 +684,54 @@ export const decryptFile = async (
     contentKey,
     ciphertext,
   );
+};
+
+interface RefreshedLicenseResult {
+  bookData: BookData;
+  license: LibraryLicense;
+}
+
+export const installRefreshedLicense = async (
+  userId: number,
+  bookId: number,
+  refreshedLicense: string,
+): Promise<RefreshedLicenseResult> => {
+  const verifiedLicense = await verifyLicenseClaims(
+    refreshedLicense,
+    userId,
+    bookId,
+  );
+
+  let refreshedClockState: EncryptedClockState | undefined;
+
+  if (verifiedLicense.licenseType === "SUBSCRIPTION") {
+    const clockKey = await getOrCreateClockKeyForDownload();
+
+    refreshedClockState = await encryptClockState(
+      clockKey,
+      verifiedLicense.iat,
+      userId,
+      bookId,
+    );
+  }
+
+  const updatedBookData = await updateStoredBook(userId, bookId, (current) => {
+    const updated: BookData = {
+      ...current,
+      license: refreshedLicense,
+    };
+
+    if (refreshedClockState) {
+      updated.clockState = refreshedClockState;
+    } else {
+      delete updated.clockState;
+    }
+
+    return updated;
+  });
+
+  return {
+    bookData: updatedBookData,
+    license: verifiedLicense,
+  };
 };
