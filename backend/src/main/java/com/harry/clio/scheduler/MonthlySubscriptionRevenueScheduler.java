@@ -11,6 +11,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.YearMonth;
+import java.time.ZoneId;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -26,9 +27,12 @@ public class MonthlySubscriptionRevenueScheduler {
     @Value("${clio.schedulers.max-attempts}")
     private int maxAttempts;
 
+    @Value("${clio.schedulers.zone-id}")
+    private String zoneId;
+
     @Scheduled(cron = "${clio.schedulers.monthly-cron}", zone = "${clio.schedulers.zone-id}")
     public void computeMonthlyRevenue() {
-        YearMonth yearMonth = YearMonth.now().minusMonths(1);
+        YearMonth yearMonth = YearMonth.now(ZoneId.of(zoneId)).minusMonths(1);
         for (int i = 1; i <= maxAttempts; i++) {
             try {
                 subscriptionRevenueService.compute(yearMonth);

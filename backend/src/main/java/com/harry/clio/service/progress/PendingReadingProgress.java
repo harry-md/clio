@@ -11,7 +11,6 @@ public record PendingReadingProgress(
         Instant updatedAt,
         String redisField,
         String serializedValue) {
-
     private static final String FIELD_SEPARATOR = ":";
     private static final String VALUE_SEPARATOR = "|";
 
@@ -33,7 +32,7 @@ public record PendingReadingProgress(
         int valueSeparator = value.indexOf(VALUE_SEPARATOR);
 
         if (fieldSeparator <= 0 || valueSeparator <= 0) {
-            throw new IllegalArgumentException("Reading progress Redis value không hợp lệ");
+            throw new IllegalArgumentException("Reading progress value không hợp lệ");
         }
 
         int userId = Integer.parseInt(field.substring(0, fieldSeparator));

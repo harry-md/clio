@@ -334,7 +334,7 @@ export const SearchFiltersForm = ({
           <Button type="submit" size="lg" disabled={isPending}>
             {isPending && <Spinner data-icon="inline-start" />}
 
-            {isPending ? "Đang tìm..." : "Tìm kiếm"}
+            {isPending ? "Đang tìm" : "Tìm kiếm"}
           </Button>
 
           <Button

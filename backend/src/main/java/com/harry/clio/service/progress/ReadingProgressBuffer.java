@@ -14,6 +14,8 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Service
 public class ReadingProgressBuffer {
+    private final StringRedisTemplate redisTemplate;
+
     private static final String PENDING_KEY = "clio:reading-progress:pending";
     private static final DefaultRedisScript<Long> DELETE_IF_UNCHANGED_SCRIPT =
             new DefaultRedisScript<>("""
@@ -26,8 +28,6 @@ public class ReadingProgressBuffer {
                 return 0
                 """, Long.class);
 
-    private final StringRedisTemplate redisTemplate;
-
     public void put(PendingReadingProgress progress) {
         redisTemplate
                 .opsForHash()
@@ -35,7 +35,6 @@ public class ReadingProgressBuffer {
     }
 
     public Optional<PendingReadingProgress> find(int userId, int bookId) {
-
         String field = PendingReadingProgress.createField(userId, bookId);
 
         Object value = redisTemplate.opsForHash().get(PENDING_KEY, field);
@@ -63,7 +62,6 @@ public class ReadingProgressBuffer {
     }
 
     public boolean removeIfUnchanged(PendingReadingProgress progress) {
-
         Long removed = redisTemplate.execute(
                 DELETE_IF_UNCHANGED_SCRIPT,
                 List.of(PENDING_KEY),

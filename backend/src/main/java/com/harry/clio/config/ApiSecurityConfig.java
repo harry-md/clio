@@ -48,7 +48,9 @@ public class ApiSecurityConfig {
                             res.setContentType(MediaType.APPLICATION_JSON_VALUE);
                             res.setCharacterEncoding("UTF-8");
                             res.getWriter().write("""
-                                {"message": "Chưa đăng nhập"}
+                                {
+                                    "message": "Chưa đăng nhập"
+                                }
                                 """);
                         })
                         .accessDeniedHandler((req, res, e) -> {
@@ -56,7 +58,9 @@ public class ApiSecurityConfig {
                             res.setContentType(MediaType.APPLICATION_JSON_VALUE);
                             res.setCharacterEncoding("UTF-8");
                             res.getWriter().write("""
-                                {"message": "Không có quyền truy cập"}
+                                {
+                                    "message": "Không có quyền truy cập"
+                                }
                                 """);
                         }))
                 .authorizeHttpRequests(auth -> auth.requestMatchers("/api/login")

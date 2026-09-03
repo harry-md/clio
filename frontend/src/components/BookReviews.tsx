@@ -255,7 +255,7 @@ export const BookReviews = ({ bookId }: BookReviewsProps) => {
       )}
 
       {!initialized || loadingMyReview ? (
-        <p className="mt-6 text-muted-foreground">Đang kiểm tra đánh giá...</p>
+        <p className="mt-6 text-muted-foreground">Đang kiểm tra đánh giá</p>
       ) : !user ? (
         <div className="mt-8 border border-border p-6">
           <p className="text-muted-foreground">

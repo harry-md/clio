@@ -24,7 +24,7 @@ import java.util.*;
 @Service
 public class PublisherMonthlySubscriptionRevenueServiceImpl
         implements PublisherMonthlySubscriptionRevenueService {
-    private final PublisherMonthlySubscriptionRevenueRepository revenueRepository;
+    private final PublisherMonthlySubscriptionRevenueRepository pubRevenueRepository;
     private final SubscriptionBookBillingRepository billingRepository;
     private final PublisherRepository publisherRepository;
 
@@ -67,7 +67,7 @@ public class PublisherMonthlySubscriptionRevenueServiceImpl
                     .amount(amount)
                     .build());
         });
-        revenueRepository.saveAll(pubMonthlyRevenues);
+        pubRevenueRepository.saveAll(pubMonthlyRevenues);
 
         pubMonthlyRevenues.forEach(pubMonthlyRevenue -> {
             int res = publisherRepository.increaseBalance(
