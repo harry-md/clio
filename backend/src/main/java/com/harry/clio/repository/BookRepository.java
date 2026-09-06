@@ -55,11 +55,26 @@ public interface BookRepository
 
     @Transactional
     @Modifying
+    @Query(value = """
+        DELETE FROM book_categories
+        WHERE book_id IN (:bookIds)
+        """, nativeQuery = true)
+    int deleteBookCategoryByBookIds(@Param("bookIds") List<Integer> bookIds);
+
     @Query("""
-        DELETE FROM Book b
+        SELECT b.id
+        FROM Book b
         WHERE b.status = :status
         """)
-    int deleteFailedBooks(@Param("status") BookStatus status);
+    List<Integer> findIdsByStatus(@Param("status") BookStatus status);
+
+    @Transactional
+    @Modifying
+    @Query("""
+        DELETE FROM Book b
+        WHERE b.id IN :bookIds
+        """)
+    int deleteByBookIds(@Param("bookIds") List<Integer> bookIds);
 
     Optional<Book> findByIdAndType(int bookId, BookType type);
 
@@ -100,4 +115,24 @@ public interface BookRepository
             @Param("countDelta") int countDelta,
             @Param("status") BookStatus status,
             @Param("type") BookType type);
+
+    @Transactional
+    @Modifying
+    @Query(value = """
+        UPDATE books b
+        SET authors = (
+            SELECT jsonb_agg(
+               jsonb_build_object(
+                    'authorId', a.id,
+                    'authorFullname', a.full_name,
+                    'role', ba.role
+               )
+            )
+            FROM book_authors ba
+            JOIN authors a ON ba.author_id = a.id
+            WHERE b.id = ba.book_id
+        )
+        WHERE b.id IN (SELECT ba.book_id FROM book_authors ba WHERE ba.author_id = :authorId)
+        """, nativeQuery = true)
+    int updateAuthorsByAuthorId(@Param("authorId") int authorId);
 }

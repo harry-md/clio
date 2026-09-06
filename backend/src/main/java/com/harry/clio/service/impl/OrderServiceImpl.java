@@ -153,10 +153,13 @@ public class OrderServiceImpl implements OrderService {
 
         List<OrderDetail> orderDetails =
                 orderDetailRepository.findAllWithItemByOrderId(order.getId());
-        DetailType type = orderDetails.getFirst().getType();
-        switch (type) {
-            case BOOK -> handleBookOrder(order, orderDetails);
-            case SUBSCRIPTION -> handleSubscriptionOrder(order, orderDetails.getFirst());
+        OrderDetail firstDetail = orderDetails.getFirst();
+        if (firstDetail.getBook() != null) {
+            handleBookOrder(order, orderDetails);
+        } else if (firstDetail.getSubscriptionPlan() != null) {
+            handleSubscriptionOrder(order, firstDetail);
+        } else {
+            throw new InvalidWebhookException("Chi tiết đơn hàng không hợp lệ");
         }
 
         order.setStripeSessionId(session.getId());
@@ -284,8 +287,7 @@ public class OrderServiceImpl implements OrderService {
             }
 
             Order existingOrder = orderRepository
-                    .findSubOrderWithDetailByUserId(
-                            userId, OrderStatus.PENDING, DetailType.SUBSCRIPTION)
+                    .findSubOrderWithDetailByUserId(userId, OrderStatus.PENDING)
                     .orElse(null);
 
             if (existingOrder == null) {
@@ -303,7 +305,6 @@ public class OrderServiceImpl implements OrderService {
                         .order(order)
                         .subscriptionPlan(plan)
                         .price(plan.getPrice())
-                        .type(DetailType.SUBSCRIPTION)
                         .build();
                 orderDetailRepository.save(detail);
                 return new StripeSessionInput(

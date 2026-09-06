@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 public interface BookInfoRepository extends JpaRepository<BookInfo, Integer> {
     @Transactional
     @Modifying
@@ -20,4 +22,12 @@ public interface BookInfoRepository extends JpaRepository<BookInfo, Integer> {
             @Param("id") int id,
             @Param("fileSize") long fileSize,
             @Param("wordCount") long wordCount);
+
+    @Transactional
+    @Modifying
+    @Query("""
+        DELETE FROM BookInfo bi
+        WHERE bi.bookId IN :bookIds
+        """)
+    int deleteByBookIds(@Param("bookIds") List<Integer> bookIds);
 }

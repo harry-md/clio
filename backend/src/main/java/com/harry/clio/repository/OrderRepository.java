@@ -1,6 +1,5 @@
 package com.harry.clio.repository;
 
-import com.harry.clio.model.DetailType;
 import com.harry.clio.model.Order;
 import com.harry.clio.model.OrderStatus;
 
@@ -37,10 +36,8 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
         SELECT o
         FROM Order o
         JOIN FETCH o.details od
-        WHERE o.user.id = :userId AND o.status = :status AND od.type = :type
+        WHERE o.user.id = :userId AND o.status = :status AND od.subscriptionPlan IS NOT NULL
         """)
     Optional<Order> findSubOrderWithDetailByUserId(
-            @Param("userId") int userId,
-            @Param("status") OrderStatus status,
-            @Param("type") DetailType type);
+            @Param("userId") int userId, @Param("status") OrderStatus status);
 }

@@ -34,8 +34,8 @@ public class MonthlySubscriptionRevenueServiceImpl implements MonthlySubscriptio
 
     @Override
     public MonthlySubscriptionRevenue computeMonthlyRevenue(YearMonth yearMonth) {
-        BigDecimal totalPublisherRevenue =
-                allocationRepository.findTotalPublisherAmountByMonthAndYearAndStatus(
+        BigDecimal totalPublisherAmount =
+                allocationRepository.findTotalPublisherAmountByMonthAndYear(
                         yearMonth.getYear(), yearMonth.getMonthValue());
 
         Instant start = yearMonth.atDay(1).atStartOfDay(ZoneId.of(zoneId)).toInstant();
@@ -49,8 +49,8 @@ public class MonthlySubscriptionRevenueServiceImpl implements MonthlySubscriptio
                 .orElse(null);
 
         BigDecimal finalPublisherAmount = prevMonthRevenue == null
-                ? totalPublisherRevenue
-                : totalPublisherRevenue.add(prevMonthRevenue.getUnallocatedAmount());
+                ? totalPublisherAmount
+                : totalPublisherAmount.add(prevMonthRevenue.getUnallocatedAmount());
 
         BigDecimal unallocatedAmount = BigDecimal.ZERO;
         if (totalPageCount == 0) {
@@ -61,7 +61,7 @@ public class MonthlySubscriptionRevenueServiceImpl implements MonthlySubscriptio
         return monthlySubscriptionRevenueRepository.save(MonthlySubscriptionRevenue.builder()
                 .year(yearMonth.getYear())
                 .month(yearMonth.getMonthValue())
-                .totalPublisherAmount(totalPublisherRevenue)
+                .totalPublisherAmount(totalPublisherAmount)
                 .unallocatedAmount(unallocatedAmount)
                 .finalPublisherAmount(finalPublisherAmount)
                 .totalPageCount(totalPageCount)

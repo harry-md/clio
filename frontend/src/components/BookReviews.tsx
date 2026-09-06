@@ -474,14 +474,6 @@ export const BookReviews = ({ bookId }: BookReviewsProps) => {
               Xóa đánh giá?
             </h3>
 
-            <p
-              id="delete-review-description"
-              className="mt-3 text-muted-foreground"
-            >
-              Đánh giá của bạn sẽ bị xóa và điểm trung bình của sách sẽ được cập
-              nhật lại.
-            </p>
-
             <div className="mt-6 flex justify-end gap-3">
               <Button
                 type="button"

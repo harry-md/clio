@@ -31,7 +31,7 @@
       <a class="nav-link" th:classappend="${activePage == 'dashboard'} ? 'active' : ''"
          th:href="@{/}">
         <span class="nav-icon"><i class="bi bi-speedometer2"></i></span>
-        <span class="nav-text">Dashboard</span>
+        <span class="nav-text">Thống kê doanh thu</span>
       </a>
       <a class="nav-link" th:classappend="${activePage == 'books'} ? 'active' : ''" th:href="@{/books}">
         <span class="nav-icon"><i class="bi bi-book"></i></span>
@@ -47,6 +47,25 @@
             <i class="bi bi-person-badge"></i>
         </span>
         <span class="nav-text">Publishers</span>
+      </a>
+      <a class="nav-link"
+         th:classappend="${activePage == 'authors'} ? 'active' : ''"
+         th:href="@{/authors}">
+        <span class="nav-icon"><i class="bi bi-person-lines-fill"></i></span>
+        <span class="nav-text">Tác giả</span>
+      </a>
+
+      <a class="nav-link" th:classappend="${activePage == 'categories'} ? 'active' : ''"
+         th:href="@{/categories}">
+        <span class="nav-icon"><i class="bi bi-tags"></i></span>
+        <span class="nav-text">Danh mục</span>
+      </a>
+
+      <a class="nav-link"
+         th:classappend="${activePage == 'reviews'} ? 'active' : ''"
+         th:href="@{/reviews}">
+        <span class="nav-icon"><i class="bi bi-chat-left-text"></i></span>
+        <span class="nav-text">Đánh giá sách</span>
       </a>
     </nav>
   </aside>

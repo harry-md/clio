@@ -156,8 +156,18 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    @Transactional
     public int deleteFailedBooks() {
-        return bookRepository.deleteFailedBooks(BookStatus.FAILED);
+        List<Integer> bookIds = bookRepository.findIdsByStatus(BookStatus.FAILED);
+        if (bookIds.isEmpty()) {
+            return 0;
+        }
+
+        bookInfoRepository.deleteByBookIds(bookIds);
+        bookAuthorRepository.deleteByBookIds(bookIds);
+        bookRepository.deleteBookCategoryByBookIds(bookIds);
+
+        return bookRepository.deleteByBookIds(bookIds);
     }
 
     @Override
