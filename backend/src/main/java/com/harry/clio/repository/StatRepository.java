@@ -1,7 +1,6 @@
 package com.harry.clio.repository;
 
 import com.harry.clio.dto.stats.TopSellingBookResponse;
-import com.harry.clio.model.DetailType;
 import com.harry.clio.model.OrderDetail;
 import com.harry.clio.model.OrderStatus;
 
@@ -21,7 +20,6 @@ public interface StatRepository extends JpaRepository<OrderDetail, Integer> {
         JOIN od.book b
         WHERE b.publisher.userId = :publisherId
             AND o.status = :orderStatus
-            AND od.type = :detailType
             AND o.createdAt >= :start
             AND o.createdAt < :end
         GROUP BY b.id
@@ -30,7 +28,6 @@ public interface StatRepository extends JpaRepository<OrderDetail, Integer> {
     List<TopSellingBookResponse> findTopSellingBooksByPublisherId(
             @Param("publisherId") int publisherId,
             @Param("orderStatus") OrderStatus orderStatus,
-            @Param("detailType") DetailType detailType,
             @Param("start") Instant start,
             @Param("end") Instant end,
             Pageable pageable);

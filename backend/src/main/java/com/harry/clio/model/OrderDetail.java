@@ -33,9 +33,4 @@ public class OrderDetail {
     @Builder.Default
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal price = BigDecimal.ZERO;
-
-    @Builder.Default
-    @Column(nullable = false, length = 20)
-    @Enumerated(EnumType.STRING)
-    private DetailType type = DetailType.BOOK;
 }

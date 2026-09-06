@@ -15,6 +15,6 @@ public interface SubscriptionAllocationRepository
         FROM SubscriptionAllocation sa
         WHERE sa.month = :month AND sa.year = :year
         """)
-    BigDecimal findTotalPublisherAmountByMonthAndYearAndStatus(
+    BigDecimal findTotalPublisherAmountByMonthAndYear(
             @Param("year") int year, @Param("month") int month);
 }

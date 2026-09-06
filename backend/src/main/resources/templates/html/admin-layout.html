@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      th:fragment="layout(pageTitle, activePage, pageContent)">
+<head th:replace="~{html/base :: head(${pageTitle})}"></head>
+
+<body>
+<div class="admin-shell">
+  <div th:replace="~{html/base :: sidebar(${activePage})}"></div>
+
+  <div class="admin-main">
+    <div th:replace="~{html/base :: topnav}"></div>
+
+    <main class="dashboard-content">
+      <div class="container-fluid px-3 px-lg-4 py-4">
+        <div th:if="${success != null}"
+             class="alert alert-success"
+             role="status"
+             th:text="${success}">
+        </div>
+
+        <div th:if="${error != null}"
+             class="alert alert-danger"
+             role="alert"
+             th:text="${error}">
+        </div>
+
+        <th:block th:replace="${pageContent}"></th:block>
+      </div>
+    </main>
+
+    <footer th:replace="~{html/base :: footer}"></footer>
+  </div>
+</div>
+
+<script th:src="@{/assets/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/assets/js/main.js}"></script>
+</body>
+</html>
