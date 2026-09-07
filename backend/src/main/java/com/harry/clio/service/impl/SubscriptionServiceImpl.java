@@ -10,8 +10,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
 public class SubscriptionServiceImpl implements SubscriptionService {
     private final SubscriptionRepository subscriptionRepository;
 

@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/subscription-plans")
+@RequiredArgsConstructor
 public class ApiSubscriptionPlanController {
     private final SubscriptionPlanService subscriptionPlanService;
 

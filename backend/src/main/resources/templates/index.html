@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="vi"
       xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{html/admin-layout :: layout(
+      th:replace="~{admin-layout :: layout(
           'Thống kê doanh thu', 'dashboard', ~{::content})}">
 <body>
 <section th:fragment="content">
@@ -10,7 +10,7 @@
     <div>
       <h1 class="mb-1">Thống kê doanh thu</h1>
       <p class="text-muted mb-0"
-         th:text="|Doanh thu nền tảng — ${stats.label}|">
+         th:text="|Doanh thu nền tảng - ${stats.label}|">
       </p>
     </div>
 
@@ -30,20 +30,11 @@
       </div>
 
       <div>
-        <label class="form-label"
-               id="periodLabel"
-               for="period"
-               th:text="${stats.time == 'MONTH'} ? 'Tháng' : 'Quý'">
+        <label class="form-label" id="periodLabel" for="period" th:text="${stats.time == 'MONTH'} ? 'Tháng' : 'Quý'">
         </label>
 
-        <select class="form-select"
-                id="period"
-                name="period"
-                style="min-width: 120px"
-                required>
-          <option th:each="number : ${#numbers.sequence(
-                      1, (stats.time == 'MONTH' ? 12 : 4))}"
-                  th:value="${number}"
+        <select class="form-select" id="period" name="period" style="min-width: 120px" required>
+          <option th:each="number : ${#numbers.sequence(1, (stats.time == 'MONTH' ? 12 : 4))}" th:value="${number}"
                   th:selected="${number == stats.period}"
                   th:text="${(stats.time == 'MONTH' ? 'Tháng ' : 'Quý ') + number}">
           </option>
@@ -52,15 +43,8 @@
 
       <div>
         <label class="form-label" for="year">Năm</label>
-        <input class="form-control"
-               style="width: 120px"
-               id="year"
-               name="year"
-               type="number"
-               min="2000"
-               max="2100"
-               required
-               th:value="${stats.year}">
+        <input class="form-control" style="width: 120px" id="year" name="year" type="number" min="2000" max="2100"
+               required th:value="${stats.year}">
       </div>
 
       <button class="btn btn-primary" type="submit">
@@ -73,9 +57,7 @@
     <div class="col-12 col-lg-4">
       <div class="panel h-100">
         <p class="text-muted mb-2">Tổng doanh thu nền tảng</p>
-        <h2 class="h3 mb-0"
-            th:text="|${#numbers.formatDecimal(
-                stats.totalRevenue, 1, 'POINT', 2, 'COMMA')} ₫|">
+        <h2 class="h3 mb-0" th:text="|${#numbers.formatDecimal(stats.totalRevenue, 1, 'POINT', 2, 'COMMA')} đ|">
         </h2>
       </div>
     </div>
@@ -85,7 +67,7 @@
         <p class="text-muted mb-2">Từ mua sách</p>
         <h2 class="h3 mb-0"
             th:text="|${#numbers.formatDecimal(
-                stats.bookRevenue, 1, 'POINT', 2, 'COMMA')} ₫|">
+                stats.bookRevenue, 1, 'POINT', 2, 'COMMA')} đ|">
         </h2>
       </div>
     </div>
@@ -95,7 +77,7 @@
         <p class="text-muted mb-2">Từ gói đọc</p>
         <h2 class="h3 mb-0"
             th:text="|${#numbers.formatDecimal(
-                stats.subscriptionRevenue, 1, 'POINT', 2, 'COMMA')} ₫|">
+                stats.subscriptionRevenue, 1, 'POINT', 2, 'COMMA')} đ|">
         </h2>
       </div>
     </div>
@@ -108,7 +90,7 @@
   <div class="row g-3 mb-4">
     <div class="col-12 col-xl-4">
       <section class="panel h-100">
-        <h2 class="h5 mb-1">Cơ cấu doanh thu</h2>
+        <h2 class="h5 mb-1">Tỉ trọng doanh thu</h2>
         <p class="text-muted mb-3" th:text="${stats.label}"></p>
 
         <div th:if="${stats.totalRevenue.signum() > 0}" style="position: relative; height: 350px; min-width: 0">
@@ -232,7 +214,7 @@
 
           const money = value => moneyFormatter.format(Number(value));
           const compactMoney = value =>
-              compactFormatter.format(Number(value)) + " ₫";
+              compactFormatter.format(Number(value)) + " đ";
 
           const animation = window.matchMedia(
               "(prefers-reduced-motion: reduce)"

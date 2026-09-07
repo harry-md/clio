@@ -4,11 +4,6 @@ import jakarta.persistence.*;
 
 import lombok.*;
 
-@Builder
-@Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
 @Entity
 @Table(
         name = "reviews",
@@ -17,6 +12,11 @@ import lombok.*;
                     name = "uq_reviews_user_book",
                     columnNames = {"user_id", "book_id"})
         })
+@Getter
+@Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class Review {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

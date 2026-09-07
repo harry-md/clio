@@ -16,15 +16,15 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
-@RequiredArgsConstructor
 @Controller
+@RequiredArgsConstructor
 public class PublisherController {
     private final PublisherService publisherService;
 
     @GetMapping("/publishers")
     public String list(Model model) {
         model.addAttribute("publishers", publisherService.getAllPublishers());
-        return "html/publishers";
+        return "publishers";
     }
 
     @GetMapping("/publishers/create")
@@ -33,7 +33,7 @@ public class PublisherController {
         model.addAttribute("availableUsers", publisherService.getUserOptions());
         model.addAttribute("isEdit", false);
         model.addAttribute("formAction", "/publishers/create");
-        return "html/publisher-form";
+        return "publisher-form";
     }
 
     @PostMapping("/publishers/create")
@@ -45,7 +45,7 @@ public class PublisherController {
             model.addAttribute("availableUsers", publisherService.getUserOptions());
             model.addAttribute("isEdit", false);
             model.addAttribute("formAction", "/publishers/create");
-            return "html/publisher-form";
+            return "publisher-form";
         }
         publisherService.createPublisher(publisherForm);
         return "redirect:/publishers";
@@ -54,7 +54,7 @@ public class PublisherController {
     @GetMapping("/publishers/{userId}")
     public String detail(@PathVariable int userId, Model model) {
         model.addAttribute("publisher", publisherService.getPublisherAdmin(userId));
-        return "html/publisher-details";
+        return "publisher-details";
     }
 
     @GetMapping("/publishers/{userId}/edit")
@@ -68,7 +68,7 @@ public class PublisherController {
         model.addAttribute("selectedPublisher", publisher);
         model.addAttribute("isEdit", true);
         model.addAttribute("formAction", "/publishers/" + userId + "/edit");
-        return "html/publisher-form";
+        return "publisher-form";
     }
 
     @PostMapping("/publishers/{userId}/edit")
@@ -83,7 +83,7 @@ public class PublisherController {
             model.addAttribute("isEdit", true);
             model.addAttribute("formAction", "/publishers/" + userId + "/edit");
 
-            return "html/publisher-form";
+            return "publisher-form";
         }
         publisherService.updatePublisher(userId, publisherForm);
         return "redirect:/publishers/" + userId;

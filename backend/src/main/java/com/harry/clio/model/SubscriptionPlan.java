@@ -2,17 +2,17 @@ package com.harry.clio.model;
 
 import jakarta.persistence.*;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.math.BigDecimal;
 
-@Getter
-@Setter
-@NoArgsConstructor
 @Entity
 @Table(name = "subscription_plans")
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class SubscriptionPlan {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

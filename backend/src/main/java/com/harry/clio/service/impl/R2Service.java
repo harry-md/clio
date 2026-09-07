@@ -24,9 +24,9 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.UUID;
 
-@Slf4j
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class R2Service {
     private final R2Properties r2Props;
     private final S3Client s3Client;

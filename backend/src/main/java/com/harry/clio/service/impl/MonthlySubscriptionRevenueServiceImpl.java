@@ -16,8 +16,8 @@ import java.time.Instant;
 import java.time.YearMonth;
 import java.time.ZoneId;
 
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
 public class MonthlySubscriptionRevenueServiceImpl implements MonthlySubscriptionRevenueService {
     private final MonthlySubscriptionRevenueRepository monthlySubscriptionRevenueRepository;
     private final SubscriptionAllocationRepository allocationRepository;

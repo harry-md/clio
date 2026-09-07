@@ -14,14 +14,14 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-@Slf4j
-@RequiredArgsConstructor
 @Component
 @ConditionalOnProperty(
         prefix = "clio.schedulers",
         name = "enabled",
         havingValue = "true",
         matchIfMissing = true)
+@RequiredArgsConstructor
+@Slf4j
 public class ReadingProgressScheduler {
     private final ReadingProgressBuffer progressBuffer;
     private final ReadingProgressBatchWriter batchWriter;

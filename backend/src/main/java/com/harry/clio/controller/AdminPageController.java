@@ -17,9 +17,9 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Locale;
 
-@RequiredArgsConstructor
 @Controller
-public class AdminController {
+@RequiredArgsConstructor
+public class AdminPageController {
     private final StatService statService;
 
     @Value("${clio.schedulers.zone-id}")
@@ -27,7 +27,7 @@ public class AdminController {
 
     @GetMapping("/login")
     public String login() {
-        return "html/login";
+        return "login";
     }
 
     @GetMapping("/")
@@ -36,7 +36,6 @@ public class AdminController {
             @RequestParam(required = false) Integer period,
             @RequestParam(required = false) Integer year,
             Model model) {
-
         String normalizedTime = time.strip().toUpperCase(Locale.ROOT);
 
         LocalDate today = LocalDate.now(ZoneId.of(zoneId));
@@ -56,7 +55,7 @@ public class AdminController {
                 "stats",
                 statService.getPlatformRevenue(normalizedTime, selectedPeriod, selectedYear));
 
-        return "html/index";
+        return "index";
     }
 
     @ExceptionHandler(BadRequestException.class)

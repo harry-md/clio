@@ -16,7 +16,6 @@ public record PlatformRevenueResponse(
 
     public record RevenuePoint(
             String label, BigDecimal bookRevenue, BigDecimal subscriptionRevenue) {
-
         public BigDecimal total() {
             return bookRevenue.add(subscriptionRevenue);
         }

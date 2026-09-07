@@ -9,8 +9,8 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.util.Optional;
 
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
 public class BookQueue {
     private static final String READY_QUEUE_KEY = "book-ready-queue";
     private static final String PROCESS_QUEUE_KEY = "book-process-queue";

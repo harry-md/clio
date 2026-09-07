@@ -11,17 +11,17 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Set;
 
-@Builder
-@Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
 @Entity
 @Table(
         name = "orders",
         uniqueConstraints = {
             @UniqueConstraint(name = "uq_orders_stripe_session", columnNames = "stripe_session_id")
         })
+@Getter
+@Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

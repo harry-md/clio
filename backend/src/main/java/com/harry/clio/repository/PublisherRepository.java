@@ -28,8 +28,8 @@ public interface PublisherRepository extends JpaRepository<Publisher, Integer> {
         """)
     Optional<Publisher> findWithUserByUserId(@Param("userId") int userId);
 
-    @Transactional
     @Modifying
+    @Transactional
     @Query("""
         UPDATE Publisher p
         SET p.balance = p.balance + :amount

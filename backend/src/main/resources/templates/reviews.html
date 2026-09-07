@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin-layout :: layout('Quản lý đánh giá sách', 'reviews', ~{::content})}">
+<body>
+<section th:fragment="content">
+  <div class="page-heading">
+    <h1 class="mb-0">Quản lý đánh giá sách</h1>
+  </div>
+
+  <section class="panel mb-3">
+    <form method="get" th:action="@{/reviews}">
+      <label class="form-label" for="keyword">Nội dung đánh giá</label>
+
+      <div class="d-flex flex-wrap gap-2">
+        <input class="form-control flex-grow-1" style="width: auto" id="keyword" name="keyword" type="search"
+               maxlength="500" placeholder="Tìm trong nội dung đánh giá" th:value="${keyword}">
+
+        <button class="btn btn-primary" type="submit">Tìm kiếm</button>
+        <a class="btn btn-outline-secondary" th:href="@{/reviews}">
+          Xóa bộ lọc
+        </a>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel">
+    <p class="text-muted" th:text="|Tìm thấy ${reviews.totalElements} đánh giá|"></p>
+
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+        <tr>
+          <th>Sách</th>
+          <th>Người đánh giá</th>
+          <th>Điểm</th>
+          <th>Nội dung</th>
+          <th class="text-end">Thao tác</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr th:each="review : ${reviews.content}">
+          <td style="min-width: 180px">
+            <div class="fw-semibold" th:text="${review.bookTitle}"></div>
+            <small class="text-muted" th:text="|Sách #${review.bookId}|"></small>
+          </td>
+
+          <td>
+            <div th:text="${review.username}"></div>
+            <small class="text-muted" th:text="|User #${review.userId}|"></small>
+          </td>
+
+          <td class="text-nowrap">
+            <span th:text="|${review.rating}|"></span>
+            <i class="bi bi-star-fill text-warning"></i>
+          </td>
+
+          <td style="white-space: pre-wrap; overflow-wrap: anywhere;
+                     min-width: 240px; max-width: 520px"
+              th:text="${review.comment}">
+          </td>
+
+          <td class="text-end">
+            <form method="post" th:action="@{/reviews/{id}/delete(id=${review.id})}"
+                  onsubmit="return confirm('Xóa đánh giá này? Điểm của sách sẽ được cập nhật lại.')">
+              <input type="hidden" name="keyword" th:value="${keyword}">
+              <input type="hidden" name="page" th:value="${reviews.number}">
+
+              <button class="btn btn-sm btn-outline-danger" type="submit">
+                Xóa
+              </button>
+            </form>
+          </td>
+        </tr>
+
+        <tr th:if="${reviews.empty}">
+          <td colspan="5" class="text-center text-muted py-4">
+            Không tìm thấy đánh giá.
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center p-3" th:if="${reviews.totalPages > 0}">
+      <span class="text-muted" th:text="|Trang ${reviews.number + 1}/${reviews.totalPages}|"></span>
+      <nav th:if="${reviews.totalPages > 1}" aria-label="Phân trang đánh giá">
+        <ul class="pagination mb-0">
+          <li class="page-item" th:classappend="${reviews.first} ? 'disabled'">
+            <a class="page-link" th:href="@{/reviews(page=${reviews.number - 1},keyword=${keyword})}">
+              Trước
+            </a>
+          </li>
+
+          <li class="page-item" th:each="pageNumber : ${pageNumbers}"
+              th:classappend="${pageNumber == reviews.number} ? 'active'">
+            <a class="page-link" th:href="@{/reviews(page=${pageNumber},keyword=${keyword})}"
+               th:text="${pageNumber + 1}"></a>
+          </li>
+
+          <li class="page-item" th:classappend="${reviews.last} ? 'disabled'">
+            <a class="page-link" th:href="@{/reviews(page=${reviews.number + 1},keyword=${keyword})}">
+              Sau
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </section>
+</section>
+</body>
+</html>

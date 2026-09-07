@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin-layout :: layout( 'Thông tin danh mục', 'categories', ~{::content})}">
+<body>
+<section th:fragment="content">
+  <div class="page-heading">
+    <h1 class="mb-0" th:text="${isEdit} ? 'Chỉnh sửa danh mục' : 'Thêm danh mục'"></h1>
+  </div>
+
+  <form class="panel" method="post" th:object="${form}"
+        th:action="${isEdit} ? @{/categories/{id}(id=${categoryId})} : @{/categories}">
+    <div class="mb-3">
+      <label class="form-label" for="name">Tên danh mục</label>
+      <input class="form-control" id="name" th:field="*{name}" maxlength="255" required>
+
+      <div class="text-danger mt-1" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">
+      </div>
+    </div>
+
+    <div class="d-flex gap-2">
+      <button class="btn btn-primary" type="submit" th:text="${isEdit} ? 'Lưu thay đổi' : 'Thêm danh mục'">
+      </button>
+      <a class="btn btn-outline-secondary" th:href="@{/categories}">Hủy</a>
+    </div>
+  </form>
+</section>
+</body>
+</html>

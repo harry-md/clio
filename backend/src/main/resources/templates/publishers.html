@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{html/base :: head('Publishers')}"></head>
+<head th:replace="~{base :: head('Publishers')}"></head>
 
 <body>
 <div class="admin-shell">
-  <div th:replace="~{html/base :: sidebar('publishers')}"></div>
+  <div th:replace="~{base :: sidebar('publishers')}"></div>
   <div class="admin-main">
-    <div th:replace="~{html/base :: topnav}"></div>
+    <div th:replace="~{base :: topnav}"></div>
     <main class="dashboard-content">
       <div class="container-fluid px-3 px-lg-4 py-4">
         <div class="page-heading">
@@ -80,7 +80,7 @@
               <tr th:if="${#lists.isEmpty(publishers)}">
                 <td colspan="5"
                     class="text-center text-muted py-4">
-                  No publishers found.
+                  Không tìm thấy NXB
                 </td>
               </tr>
               </tbody>
@@ -90,7 +90,7 @@
       </div>
     </main>
 
-    <footer th:replace="~{html/base :: footer}"></footer>
+    <footer th:replace="~{base :: footer}"></footer>
   </div>
 </div>
 

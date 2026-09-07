@@ -2,6 +2,7 @@ package com.harry.clio.model;
 
 import jakarta.persistence.*;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -12,9 +13,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
 
-@Getter
-@Setter
-@NoArgsConstructor
 @Entity
 @Table(
         name = "users",
@@ -22,6 +20,10 @@ import java.time.Instant;
             @UniqueConstraint(name = "uq_users_username", columnNames = "username"),
             @UniqueConstraint(name = "uq_users_email", columnNames = "email")
         })
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

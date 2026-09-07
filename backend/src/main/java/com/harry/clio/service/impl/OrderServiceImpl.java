@@ -30,8 +30,8 @@ import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final OrderDetailRepository orderDetailRepository;
@@ -112,8 +112,8 @@ public class OrderServiceImpl implements OrderService {
         return new StripeSessionInput(order.getId(), bookItems);
     }
 
-    @Transactional
     @Override
+    @Transactional
     public void handleWebhook(String sigHeader, String payload) {
         Event event = paymentService.constructWebhookEvent(sigHeader, payload);
         Session session = getSessionFromEvent(event);

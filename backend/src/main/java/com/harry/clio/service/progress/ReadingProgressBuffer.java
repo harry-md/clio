@@ -11,8 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
 public class ReadingProgressBuffer {
     private final StringRedisTemplate redisTemplate;
 

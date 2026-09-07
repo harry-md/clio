@@ -15,11 +15,6 @@ import jakarta.persistence.UniqueConstraint;
 
 import lombok.*;
 
-@Builder
-@AllArgsConstructor
-@Getter
-@Setter
-@NoArgsConstructor
 @Entity
 @Table(
         name = "book_authors",
@@ -28,6 +23,11 @@ import lombok.*;
                     name = "uq_book_author_role",
                     columnNames = {"book_id", "author_id", "role"})
         })
+@Getter
+@Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class BookAuthor {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

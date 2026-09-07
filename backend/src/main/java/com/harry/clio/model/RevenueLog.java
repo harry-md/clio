@@ -9,11 +9,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.math.BigDecimal;
 import java.time.Instant;
 
-@Builder
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
 @Entity
 @Table(
         name = "revenue_logs",
@@ -22,6 +17,11 @@ import java.time.Instant;
                     name = "uq_revenue_logs_order_detail_id_owner",
                     columnNames = {"order_detail_id", "owner"})
         })
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class RevenueLog {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "revenue_log_seq")

@@ -12,9 +12,9 @@ import org.springframework.context.SmartLifecycle;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Component;
 
-@Slf4j
-@RequiredArgsConstructor
 @Component
+@RequiredArgsConstructor
+@Slf4j
 public class BookWorker implements SmartLifecycle {
     private final BookWorkerProperties workerProps;
     private final BookQueue bookQueue;
