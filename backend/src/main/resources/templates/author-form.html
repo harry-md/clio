@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin-layout :: layout('Thông tin tác giả', 'authors', ~{::content})}">
+<body>
+<section th:fragment="content">
+  <div class="page-heading">
+    <h1 class="mb-0" th:text="${isEdit} ? 'Chỉnh sửa tác giả' : 'Thêm tác giả'"></h1>
+  </div>
+
+  <form class="panel" method="post" th:object="${form}"
+        th:action="${isEdit} ? @{/authors/{id}(id=${authorId})} : @{/authors}">
+    <div class="mb-3">
+      <label class="form-label" for="fullName">Tên tác giả</label>
+      <input class="form-control" id="fullName" th:field="*{fullName}" maxlength="255" required>
+
+      <div class="text-danger mt-1" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}">
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label" for="biography">Tiểu sử</label>
+      <textarea class="form-control" id="biography" th:field="*{biography}" maxlength="20000" rows="10"></textarea>
+
+      <div class="text-danger mt-1" th:if="${#fields.hasErrors('biography')}" th:errors="*{biography}">
+      </div>
+    </div>
+
+    <div class="form-check mb-3" th:if="${isEdit}">
+      <input class="form-check-input" id="verified" type="checkbox" th:field="*{verified}">
+      <label class="form-check-label" for="verified">Đã xác minh</label>
+    </div>
+
+    <div class="d-flex gap-2">
+      <button class="btn btn-primary" type="submit" th:text="${isEdit} ? 'Lưu thay đổi' : 'Thêm tác giả'">
+      </button>
+      <a class="btn btn-outline-secondary" th:href="@{/authors}">Hủy</a>
+    </div>
+  </form>
+</section>
+</body>
+</html>

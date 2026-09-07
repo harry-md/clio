@@ -20,8 +20,8 @@ import java.time.YearMonth;
 import java.time.ZoneId;
 import java.util.*;
 
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
 public class PublisherMonthlySubscriptionRevenueServiceImpl
         implements PublisherMonthlySubscriptionRevenueService {
     private final PublisherMonthlySubscriptionRevenueRepository pubRevenueRepository;

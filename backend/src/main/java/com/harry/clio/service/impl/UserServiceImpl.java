@@ -32,8 +32,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.Set;
 
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService, UserDetailsService {
     private final UserRepository userRepository;
     private final CloudinaryService cloudinaryService;

@@ -97,7 +97,7 @@ export const PublisherBookUploadForm = () => {
         }
       } catch (error: unknown) {
         if (active) {
-          setDataError(getApiErrorMessage(error, "Lỗi tải danh mục sách."));
+          setDataError(getApiErrorMessage(error, "Lỗi tải thể loại sách."));
         }
       }
     };
@@ -259,7 +259,7 @@ export const PublisherBookUploadForm = () => {
       return "Vui lòng chọn tác giả.";
     }
     if (selectedCategoryIds.size === 0) {
-      return "Vui lòng chọn danh mục.";
+      return "Vui lòng chọn thể loại.";
     }
     return null;
   };
@@ -460,7 +460,7 @@ export const PublisherBookUploadForm = () => {
       </section>
 
       <section className="border-y border-border py-7">
-        <h3 className="text-xl font-semibold text-foreground">Danh mục</h3>
+        <h3 className="text-xl font-semibold text-foreground">Thể loại</h3>
 
         <div className="mt-4 flex flex-wrap gap-3">
           {categories.map((category) => (

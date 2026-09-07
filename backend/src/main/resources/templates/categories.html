@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin-layout :: layout( 'Quản lý thể loại', 'categories', ~{::content})}">
+<body>
+<section th:fragment="content">
+  <div class="page-heading">
+    <h1 class="mb-0">Quản lý thể loại</h1>
+    <a class="btn btn-primary" th:href="@{/categories/new}">
+      <i class="bi bi-plus-lg"></i> Thêm thể loại
+    </a>
+  </div>
+
+  <section class="panel">
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead>
+        <tr>
+          <th>ID</th>
+          <th>Tên thể loại</th>
+          <th class="text-end">Thao tác</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr th:each="category : ${categories.content}">
+          <td th:text="${category.id}"></td>
+          <td class="fw-semibold" th:text="${category.name}"></td>
+          <td>
+            <div class="d-flex justify-content-end gap-2">
+              <a class="btn btn-sm btn-outline-primary" th:href="@{/categories/{id}/edit(id=${category.id})}">
+                Chỉnh sửa
+              </a>
+
+              <form method="post" th:action="@{/categories/{id}/delete(id=${category.id})}"
+                    onsubmit="return confirm('Xóa thể loại này?')">
+                <button class="btn btn-sm btn-outline-danger" type="submit">
+                  Xóa
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+
+        <tr th:if="${categories.empty}">
+          <td colspan="3" class="text-center text-muted py-4">
+            Chưa có thể loại.
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="d-flex justify-content-between align-items-center p-3" th:if="${categories.totalPages > 0}">
+      <span class="text-muted" th:text="|Trang ${categories.number + 1}/${categories.totalPages}|"></span>
+
+      <nav th:if="${categories.totalPages > 1}" aria-label="Phân trang thể loại">
+        <ul class="pagination mb-0">
+          <li class="page-item" th:classappend="${categories.first} ? 'disabled'">
+            <a class="page-link" th:href="@{/categories(page=${categories.number - 1})}">
+              Trước
+            </a>
+          </li>
+
+          <li class="page-item" th:each="pageNumber : ${pageNumbers}"
+              th:classappend="${pageNumber == categories.number} ? 'active'">
+            <a class="page-link" th:href="@{/categories(page=${pageNumber})}" th:text="${pageNumber + 1}"></a>
+          </li>
+
+          <li class="page-item" th:classappend="${categories.last} ? 'disabled'">
+            <a class="page-link" th:href="@{/categories(page=${categories.number + 1})}">
+              Sau
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </section>
+</section>
+</body>
+</html>

@@ -7,11 +7,6 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-@Builder
-@Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
 @Entity
 @Table(
         name = "subscription_allocations",
@@ -20,6 +15,11 @@ import java.time.LocalDate;
                     name = "uq_sub_allocations_subscription_year_month",
                     columnNames = {"subscription_id", "year", "month"})
         })
+@Getter
+@Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class SubscriptionAllocation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

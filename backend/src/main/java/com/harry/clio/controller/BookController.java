@@ -25,8 +25,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.util.List;
 import java.util.stream.IntStream;
 
-@RequiredArgsConstructor
 @Controller
+@RequiredArgsConstructor
 public class BookController {
     private final BookService bookService;
     private final CategoryService categoryService;
@@ -45,7 +45,7 @@ public class BookController {
         model.addAttribute("books", books);
         model.addAttribute("categories", categoryService.getCategories());
         model.addAttribute("pageNumbers", createPageNumbers(books));
-        return "html/books";
+        return "books";
     }
 
     private List<Integer> createPageNumbers(Page<?> page) {
@@ -55,7 +55,6 @@ public class BookController {
 
         int startPage = Math.max(0, page.getNumber() - 2);
         int endPage = Math.min(page.getTotalPages() - 1, startPage + 4);
-
         startPage = Math.max(0, endPage - 4);
         return IntStream.rangeClosed(startPage, endPage).boxed().toList();
     }

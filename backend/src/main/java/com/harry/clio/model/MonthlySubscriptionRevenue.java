@@ -10,11 +10,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.math.BigDecimal;
 import java.time.Instant;
 
-@Getter
-@Setter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 @Entity
 @Table(
         name = "monthly_subscription_revenues",
@@ -23,6 +18,11 @@ import java.time.Instant;
                     name = "uq_monthly_subscription_revenues_year_month",
                     columnNames = {"year", "month"})
         })
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class MonthlySubscriptionRevenue {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{html/base :: head('Books')}"></head>
+<head th:replace="~{base :: head('Books')}"></head>
 
 <body>
 <div class="admin-shell">
-  <div th:replace="~{html/base :: sidebar('books')}"></div>
+  <div th:replace="~{base :: sidebar('books')}"></div>
 
   <div class="admin-main">
-    <div th:replace="~{html/base :: topnav}"></div>
+    <div th:replace="~{base :: topnav}"></div>
 
     <main class="dashboard-content">
       <div class="container-fluid px-3 px-lg-4 py-4">
@@ -51,9 +51,9 @@
               </div>
 
               <div class="col-12 col-md-4">
-                <label class="form-label" for="categoryId">Danh mục</label>
+                <label class="form-label" for="categoryId">Thể loại</label>
                 <select id="categoryId" class="form-select" th:field="*{categoryId}">
-                  <option value="">Tất cả danh mục</option>
+                  <option value="">Tất cả thể loại</option>
                   <option th:each="category : ${categories}" th:value="${category.id}"
                           th:text="${category.name}"></option>
                 </select>
@@ -150,20 +150,13 @@
                 <td>
                   <span class="badge" th:classappend="${book.status.name() == 'COMPLETED'}
                           ? ' text-bg-success'
-                          : (${book.status.name() == 'QUEUED'}
-                            ? ' text-bg-warning'
-                            : ' text-bg-danger')"
+                          : (${book.status.name() == 'QUEUED'} ? ' text-bg-warning' : ' text-bg-danger')"
                         th:text="${book.status}">
                   </span>
                 </td>
 
                 <td>
                   <div class="d-flex flex-column align-items-start gap-2">
-
-                  <span class="badge" th:classappend="${book.active} ? ' text-bg-success' : ' text-bg-secondary'"
-                        th:text="${book.active} ? 'Active' : 'Inactive'">
-                  </span>
-
                     <form method="post" th:action="@{/books/{bookId}/active(bookId=${book.id})}">
                       <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                       <input type="hidden" name="active" th:value="${!book.active}">
@@ -252,7 +245,7 @@
       </div>
     </main>
 
-    <footer th:replace="~{html/base :: footer}"></footer>
+    <footer th:replace="~{base :: footer}"></footer>
   </div>
 </div>
 

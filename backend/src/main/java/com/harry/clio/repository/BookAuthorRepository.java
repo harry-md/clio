@@ -11,8 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 public interface BookAuthorRepository extends JpaRepository<BookAuthor, Integer> {
-    @Transactional
     @Modifying
+    @Transactional
     @Query("""
         DELETE FROM BookAuthor ba
         WHERE ba.book.id IN :bookIds

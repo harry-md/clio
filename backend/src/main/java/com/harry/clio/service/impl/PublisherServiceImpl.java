@@ -27,8 +27,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
 public class PublisherServiceImpl implements PublisherService {
     private final PublisherRepository publisherRepository;
     private final PublisherMapper publisherMapper;
@@ -50,7 +50,6 @@ public class PublisherServiceImpl implements PublisherService {
         return publisherMapper.toDto(getPublisherOrThrow(userId));
     }
 
-    @Transactional(readOnly = true)
     @Override
     public List<AdminPublisherDto> getAllPublishers() {
         return publisherRepository.findAllWithUser().stream()
@@ -73,8 +72,8 @@ public class PublisherServiceImpl implements PublisherService {
                 .toList();
     }
 
-    @Transactional
     @Override
+    @Transactional
     public void calculateBookRevenueToday(LocalDate today) {
         Instant startOfDay = today.atStartOfDay(ZoneId.of(zoneId)).toInstant();
         List<RevenueLog> revenueLogs = revenueLogRepository.findAllWithPublisherBefore(
@@ -94,7 +93,6 @@ public class PublisherServiceImpl implements PublisherService {
         revenueLogs.forEach(log -> log.setComputed(true));
     }
 
-    @Transactional
     @Override
     public PublisherDto createPublisher(PublisherForm publisherForm) {
         if (publisherRepository.existsById(publisherForm.getUserId())) {

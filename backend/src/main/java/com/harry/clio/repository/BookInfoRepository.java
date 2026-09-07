@@ -11,8 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 public interface BookInfoRepository extends JpaRepository<BookInfo, Integer> {
-    @Transactional
     @Modifying
+    @Transactional
     @Query("""
         UPDATE BookInfo bi
         SET bi.fileSize = :fileSize, bi.wordCount = :wordCount
@@ -23,8 +23,8 @@ public interface BookInfoRepository extends JpaRepository<BookInfo, Integer> {
             @Param("fileSize") long fileSize,
             @Param("wordCount") long wordCount);
 
-    @Transactional
     @Modifying
+    @Transactional
     @Query("""
         DELETE FROM BookInfo bi
         WHERE bi.bookId IN :bookIds

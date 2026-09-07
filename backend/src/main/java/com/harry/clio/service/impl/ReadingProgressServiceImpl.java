@@ -17,9 +17,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
-@Slf4j
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class ReadingProgressServiceImpl implements ReadingProgressService {
     private final UserLibraryRepository userLibraryRepository;
     private final ReadingProgressBuffer progressBuffer;

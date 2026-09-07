@@ -21,7 +21,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -32,11 +31,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
 public class StatServiceImpl implements StatService {
     private final StatRepository statRepository;
     private final PublisherRepository publisherRepository;
@@ -48,11 +46,12 @@ public class StatServiceImpl implements StatService {
 
     @Override
     public PublisherDashboardResponse getPublisherDashboard(int publisherId, int year, int month) {
+        if (year < 1 || month < 1 || month > 12) {
+            throw new BadRequestException("Tháng năm không hợp lệ");
+        }
 
         YearMonth yearMonth = YearMonth.of(year, month);
-
         Instant start = yearMonth.atDay(1).atStartOfDay(ZoneId.of(zoneId)).toInstant();
-
         Instant end =
                 yearMonth.plusMonths(1).atDay(1).atStartOfDay(ZoneId.of(zoneId)).toInstant();
 
@@ -62,37 +61,33 @@ public class StatServiceImpl implements StatService {
         Publisher publisher = publisherRepository
                 .findById(publisherId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy NXB"));
-
         return new PublisherDashboardResponse(publisherMapper.toDto(publisher), books);
     }
 
     @Override
-    @Transactional(readOnly = true)
     public PlatformRevenueResponse getPlatformRevenue(String time, int period, int year) {
-        String normalizedTime = time == null ? "MONTH" : time.strip().toUpperCase(Locale.ROOT);
-
-        if (!normalizedTime.equals("MONTH") && !normalizedTime.equals("QUARTER")) {
-            throw new BadRequestException("Kiểu thống kê phải là MONTH hoặc QUARTER.");
+        if (year < 1) {
+            throw new BadRequestException("Năm không hợp lệ.");
         }
 
-        boolean monthly = normalizedTime.equals("MONTH");
-        int maxPeriod = monthly ? 12 : 4;
+        String normalizedTime = time == null ? "MONTH" : time.strip().toUpperCase();
+        if (!normalizedTime.equals("MONTH") && !normalizedTime.equals("QUARTER")) {
+            throw new BadRequestException("Kiểu thống kê không hợp lệ.");
+        }
 
+        boolean isMonth = normalizedTime.equals("MONTH");
+        int maxPeriod = isMonth ? 12 : 4;
         if (period < 1 || period > maxPeriod) {
             throw new BadRequestException(
-                    monthly
-                            ? "Tháng phải nằm trong khoảng 1–12."
-                            : "Quý phải nằm trong khoảng 1–4.");
+                    isMonth
+                            ? "Tháng phải nằm trong khoảng 1-12."
+                            : "Quý phải nằm trong khoảng 1-4.");
         }
 
-        if (year < 2000 || year > 2100) {
-            throw new BadRequestException("Năm phải nằm trong khoảng 2000–2100.");
-        }
-
-        int firstMonth = monthly ? period : (period - 1) * 3 + 1;
+        int firstMonth = isMonth ? period : (period - 1) * 3 + 1;
 
         LocalDate startDate = LocalDate.of(year, firstMonth, 1);
-        LocalDate endDate = startDate.plusMonths(monthly ? 1 : 3);
+        LocalDate endDate = startDate.plusMonths(isMonth ? 1 : 3);
 
         ZoneId zone = ZoneId.of(zoneId);
         Instant start = startDate.atStartOfDay(zone).toInstant();
@@ -101,7 +96,7 @@ public class StatServiceImpl implements StatService {
         String owner = RevenueLogOwner.PLATFORM.name();
         String status = OrderStatus.PAID.name();
 
-        String unit = monthly ? "day" : "month";
+        String unit = isMonth ? "day" : "month";
 
         Map<Integer, RevenueLogRepository.RevenuePointRow> rowsByBucket = new HashMap<>();
 
@@ -119,9 +114,9 @@ public class StatServiceImpl implements StatService {
 
         for (LocalDate cursor = startDate;
                 cursor.isBefore(endDate);
-                cursor = monthly ? cursor.plusDays(1) : cursor.plusMonths(1)) {
+                cursor = isMonth ? cursor.plusDays(1) : cursor.plusMonths(1)) {
 
-            int bucket = monthly ? cursor.getDayOfMonth() : cursor.getMonthValue();
+            int bucket = isMonth ? cursor.getDayOfMonth() : cursor.getMonthValue();
 
             RevenueLogRepository.RevenuePointRow row = rowsByBucket.get(bucket);
 
@@ -131,7 +126,7 @@ public class StatServiceImpl implements StatService {
                     row == null ? BigDecimal.ZERO : row.getSubscriptionRevenue();
 
             String pointLabel =
-                    monthly ? cursor.format(dayFormatter) : "Tháng " + cursor.getMonthValue();
+                    isMonth ? cursor.format(dayFormatter) : "Tháng " + cursor.getMonthValue();
 
             points.add(new RevenuePoint(pointLabel, bookAmount, subscriptionAmount));
 
@@ -145,7 +140,7 @@ public class StatServiceImpl implements StatService {
                                 row.getBookId(), row.getTitle(), row.getSales(), row.getRevenue()))
                         .toList();
 
-        String label = (monthly ? "Tháng " : "Quý ") + period + "/" + year;
+        String label = (isMonth ? "Tháng " : "Quý ") + period + "/" + year;
 
         return new PlatformRevenueResponse(
                 normalizedTime,

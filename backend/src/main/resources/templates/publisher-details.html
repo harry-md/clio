@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
-<head th:replace="~{html/base :: head('Publisher Details')}">
+<head th:replace="~{base :: head('Publisher Details')}">
 </head>
 
 <body>
 <div class="admin-shell">
-  <div th:replace="~{html/base :: sidebar('publishers')}"></div>
+  <div th:replace="~{base :: sidebar('publishers')}"></div>
   <div class="admin-main">
-    <div th:replace="~{html/base :: topnav}"></div>
+    <div th:replace="~{base :: topnav}"></div>
     <main class="dashboard-content">
       <div class="container-fluid px-3 px-lg-4 py-4">
         <div class="page-heading">
@@ -77,13 +77,13 @@
                 </div>
                 <div class="col-md-4">
                   <div class="mini-card">
-                    <span>Bank Account</span>
+                    <span>Số tài khoản</span>
                     <strong th:text="${publisher.bankAccountNumber}"></strong>
                   </div>
                 </div>
                 <div class="col-md-4">
                   <div class="mini-card">
-                    <span>Balance</span>
+                    <span>Số dư</span>
                     <strong th:text="${publisher.balance}"></strong>
                   </div>
                 </div>
@@ -94,7 +94,7 @@
       </div>
     </main>
 
-    <footer th:replace="~{html/base :: footer}"></footer>
+    <footer th:replace="~{base :: footer}"></footer>
   </div>
 </div>
 

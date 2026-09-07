@@ -24,8 +24,8 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Optional;
 
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
 public class UserLibraryServiceImpl implements UserLibraryService {
     private final UserLibraryRepository userLibraryRepository;
     private final SubscriptionRepository subscriptionRepository;
@@ -40,8 +40,8 @@ public class UserLibraryServiceImpl implements UserLibraryService {
     @Value("${clio.schedulers.zone-id}")
     private String zoneId;
 
-    @Transactional
     @Override
+    @Transactional
     public LibraryResponse addToLibrary(Integer userId, Integer bookId) {
         Optional<UserLibrary> existingLibrary =
                 userLibraryRepository.findWithBookByUserIdAndBookId(userId, bookId);

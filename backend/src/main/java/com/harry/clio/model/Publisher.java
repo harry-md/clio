@@ -7,13 +7,13 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.util.Set;
 
-@Builder
-@Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
 @Entity
 @Table(name = "publishers")
+@Getter
+@Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class Publisher {
     @Id
     @Column(name = "user_id")

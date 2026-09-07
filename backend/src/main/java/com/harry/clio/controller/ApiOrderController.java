@@ -14,9 +14,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/orders")
+@RequiredArgsConstructor
 public class ApiOrderController {
     private final OrderService orderService;
 
