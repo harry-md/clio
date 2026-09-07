@@ -12,14 +12,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.YearMonth;
 
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
 public class SubscriptionRevenueServiceImpl implements SubscriptionRevenueService {
     private final MonthlySubscriptionRevenueService monthlySubRevenueService;
     private final PublisherMonthlySubscriptionRevenueService publisherSubService;
 
-    @Transactional
     @Override
+    @Transactional
     public void compute(YearMonth yearMonth) {
         if (monthlySubRevenueService.checkThisMonthExist(yearMonth)) {
             return;

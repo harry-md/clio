@@ -33,9 +33,9 @@ import javax.crypto.spec.OAEPParameterSpec;
 import javax.crypto.spec.PSource;
 import javax.crypto.spec.SecretKeySpec;
 
-@Slf4j
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class CryptoServiceImpl implements CryptoService {
     private final SecureRandom secureRandom;
     private final SecretKey masterKey;

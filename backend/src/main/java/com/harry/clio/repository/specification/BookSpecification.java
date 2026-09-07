@@ -15,6 +15,7 @@ import org.hibernate.query.criteria.JpaJsonExistsExpression;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
+import java.util.Locale;
 
 public class BookSpecification {
     public static Specification<Book> buildFilter(BookFilterRequest request) {
@@ -37,7 +38,7 @@ public class BookSpecification {
             Expression<String> authorText = ((HibernateCriteriaBuilder) cb)
                     .cast((JpaExpression<Object>) root.get("authors"), String.class);
 
-            String pattern = String.format("%%%s%%", keyword.toLowerCase());
+            String pattern = String.format("%%%s%%", keyword.toLowerCase(Locale.ROOT));
             return cb.or(
                     cb.like(cb.lower(root.get("title")), pattern),
                     cb.like(cb.lower(authorText), pattern));

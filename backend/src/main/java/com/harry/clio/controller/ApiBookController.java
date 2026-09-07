@@ -19,21 +19,21 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/books")
+@RequiredArgsConstructor
 public class ApiBookController {
     private final BookService bookService;
     private final R2Service r2Service;
 
-    @PreAuthorize("hasRole('PUBLISHER')")
     @PostMapping("/upload-url")
+    @PreAuthorize("hasRole('PUBLISHER')")
     public ResponseEntity<PresignedUpload> createUploadUrl() {
         return ResponseEntity.ok(r2Service.createOriginUploadUrl());
     }
 
-    @PreAuthorize("hasRole('PUBLISHER')")
     @PostMapping
+    @PreAuthorize("hasRole('PUBLISHER')")
     public ResponseEntity<BookDetailResponse> create(
             @AuthenticationPrincipal CustomUser principal,
             @Valid @RequestBody CreateBookMetadataRequest request) {

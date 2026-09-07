@@ -12,14 +12,14 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
 public class SubscriptionPlanServiceImpl implements SubscriptionPlanService {
     private final SubscriptionPlanRepository subscriptionPlanRepository;
     private final SubscriptionPlanMapper subscriptionPlanMapper;
 
-    @Cacheable(cacheNames = "subscription-plans")
     @Override
+    @Cacheable(cacheNames = "subscription-plans")
     public List<SubscriptionPlanResponse> getSubscriptionPlans() {
         return subscriptionPlanRepository.findAllByActiveTrue().stream()
                 .map(subscriptionPlanMapper::toDto)

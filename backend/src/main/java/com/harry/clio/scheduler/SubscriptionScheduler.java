@@ -13,14 +13,14 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.time.ZoneId;
 
-@Slf4j
-@RequiredArgsConstructor
 @Component
 @ConditionalOnProperty(
         prefix = "clio.schedulers",
         name = "enabled",
         havingValue = "true",
         matchIfMissing = true)
+@RequiredArgsConstructor
+@Slf4j
 public class SubscriptionScheduler {
     private final SubscriptionService subscriptionService;
 

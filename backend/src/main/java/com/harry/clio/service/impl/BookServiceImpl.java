@@ -32,8 +32,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
 public class BookServiceImpl implements BookService {
     private final TransactionTemplate transactionTemplate;
     private final BookRepository bookRepository;

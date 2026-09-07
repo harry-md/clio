@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin-layout :: layout( 'Quản lý tác giả', 'authors', ~{::content})}">
+<body>
+<section th:fragment="content">
+  <div class="page-heading">
+    <h1 class="mb-0">Quản lý tác giả</h1>
+    <a class="btn btn-primary" th:href="@{/authors/new}">
+      <i class="bi bi-plus-lg"></i> Thêm tác giả
+    </a>
+  </div>
+
+  <section class="panel mb-3">
+    <form method="get" th:action="@{/authors}">
+      <label class="form-label" for="keyword">Tên tác giả</label>
+
+      <div class="d-flex flex-wrap gap-2">
+        <input class="form-control flex-grow-1" style="width: auto" id="keyword" name="keyword" type="search"
+               maxlength="255" placeholder="Nhập tên tác giả" th:value="${keyword}">
+
+        <button class="btn btn-primary" type="submit">Tìm kiếm</button>
+        <a class="btn btn-outline-secondary" th:href="@{/authors}">
+          Xóa bộ lọc
+        </a>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel">
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+        <tr>
+          <th>ID</th>
+          <th>Tác giả</th>
+          <th>Xác minh</th>
+          <th class="text-end">Thao tác</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr th:each="author : ${authors.content}">
+          <td th:text="${author.id}"></td>
+          <td class="fw-semibold" th:text="${author.fullName}"></td>
+          <td>
+            <span class="badge" th:classappend="${author.verified} ? 'text-bg-success' : 'text-bg-secondary'"
+                  th:text="${author.verified} ? 'Đã xác minh' : 'Chưa xác minh'">
+            </span>
+          </td>
+          <td class="text-end">
+            <a class="btn btn-sm btn-outline-primary" th:href="@{/authors/{id}/edit(id=${author.id})}">
+              Chỉnh sửa
+            </a>
+          </td>
+        </tr>
+
+        <tr th:if="${authors.empty}">
+          <td colspan="4" class="text-center text-muted py-4">
+            Không tìm thấy tác giả.
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center p-3" th:if="${authors.totalPages > 0}">
+      <span class="text-muted" th:text="|Trang ${authors.number + 1}/${authors.totalPages}|"></span>
+      <nav th:if="${authors.totalPages > 1}" aria-label="Phân trang tác giả">
+        <ul class="pagination mb-0">
+          <li class="page-item" th:classappend="${authors.first} ? 'disabled'">
+            <a class="page-link"
+               th:href="@{/authors(page=${authors.number - 1},keyword=${keyword})}">
+              Trước
+            </a>
+          </li>
+
+          <li class="page-item" th:each="pageNumber : ${pageNumbers}"
+              th:classappend="${pageNumber == authors.number} ? 'active'">
+            <a class="page-link"
+               th:href="@{/authors(page=${pageNumber},keyword=${keyword})}"
+               th:text="${pageNumber + 1}"></a>
+          </li>
+
+          <li class="page-item" th:classappend="${authors.last} ? 'disabled'">
+            <a class="page-link"
+               th:href="@{/authors(page=${authors.number + 1},keyword=${keyword})}">
+              Sau
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </section>
+</section>
+</body>
+</html>

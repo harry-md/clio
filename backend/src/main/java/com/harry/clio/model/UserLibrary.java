@@ -9,11 +9,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
 
-@Builder
-@Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
 @Entity
 @Table(
         name = "user_libraries",
@@ -22,6 +17,11 @@ import java.time.Instant;
                     name = "uq_user_libraries_user_book",
                     columnNames = {"user_id", "book_id"})
         })
+@Getter
+@Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class UserLibrary {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

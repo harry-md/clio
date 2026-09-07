@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
-<head th:replace="~{html/base :: head('Publisher Form')}"></head>
+<head th:replace="~{base :: head('Publisher Form')}"></head>
 
 <body>
 <div class="admin-shell">
-  <div th:replace="~{html/base :: sidebar('publishers')}"></div>
+  <div th:replace="~{base :: sidebar('publishers')}"></div>
   <div class="admin-main">
-    <div th:replace="~{html/base :: topnav}"></div>
+    <div th:replace="~{base :: topnav}"></div>
 
     <main class="dashboard-content">
       <div class="container-fluid px-3 px-lg-4 py-4">
@@ -70,7 +70,7 @@
       </div>
     </main>
 
-    <footer th:replace="~{html/base :: footer}"></footer>
+    <footer th:replace="~{base :: footer}"></footer>
   </div>
 </div>
 

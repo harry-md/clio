@@ -15,9 +15,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/authors")
+@RequiredArgsConstructor
 public class ApiAuthorController {
     private final AuthorService authorService;
 
@@ -31,8 +31,8 @@ public class ApiAuthorController {
         return ResponseEntity.ok(authorService.getAuthorById(authorId));
     }
 
-    @PreAuthorize("hasAnyRole('PUBLISHER')")
     @PostMapping
+    @PreAuthorize("hasAnyRole('PUBLISHER')")
     public ResponseEntity<AuthorResponse> create(
             @Valid @RequestBody CreateAuthorRequest authorRequest) {
         return new ResponseEntity<>(authorService.createAuthor(authorRequest), HttpStatus.CREATED);

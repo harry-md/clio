@@ -182,7 +182,7 @@ export const SearchFiltersForm = ({
               size="sm"
               onClick={() => removeScopedFilter("category")}
             >
-              Danh mục: <span className="font-semibold">{categoryName} </span>
+              Thể loại: <span className="font-semibold">{categoryName} </span>
               <Image
                 src="/close.svg"
                 alt=""

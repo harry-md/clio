@@ -23,7 +23,7 @@ public record CreateBookMetadataRequest(
         @Valid @NotEmpty(message = "Tác giả không được để trống")
         List<BookAuthorInfo> authors,
 
-        @NotEmpty(message = "Danh mục sách không được để trống")
+        @NotEmpty(message = "Thể loại sách không được để trống")
         Set<@NotNull Integer> categoryIds,
 
         @Size(max = 20000, message = "Mô tả sách vượt quá độ dài cho phép")

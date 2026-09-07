@@ -35,18 +35,18 @@
       </a>
       <a class="nav-link" th:classappend="${activePage == 'books'} ? 'active' : ''" th:href="@{/books}">
         <span class="nav-icon"><i class="bi bi-book"></i></span>
-        <span class="nav-text">Books</span>
+        <span class="nav-text">Sách</span>
       </a>
       <a class="nav-link" th:classappend="${activePage == 'users'} ? 'active' : ''" th:href="@{/users}">
         <span class="nav-icon"><i class="bi bi-person"></i></span>
-        <span class="nav-text">Users</span>
+        <span class="nav-text">Người dùng</span>
       </a>
 
       <a class="nav-link" th:classappend="${activePage == 'publishers'} ? 'active' : ''" th:href="@{/publishers}">
         <span class="nav-icon">
             <i class="bi bi-person-badge"></i>
         </span>
-        <span class="nav-text">Publishers</span>
+        <span class="nav-text">Nhà xuất bản</span>
       </a>
       <a class="nav-link"
          th:classappend="${activePage == 'authors'} ? 'active' : ''"
@@ -58,7 +58,7 @@
       <a class="nav-link" th:classappend="${activePage == 'categories'} ? 'active' : ''"
          th:href="@{/categories}">
         <span class="nav-icon"><i class="bi bi-tags"></i></span>
-        <span class="nav-text">Danh mục</span>
+        <span class="nav-text">Thể loại</span>
       </a>
 
       <a class="nav-link"

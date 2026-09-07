@@ -34,8 +34,8 @@ public interface BookRepository
             @Param("status") BookStatus status,
             @Param("type") BookType type);
 
-    @Transactional
     @Modifying
+    @Transactional
     @Query("""
         UPDATE Book b
         SET b.status = :status
@@ -53,8 +53,8 @@ public interface BookRepository
             @Param("status") BookStatus status,
             @Param("type") BookType type);
 
-    @Transactional
     @Modifying
+    @Transactional
     @Query(value = """
         DELETE FROM book_categories
         WHERE book_id IN (:bookIds)
@@ -68,8 +68,8 @@ public interface BookRepository
         """)
     List<Integer> findIdsByStatus(@Param("status") BookStatus status);
 
-    @Transactional
     @Modifying
+    @Transactional
     @Query("""
         DELETE FROM Book b
         WHERE b.id IN :bookIds
@@ -78,8 +78,8 @@ public interface BookRepository
 
     Optional<Book> findByIdAndType(int bookId, BookType type);
 
-    @Transactional
     @Modifying
+    @Transactional
     @Query("""
         UPDATE Book b
         SET b.encryptedFileUrl = :encryptedFileUrl,
@@ -96,8 +96,8 @@ public interface BookRepository
             @Param("thumbnail") String thumbnail,
             @Param("status") BookStatus status);
 
-    @Transactional
     @Modifying
+    @Transactional
     @Query("""
         UPDATE Book b
         SET b.rating =
@@ -116,8 +116,8 @@ public interface BookRepository
             @Param("status") BookStatus status,
             @Param("type") BookType type);
 
-    @Transactional
     @Modifying
+    @Transactional
     @Query(value = """
         UPDATE books b
         SET authors = (
@@ -135,4 +135,26 @@ public interface BookRepository
         WHERE b.id IN (SELECT ba.book_id FROM book_authors ba WHERE ba.author_id = :authorId)
         """, nativeQuery = true)
     int updateAuthorsByAuthorId(@Param("authorId") int authorId);
+
+    boolean existsByCategoriesId(int categoryId);
+
+    @Modifying
+    @Transactional
+    @Query("""
+        UPDATE Book b
+        SET b.rating =
+            CASE
+                WHEN b.ratingCount + :countDelta = 0 THEN 0
+                ELSE (COALESCE(b.rating, 0) * b.ratingCount + :ratingDelta) / (b.ratingCount + :countDelta)
+            END,
+            b.ratingCount = b.ratingCount + :countDelta,
+            b.updatedAt = CURRENT_TIMESTAMP
+        WHERE b.id = :bookId
+            AND b.ratingCount > 0
+            AND b.ratingCount + :countDelta >= 0
+        """)
+    int adjustExistingReviewRating(
+            @Param("bookId") int bookId,
+            @Param("ratingDelta") int ratingDelta,
+            @Param("countDelta") int countDelta);
 }

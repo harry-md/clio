@@ -4,6 +4,8 @@ import com.harry.clio.model.Author;
 
 import org.springframework.data.jpa.domain.Specification;
 
+import java.util.Locale;
+
 public class AuthorSpecification {
     public static Specification<Author> hasKw(String kw) {
         return (root, query, cb) -> {
@@ -12,7 +14,8 @@ public class AuthorSpecification {
             }
 
             return cb.like(
-                    cb.lower(root.get("fullName")), String.format("%%%s%%", kw.toLowerCase()));
+                    cb.lower(root.get("fullName")),
+                    String.format("%%%s%%", kw.toLowerCase(Locale.ROOT)));
         };
     }
 }

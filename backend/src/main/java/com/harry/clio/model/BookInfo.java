@@ -13,13 +13,13 @@ import jakarta.persistence.Table;
 
 import lombok.*;
 
-@Builder
-@AllArgsConstructor
-@Getter
-@Setter
-@NoArgsConstructor
 @Entity
 @Table(name = "book_info")
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class BookInfo {
     @Id
     @Column(name = "book_id")

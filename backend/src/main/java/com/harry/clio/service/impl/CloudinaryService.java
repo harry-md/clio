@@ -15,9 +15,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+@Service
 @RequiredArgsConstructor
 @Slf4j
-@Service
 public class CloudinaryService {
     private final Cloudinary cloudinary;
     private final Tika tika;

@@ -18,8 +18,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.Date;
 
-@RequiredArgsConstructor
 @Component
+@RequiredArgsConstructor
 public class JwtUtil {
     private final JwtProperties jwtProps;
 

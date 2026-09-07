@@ -29,9 +29,9 @@ import java.nio.file.Path;
 
 import javax.crypto.SecretKey;
 
-@Slf4j
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class BookProcessServiceImpl implements BookProcessService {
     private final R2Service r2Service;
     private final CloudinaryService cloudinaryService;
@@ -48,8 +48,8 @@ public class BookProcessServiceImpl implements BookProcessService {
     private record EncryptedData(
             String encryptedContentKey, Path encryptedFile, String encryptedFileUrl) {}
 
-    @CacheEvict(cacheNames = "books", allEntries = true)
     @Override
+    @CacheEvict(cacheNames = "books", allEntries = true)
     public void process(int bookId) {
         Book book = bookRepository
                 .findById(bookId)

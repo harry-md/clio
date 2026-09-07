@@ -19,14 +19,14 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/books/{bookId}/reviews")
+@RequiredArgsConstructor
 public class ApiReviewController {
     private final ReviewService reviewService;
 
-    @PreAuthorize("isAuthenticated()")
     @GetMapping("/my-review")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> retrieve(
             @PathVariable int bookId, @AuthenticationPrincipal CustomUser principal) {
         return reviewService
@@ -43,8 +43,8 @@ public class ApiReviewController {
         return ResponseEntity.ok(reviewService.getAllReviews(bookId, pageable));
     }
 
-    @PreAuthorize("isAuthenticated()")
     @PostMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ReviewResponse> create(
             @PathVariable int bookId,
             @AuthenticationPrincipal CustomUser principal,
@@ -54,8 +54,8 @@ public class ApiReviewController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    @PreAuthorize("isAuthenticated()")
     @PutMapping("/my-review")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ReviewResponse> update(
             @PathVariable int bookId,
             @AuthenticationPrincipal CustomUser principal,
@@ -63,8 +63,8 @@ public class ApiReviewController {
         return ResponseEntity.ok(reviewService.updateReview(principal.getId(), bookId, request));
     }
 
-    @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/my-review")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> delete(
             @PathVariable int bookId, @AuthenticationPrincipal CustomUser principal) {
         reviewService.deleteReview(principal.getId(), bookId);

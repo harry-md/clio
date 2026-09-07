@@ -11,8 +11,8 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.List;
 
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
 public class ReadingProgressBatchWriter {
     private final JdbcTemplate jdbcTemplate;
 

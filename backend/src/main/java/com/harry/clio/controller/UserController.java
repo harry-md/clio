@@ -21,8 +21,8 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import java.util.List;
 import java.util.stream.IntStream;
 
-@RequiredArgsConstructor
 @Controller
+@RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
 
@@ -40,7 +40,7 @@ public class UserController {
 
         model.addAttribute("users", users);
         model.addAttribute("pageNumbers", createPageNumbers(users));
-        return "html/users";
+        return "users";
     }
 
     private List<Integer> createPageNumbers(Page<?> page) {
@@ -50,7 +50,6 @@ public class UserController {
 
         int startPage = Math.max(0, page.getNumber() - 2);
         int endPage = Math.min(page.getTotalPages() - 1, startPage + 4);
-
         startPage = Math.max(0, endPage - 4);
         return IntStream.rangeClosed(startPage, endPage).boxed().toList();
     }

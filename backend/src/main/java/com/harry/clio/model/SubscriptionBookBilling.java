@@ -8,11 +8,6 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
 
-@Builder
-@Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
 @Entity
 @Table(
         name = "subscription_book_billings",
@@ -21,6 +16,11 @@ import java.time.Instant;
                     name = "uq_sub_book_billings_user_book",
                     columnNames = {"user_id", "book_id"})
         })
+@Getter
+@Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class SubscriptionBookBilling {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

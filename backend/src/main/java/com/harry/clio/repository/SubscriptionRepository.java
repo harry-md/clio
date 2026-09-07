@@ -25,8 +25,8 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Inte
             @Param("status") SubscriptionStatus status,
             LocalDate endDate);
 
-    @Transactional
     @Modifying
+    @Transactional
     @Query("""
         UPDATE Subscription s
         SET s.status = :expired
