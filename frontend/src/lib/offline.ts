@@ -18,7 +18,6 @@ export const ACCOUNT_STORE = "offline-account";
 export const ACTIVE_ACCOUNT_KEY = "active-account";
 const CLOCK_KEY_STORE = "clock-key";
 const CLOCK_KEY_ID = "browser-clock-key";
-const CLOCK_STATE_VERSION = 1;
 const CLOCK_IV_LENGTH = 12;
 const CLOCK_STATE_ERROR = "Dữ liệu offline đã thay đổi.";
 
@@ -35,7 +34,6 @@ export type OfflineBookMetadata = Pick<
 >;
 
 export interface EncryptedClockState {
-  version: 1;
   iv: ArrayBuffer;
   ciphertext: ArrayBuffer;
 }
@@ -264,7 +262,6 @@ const encryptClockState = async (
   );
 
   return {
-    version: CLOCK_STATE_VERSION,
     iv,
     ciphertext,
   };
@@ -278,7 +275,6 @@ const decryptClockState = async (
   licenseIat: number,
 ): Promise<number> => {
   if (
-    clockState.version !== CLOCK_STATE_VERSION ||
     !(clockState.iv instanceof ArrayBuffer) ||
     clockState.iv.byteLength !== CLOCK_IV_LENGTH ||
     !(clockState.ciphertext instanceof ArrayBuffer)
@@ -349,17 +345,14 @@ const updateStoredBook = async (
 ): Promise<BookData> => {
   const db = await getDatabase();
   const transaction = db.transaction(BOOK_STORE, "readwrite");
-  const key: [number, number] = [userId, bookId];
-
-  const current = await transaction.store.get(key);
-
+  const current = await transaction.store.get([userId, bookId]);
   if (!current) {
     throw new Error("Sách chưa được tải xuống.");
   }
 
   const updated = updater(current);
 
-  await transaction.store.put(updated, key);
+  await transaction.store.put(updated, [userId, bookId]);
   await transaction.done;
 
   return updated;
@@ -394,10 +387,10 @@ export const markReadingProgressSynced = (
   });
 };
 
-export const applyRemoteReadingProgress = (
+export const applyServerReadingProgress = (
   userId: number,
   bookId: number,
-  remoteCfiPosition: string,
+  serverCfiPosition: string,
 ): Promise<BookData> => {
   return updateStoredBook(userId, bookId, (current) => {
     if (current.progressDirty) {
@@ -406,7 +399,7 @@ export const applyRemoteReadingProgress = (
 
     return {
       ...current,
-      cfiPosition: remoteCfiPosition,
+      cfiPosition: serverCfiPosition,
       progressDirty: false,
     };
   });
@@ -594,7 +587,7 @@ interface VerifyLicenseResult {
   updatedClockState?: EncryptedClockState;
 }
 
-export class LicenseRefreshRequiredError extends Error {
+export class RequireRefreshLicenseError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "LicenseRefreshRequiredError";
@@ -635,12 +628,12 @@ export const verifyLicense = async (
   const trustedAt = Math.max(license.iat, lastSeenAt);
   const deviceNow = Math.floor(Date.now() / 1000);
   if (deviceNow < trustedAt - 300) {
-    throw new LicenseRefreshRequiredError("Đồng hồ đã bị chỉnh sửa.");
+    throw new RequireRefreshLicenseError("Đồng hồ đã bị chỉnh sửa.");
   }
 
   const effectiveNow = Math.max(deviceNow, trustedAt);
   if (effectiveNow >= license.offlineUntil || effectiveNow >= license.exp) {
-    throw new LicenseRefreshRequiredError("License cần được làm mới.");
+    throw new RequireRefreshLicenseError("License cần được làm mới.");
   }
 
   const updatedClockState = await encryptClockState(

@@ -16,15 +16,15 @@ import { Spinner } from "@/components/ui/spinner";
 import { useAuth } from "@/context/AuthContext";
 import { Api, getApiErrorMessage } from "@/lib/api";
 import {
-  applyRemoteReadingProgress,
+  applyServerReadingProgress,
   BOOK_STORE,
   type BookData,
   decryptFile,
   get,
   getOrCreateKey,
   installRefreshedLicense,
-  LicenseRefreshRequiredError,
   markReadingProgressSynced,
+  RequireRefreshLicenseError,
   updateLocalReadingProgress,
   updateStoredClockState,
   verifyLicense,
@@ -56,7 +56,6 @@ interface ReadingProgressResponse {
   cfiPosition: string | null;
 }
 
-const PROGRESS_DEBOUNCE_MS = 2_000;
 const READER_SETTINGS_STORAGE_KEY = "clio-reader-settings";
 
 const GOOGLE_READER_FONTS = new Set<ReaderFontFamily>([
@@ -323,12 +322,12 @@ export const Reader = ({ bookId }: ReaderProps) => {
 
     let progressSyncTimer: ReturnType<typeof setTimeout> | null = null;
     let latestCfiPosition: string | null = null;
-    let pendingRemoteCfiPosition: string | null = null;
+    let pendingServerCfiPosition: string | null = null;
 
     let localProgressQueue: Promise<void> = Promise.resolve();
-    let remoteProgressQueue: Promise<void> = Promise.resolve();
+    let serverProgressQueue: Promise<void> = Promise.resolve();
 
-    const pushReadingProgress = async (cfiPosition: string) => {
+    const putReadingProgress = async (cfiPosition: string) => {
       await Api.put<ReadingProgressResponse>(`/libraries/${bookId}/progress`, {
         cfiPosition,
       });
@@ -336,34 +335,30 @@ export const Reader = ({ bookId }: ReaderProps) => {
       await markReadingProgressSynced(userId, bookId, cfiPosition);
     };
 
-    const enqueueRemoteProgress = (cfiPosition: string) => {
-      remoteProgressQueue = remoteProgressQueue
+    const flushProgress = () => {
+      if (!pendingServerCfiPosition || !user || !navigator.onLine) {
+        return;
+      }
+
+      const cfiPosition = pendingServerCfiPosition;
+      pendingServerCfiPosition = null;
+
+      serverProgressQueue = serverProgressQueue
         .then(async () => {
           await localProgressQueue;
-          await pushReadingProgress(cfiPosition);
+          await putReadingProgress(cfiPosition);
         })
         .catch((error: unknown) => {
           console.warn("Không đồng bộ được tiến độ đọc", error);
         });
     };
 
-    const flushPendingRemoteProgress = () => {
-      if (!pendingRemoteCfiPosition || !user || !navigator.onLine) {
-        return;
-      }
-
-      const cfiPosition = pendingRemoteCfiPosition;
-      pendingRemoteCfiPosition = null;
-
-      enqueueRemoteProgress(cfiPosition);
-    };
-
-    const scheduleRemoteProgress = (cfiPosition: string) => {
+    const scheduleServerProgress = (cfiPosition: string) => {
       if (!user || !navigator.onLine) {
         return;
       }
 
-      pendingRemoteCfiPosition = cfiPosition;
+      pendingServerCfiPosition = cfiPosition;
 
       if (progressSyncTimer) {
         clearTimeout(progressSyncTimer);
@@ -371,21 +366,12 @@ export const Reader = ({ bookId }: ReaderProps) => {
 
       progressSyncTimer = setTimeout(() => {
         progressSyncTimer = null;
-        flushPendingRemoteProgress();
-      }, PROGRESS_DEBOUNCE_MS);
+        flushProgress();
+      }, 3000);
     };
 
     const handleRelocated = (location: Location) => {
       const cfiPosition = location.start.cfi;
-
-      console.debug("[reading-progress] relocated", {
-        previousCfi: latestCfiPosition,
-        startCfi: location.start.cfi,
-        endCfi: location.end.cfi,
-        displayedPage: location.start.displayed.page,
-        displayedTotal: location.start.displayed.total,
-      });
-
       if (!cfiPosition || cfiPosition === latestCfiPosition) {
         return;
       }
@@ -400,10 +386,10 @@ export const Reader = ({ bookId }: ReaderProps) => {
           console.error("Không lưu được CFI vào IndexedDB", error);
         });
 
-      scheduleRemoteProgress(cfiPosition);
+      scheduleServerProgress(cfiPosition);
     };
 
-    const reconcileReadingProgress = async (
+    const syncReadingProgress = async (
       bookData: BookData,
     ): Promise<BookData> => {
       if (!user || !navigator.onLine) {
@@ -412,7 +398,7 @@ export const Reader = ({ bookId }: ReaderProps) => {
 
       try {
         if (bookData.progressDirty && bookData.cfiPosition) {
-          await pushReadingProgress(bookData.cfiPosition);
+          await putReadingProgress(bookData.cfiPosition);
 
           return (await get(BOOK_STORE, [userId, bookId])) ?? bookData;
         }
@@ -424,7 +410,7 @@ export const Reader = ({ bookId }: ReaderProps) => {
           return bookData;
         }
 
-        return await applyRemoteReadingProgress(
+        return await applyServerReadingProgress(
           userId,
           bookId,
           data.cfiPosition,
@@ -555,7 +541,7 @@ export const Reader = ({ bookId }: ReaderProps) => {
         progressSyncTimer = null;
       }
 
-      flushPendingRemoteProgress();
+      flushProgress();
     };
 
     const openBook = async () => {
@@ -571,20 +557,17 @@ export const Reader = ({ bookId }: ReaderProps) => {
         let verification: Awaited<ReturnType<typeof verifyLicense>>;
         try {
           verification = await verifyLicense(bookData, userId, bookId);
-        } catch (verificationError: unknown) {
+        } catch (error: unknown) {
           const canRefresh =
-            verificationError instanceof LicenseRefreshRequiredError &&
+            error instanceof RequireRefreshLicenseError &&
             user !== null &&
             navigator.onLine;
-
           if (!canRefresh) {
-            throw verificationError;
+            throw error;
           }
 
           const accountKey = await getOrCreateKey(user.id);
-
           let refreshedLicense: string;
-
           try {
             const { data } = await Api.post<LicenseResponse>(
               `/libraries/${bookId}/license/refresh`,
@@ -605,7 +588,6 @@ export const Reader = ({ bookId }: ReaderProps) => {
             bookId,
             refreshedLicense,
           );
-
           bookData = refreshed.bookData;
 
           verification = {
@@ -621,7 +603,7 @@ export const Reader = ({ bookId }: ReaderProps) => {
           );
         }
 
-        bookData = await reconcileReadingProgress(bookData);
+        bookData = await syncReadingProgress(bookData);
 
         const originFile = await decryptFile(
           userId,

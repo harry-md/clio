@@ -1,6 +1,8 @@
 CREATE INDEX IF NOT EXISTS idx_books_system_created_at_desc ON books (created_at DESC) WHERE type = 'SYSTEM';
-CREATE INDEX IF NOT EXISTS idx_books_uploader_created_at_desc ON books (uploader_id, created_at DESC) WHERE type = 'USER';
 CREATE INDEX IF NOT EXISTS idx_books_publisher_created_at_desc ON books (publisher_id, created_at DESC) WHERE type = 'SYSTEM';
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE INDEX IF NOT EXISTS idx_books_title_trgm ON books USING gin (lower(title) gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_books_authors_text_trgm ON books USING gin (lower(authors::text) gin_trgm_ops);
 
 CREATE INDEX IF NOT EXISTS idx_book_authors_author ON book_authors (author_id);
 
@@ -11,7 +13,7 @@ CREATE INDEX IF NOT EXISTS idx_user_libraries_book_updated_at_desc ON user_libra
 
 CREATE INDEX IF NOT EXISTS idx_sub_allocations_year_month ON subscription_allocations ("year", "month");
 
-CREATE INDEX IF NOT EXISTS idx_sub_book_billings_created_at_book_id ON subscription_book_billings (created_at, book_id);
+CREATE INDEX IF NOT EXISTS idx_sub_book_billings_book_id_created_at ON subscription_book_billings (book_id, created_at);
 
 CREATE INDEX IF NOT EXISTS idx_orders_user_created_at_desc ON orders (user_id, created_at DESC);
 
@@ -24,7 +26,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_subscriptions_user_active ON subscriptions 
 
 CREATE SEQUENCE IF NOT EXISTS revenue_log_seq START WITH 1 INCREMENT BY 50;
 
-CREATE INDEX IF NOT EXISTS idx_revenue_logs_pending_publisher_created_at ON revenue_logs (created_at, publisher_id) WHERE is_computed = false AND owner = 'PUBLISHER';
+CREATE INDEX IF NOT EXISTS idx_revenue_logs_pending_publisher_created_at ON revenue_logs (publisher_id, created_at) WHERE is_computed = false AND owner = 'PUBLISHER';
 
 -- ALTER TABLE books
 --     ADD CONSTRAINT chk_books_price CHECK (price >= 0),

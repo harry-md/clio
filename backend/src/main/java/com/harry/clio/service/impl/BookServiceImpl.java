@@ -3,11 +3,11 @@ package com.harry.clio.service.impl;
 import com.harry.clio.dto.book.*;
 import com.harry.clio.exception.BadRequestException;
 import com.harry.clio.exception.ResourceNotFoundException;
+import com.harry.clio.infra.BookQueue;
 import com.harry.clio.mapper.BookAuthorMapper;
 import com.harry.clio.mapper.BookInfoMapper;
 import com.harry.clio.mapper.BookMapper;
 import com.harry.clio.model.*;
-import com.harry.clio.queue.BookQueue;
 import com.harry.clio.repository.*;
 import com.harry.clio.repository.specification.BookSpecification;
 import com.harry.clio.service.BookService;
@@ -107,12 +107,12 @@ public class BookServiceImpl implements BookService {
     }
 
     @Cacheable(cacheNames = "books", key = """
-        'page=' + #pageable.pageNumber +
-        '|size=' + #pageable.pageSize +
-        '|sort=' +  #pageable.sort.toString()
+        'page:'+#pageable.pageNumber +
+        ':sort:'+#pageable.sort.toString()
         """, condition = """
             #pageable.paged &&
-            (#pageable.pageNumber == 0 || #pageable.pageNumber == 1 || #pageable.pageNumber == 2) &&
+            #pageable.pageNumber >= 0 &&
+            #pageable.pageNumber <= 3 &&
             #pageable.pageSize == 12 &&
             #request.hasNoFilters()
             """)
@@ -142,7 +142,7 @@ public class BookServiceImpl implements BookService {
         return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(orders));
     }
 
-    @Cacheable(cacheNames = "book-detail", key = "#bookId")
+    @Cacheable(cacheNames = "book", key = "#bookId")
     @Override
     public BookDetailResponse getBookDetail(int bookId) {
         Book book = bookRepository
@@ -189,7 +189,7 @@ public class BookServiceImpl implements BookService {
     @Caching(
             evict = {
                 @CacheEvict(cacheNames = "books", allEntries = true),
-                @CacheEvict(cacheNames = "book-detail", key = "#bookId")
+                @CacheEvict(cacheNames = "book", key = "#bookId")
             })
     public void updateBookActive(int bookId, boolean active) {
         Book book = bookRepository

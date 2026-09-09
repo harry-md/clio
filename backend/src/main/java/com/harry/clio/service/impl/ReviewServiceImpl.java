@@ -18,7 +18,6 @@ import com.harry.clio.service.ReviewService;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -57,11 +56,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     @Transactional
-    @Caching(
-            evict = {
-                @CacheEvict(cacheNames = "books", allEntries = true),
-                @CacheEvict(cacheNames = "book-detail", key = "#bookId")
-            })
+    @CacheEvict(cacheNames = "book", key = "#bookId")
     public ReviewResponse review(int userId, int bookId, ReviewRequest request) {
         if (reviewRepository.existsByUserIdAndBookId(userId, bookId)) {
             throw new BadRequestException("Bạn đã đánh giá rồi");
@@ -86,6 +81,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = "book", key = "#bookId")
     public ReviewResponse updateReview(int userId, int bookId, ReviewRequest request) {
         if (!userLibraryRepository.existsByUserIdAndBookId(userId, bookId)) {
             throw new BadRequestException("Bạn không có quyền đánh giá");
@@ -110,6 +106,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = "book", key = "#bookId")
     public void deleteReview(int userId, int bookId) {
         Review review = reviewRepository
                 .findWithUserByUserIdAndBookId(userId, bookId)

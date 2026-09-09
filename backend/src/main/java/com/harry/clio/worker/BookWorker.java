@@ -2,7 +2,7 @@ package com.harry.clio.worker;
 
 import com.harry.clio.config.properties.BookWorkerProperties;
 import com.harry.clio.exception.InvalidEbookException;
-import com.harry.clio.queue.BookQueue;
+import com.harry.clio.infra.BookQueue;
 import com.harry.clio.service.BookProcessService;
 
 import lombok.RequiredArgsConstructor;
@@ -92,7 +92,7 @@ public class BookWorker implements SmartLifecycle {
 
     private void remove(int bookId) {
         if (!bookQueue.removeJob(bookId)) {
-            log.error("Xóa job khỏi process queue thất bại");
+            log.error("Xóa job khỏi process infra thất bại");
         }
     }
 
