@@ -28,11 +28,17 @@ public class CategoryServiceImpl implements CategoryService {
     private final CategoryMapper categoryMapper;
     private final BookRepository bookRepository;
 
-    @Cacheable(value = "categories")
+    @Cacheable(cacheNames = "categories")
     public List<CategoryResponse> getCategories() {
         return categoryRepository.findAll().stream()
                 .map(categoryMapper::toResponse)
                 .toList();
+    }
+
+    @Override
+    @Cacheable(cacheNames = "category", key = "#categoryId")
+    public CategoryResponse getCategoryById(int categoryId) {
+        return categoryMapper.toResponse(getCategoryOrThrow(categoryId));
     }
 
     private Category getCategoryOrThrow(int categoryId) {
@@ -43,11 +49,6 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @CacheEvict(cacheNames = "categories", allEntries = true)
-    public CategoryResponse getCategoryById(int categoryId) {
-        return categoryMapper.toResponse(getCategoryOrThrow(categoryId));
-    }
-
-    @Override
     public CategoryResponse createCategory(CreateCategoryRequest request) {
         Category category = categoryMapper.toEntity(request);
         return categoryMapper.toResponse(categoryRepository.save(category));
@@ -57,8 +58,9 @@ public class CategoryServiceImpl implements CategoryService {
     @Caching(
             evict = {
                 @CacheEvict(cacheNames = "categories", allEntries = true),
-                @CacheEvict(cacheNames = "books", allEntries = true),
-                @CacheEvict(cacheNames = "book-detail", allEntries = true)
+                @CacheEvict(cacheNames = "category", key = "#categoryId"),
+                @CacheEvict(cacheNames = "book", allEntries = true),
+                @CacheEvict(cacheNames = "books", allEntries = true)
             })
     public CategoryResponse updateCategory(int categoryId, CreateCategoryRequest request) {
         Category category = getCategoryOrThrow(categoryId);
@@ -67,7 +69,13 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    @CacheEvict(cacheNames = "categories", allEntries = true)
+    @Caching(
+            evict = {
+                @CacheEvict(cacheNames = "categories", allEntries = true),
+                @CacheEvict(cacheNames = "category", key = "#categoryId"),
+                @CacheEvict(cacheNames = "book", allEntries = true),
+                @CacheEvict(cacheNames = "books", allEntries = true)
+            })
     public void deleteCategory(int categoryId) {
         if (bookRepository.existsByCategoriesId(categoryId)) {
             throw new BadRequestException("Không thể xóa do có sách đang trong thể loại");

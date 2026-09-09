@@ -236,43 +236,42 @@ public class OrderServiceImpl implements OrderService {
                 .build());
 
         allocationRepository.saveAll(allocateSubscription(
-                subscription, subscription.getStartDate(), subscription.getEndDate(), pubRevenue));
+                subscription,
+                plan.getDuration(),
+                subscription.getStartDate(),
+                subscription.getEndDate(),
+                pubRevenue));
     }
 
     private List<SubscriptionAllocation> allocateSubscription(
             Subscription subscription,
+            int duration,
             LocalDate startDate,
             LocalDate endDate,
             BigDecimal totalAmount) {
         long totalDays = ChronoUnit.DAYS.between(startDate, endDate);
-        List<SubscriptionAllocation> allocations = new ArrayList<>();
+        List<SubscriptionAllocation> allocations = new ArrayList<>(duration + 1);
 
         LocalDate current = startDate;
-        BigDecimal allocatedAmount = BigDecimal.ZERO;
-
         while (current.isBefore(endDate)) {
             LocalDate nextMonth = current.withDayOfMonth(1).plusMonths(1);
             LocalDate sliceEnd = nextMonth.isBefore(endDate) ? nextMonth : endDate;
 
-            long elapsedDays = ChronoUnit.DAYS.between(startDate, sliceEnd);
+            long daysLeft = ChronoUnit.DAYS.between(current, sliceEnd);
 
-            BigDecimal cumulativeAmount = sliceEnd.equals(endDate)
-                    ? totalAmount
-                    : totalAmount.multiply(BigDecimal.valueOf(elapsedDays)
-                            .divide(BigDecimal.valueOf(totalDays), 2, RoundingMode.HALF_UP));
-
-            BigDecimal sliceAmount = cumulativeAmount.subtract(allocatedAmount);
+            BigDecimal amount = totalAmount
+                    .multiply(BigDecimal.valueOf(daysLeft))
+                    .divide(BigDecimal.valueOf(totalDays), 2, RoundingMode.HALF_UP);
 
             allocations.add(SubscriptionAllocation.builder()
                     .subscription(subscription)
                     .month(current.getMonthValue())
                     .year(current.getYear())
-                    .publisherAmount(sliceAmount)
+                    .publisherAmount(amount)
                     .startAllocateDate(current)
                     .endAllocateDate(sliceEnd)
                     .build());
 
-            allocatedAmount = cumulativeAmount;
             current = sliceEnd;
         }
         return allocations;

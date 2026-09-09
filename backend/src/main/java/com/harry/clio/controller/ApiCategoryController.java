@@ -20,9 +20,4 @@ public class ApiCategoryController {
     public ResponseEntity<List<CategoryResponse>> list() {
         return ResponseEntity.ok().body(categoryService.getCategories());
     }
-
-    @GetMapping("/{categoryId}")
-    public ResponseEntity<CategoryResponse> retrieve(@PathVariable int categoryId) {
-        return ResponseEntity.ok().body(categoryService.getCategoryById(categoryId));
-    }
 }

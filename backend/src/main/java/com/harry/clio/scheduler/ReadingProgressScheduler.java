@@ -1,8 +1,8 @@
 package com.harry.clio.scheduler;
 
-import com.harry.clio.service.progress.PendingReadingProgress;
-import com.harry.clio.service.progress.ReadingProgressBatchWriter;
-import com.harry.clio.service.progress.ReadingProgressBuffer;
+import com.harry.clio.dto.library.PendingReadingProgress;
+import com.harry.clio.infra.ReadingProgressHash;
+import com.harry.clio.service.ReadingProgressWriterService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,8 +23,8 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class ReadingProgressScheduler {
-    private final ReadingProgressBuffer progressBuffer;
-    private final ReadingProgressBatchWriter batchWriter;
+    private final ReadingProgressHash progressBuffer;
+    private final ReadingProgressWriterService writer;
 
     @Scheduled(fixedDelayString = "${clio.reading-progress.flush-delay}")
     public void flushReadingProgress() {
@@ -42,7 +42,7 @@ public class ReadingProgressScheduler {
         }
 
         try {
-            batchWriter.writeBatch(snapshot);
+            writer.updateBatch(snapshot);
         } catch (DataAccessException ex) {
             log.error("Không batch update được {} reading progress", snapshot.size(), ex);
             return;
@@ -54,6 +54,6 @@ public class ReadingProgressScheduler {
                 removed++;
             }
         }
-        log.info("Đã lưu xuống {} reading progress, xóa {} entries", snapshot.size(), removed);
+        log.info("Đã lưu xuống {} reading progress, xóa {} progresses", snapshot.size(), removed);
     }
 }

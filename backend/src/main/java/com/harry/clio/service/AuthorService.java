@@ -12,13 +12,11 @@ import java.util.List;
 public interface AuthorService {
     List<AuthorResponse> getAllAuthors(String kw);
 
-    Page<AuthorResponse> getAdminAuthors(String keyword, Pageable pageable);
-
     AuthorResponse getAuthorById(int authorId);
+
+    Page<AuthorResponse> getAdminAuthors(String keyword, Pageable pageable);
 
     AuthorResponse createAuthor(CreateAuthorRequest request);
 
     AuthorResponse updateAuthor(int authorId, UpdateAuthorRequest request);
-
-    void deleteAuthor(int authorId);
 }

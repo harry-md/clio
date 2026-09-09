@@ -26,11 +26,6 @@ public class ApiAuthorController {
         return ResponseEntity.ok(authorService.getAllAuthors(kw));
     }
 
-    @GetMapping("/{authorId}")
-    public ResponseEntity<AuthorResponse> retrieve(@PathVariable int authorId) {
-        return ResponseEntity.ok(authorService.getAuthorById(authorId));
-    }
-
     @PostMapping
     @PreAuthorize("hasAnyRole('PUBLISHER')")
     public ResponseEntity<AuthorResponse> create(

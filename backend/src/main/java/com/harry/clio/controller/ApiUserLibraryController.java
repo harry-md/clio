@@ -59,16 +59,16 @@ public class ApiUserLibraryController {
     }
 
     @GetMapping("/libraries/{bookId}/progress")
-    public ResponseEntity<ReadingProgressResponse> getProgress(
+    public ResponseEntity<ReadingProgressDto> getProgress(
             @AuthenticationPrincipal CustomUser principal, @PathVariable int bookId) {
         return ResponseEntity.ok(readingProgressService.getProgress(principal.getId(), bookId));
     }
 
     @PutMapping("/libraries/{bookId}/progress")
-    public ResponseEntity<ReadingProgressResponse> updateProgress(
+    public ResponseEntity<ReadingProgressDto> updateProgress(
             @AuthenticationPrincipal CustomUser principal,
             @PathVariable int bookId,
-            @Valid @RequestBody ReadingProgressRequest request) {
+            @Valid @RequestBody ReadingProgressDto request) {
         return ResponseEntity.ok(readingProgressService.updateProgress(
                 principal.getId(), bookId, request.cfiPosition()));
     }

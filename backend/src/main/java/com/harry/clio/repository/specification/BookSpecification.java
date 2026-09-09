@@ -10,7 +10,6 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
 
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
-import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaJsonExistsExpression;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -36,7 +35,7 @@ public class BookSpecification {
 
         return (root, query, cb) -> {
             Expression<String> authorText = ((HibernateCriteriaBuilder) cb)
-                    .cast((JpaExpression<Object>) root.get("authors"), String.class);
+                    .sql("CAST(? AS TEXT)", String.class, root.get("authors"));
 
             String pattern = String.format("%%%s%%", keyword.toLowerCase(Locale.ROOT));
             return cb.or(

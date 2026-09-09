@@ -38,7 +38,7 @@ public class ApiReviewController {
     @GetMapping
     public ResponseEntity<Page<ReviewResponse>> list(
             @PathVariable int bookId,
-            @PageableDefault(size = 1, sort = "id", direction = Sort.Direction.DESC)
+            @PageableDefault(size = 12, sort = "id", direction = Sort.Direction.DESC)
                     Pageable pageable) {
         return ResponseEntity.ok(reviewService.getAllReviews(bookId, pageable));
     }
