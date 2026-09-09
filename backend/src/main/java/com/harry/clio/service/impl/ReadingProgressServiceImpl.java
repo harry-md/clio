@@ -1,13 +1,12 @@
 package com.harry.clio.service.impl;
 
-import com.harry.clio.dto.library.ReadingProgressResponse;
+import com.harry.clio.dto.library.PendingReadingProgress;
+import com.harry.clio.dto.library.ReadingProgressDto;
 import com.harry.clio.exception.ResourceNotFoundException;
+import com.harry.clio.infra.ReadingProgressHash;
 import com.harry.clio.model.UserLibrary;
 import com.harry.clio.repository.UserLibraryRepository;
 import com.harry.clio.service.ReadingProgressService;
-import com.harry.clio.service.progress.PendingReadingProgress;
-import com.harry.clio.service.progress.ReadingProgressBatchWriter;
-import com.harry.clio.service.progress.ReadingProgressBuffer;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,29 +21,29 @@ import java.util.Optional;
 @Slf4j
 public class ReadingProgressServiceImpl implements ReadingProgressService {
     private final UserLibraryRepository userLibraryRepository;
-    private final ReadingProgressBuffer progressBuffer;
-    private final ReadingProgressBatchWriter batchWriter;
+    private final ReadingProgressHash progressBuffer;
+    private final ReadingProgressWriterServiceImpl batchWriter;
 
     @Override
-    public ReadingProgressResponse getProgress(int userId, int bookId) {
+    public ReadingProgressDto getProgress(int userId, int bookId) {
         try {
-            Optional<PendingReadingProgress> pendingProgress = progressBuffer.find(userId, bookId);
+            Optional<PendingReadingProgress> pendingProgress = progressBuffer.get(userId, bookId);
             if (pendingProgress.isPresent()) {
-                return new ReadingProgressResponse(pendingProgress.get().cfiPosition());
+                return new ReadingProgressDto(pendingProgress.get().cfiPosition());
             }
-        } catch (DataAccessException ex) {
-            log.warn("Lỗi khi đọc progress user {} book {}", userId, bookId, ex);
+        } catch (RuntimeException ex) {
+            log.error("Lỗi khi đọc progress user {} book {}", userId, bookId, ex);
         }
 
         UserLibrary library = userLibraryRepository
                 .findWithBookByUserIdAndBookId(userId, bookId)
                 .orElseThrow(
                         () -> new ResourceNotFoundException("Không tìm thấy sách trong thư viện"));
-        return new ReadingProgressResponse(library.getCfiPosition());
+        return new ReadingProgressDto(library.getCfiPosition());
     }
 
     @Override
-    public ReadingProgressResponse updateProgress(int userId, int bookId, String cfiPosition) {
+    public ReadingProgressDto updateProgress(int userId, int bookId, String cfiPosition) {
         if (!userLibraryRepository.existsByUserIdAndBookId(userId, bookId)) {
             throw new ResourceNotFoundException("Không tìm thấy sách trong thư viện");
         }
@@ -54,8 +53,8 @@ public class ReadingProgressServiceImpl implements ReadingProgressService {
         try {
             progressBuffer.put(progress);
         } catch (DataAccessException ex) {
-            batchWriter.writeOne(progress);
+            batchWriter.update(progress);
         }
-        return new ReadingProgressResponse(cfiPosition);
+        return new ReadingProgressDto(cfiPosition);
     }
 }

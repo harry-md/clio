@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: "{{LOCAL_API_URL}}/books/33"
+  url: "{{LOCAL_API_URL}}/books/35"
   auth: inherit
 
 settings:

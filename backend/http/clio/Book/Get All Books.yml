@@ -5,25 +5,34 @@ info:
 
 http:
   method: GET
-  url: "{{DEPLOY_API_URL}}/books?authorFullname=&title=&fromPrice=&toPrice=&fromRating=&toRating="
+  url: "{{LOCAL_API_URL}}/books?keyword=CLIOBENCH200K-00012"
   params:
     - name: authorFullname
       value: ""
       type: query
+      disabled: true
     - name: title
       value: ""
       type: query
+      disabled: true
     - name: fromPrice
       value: ""
       type: query
+      disabled: true
     - name: toPrice
       value: ""
       type: query
+      disabled: true
     - name: fromRating
       value: ""
       type: query
+      disabled: true
     - name: toRating
       value: ""
+      type: query
+      disabled: true
+    - name: keyword
+      value: CLIOBENCH200K-00012
       type: query
   auth: inherit
 

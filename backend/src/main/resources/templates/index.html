@@ -18,25 +18,25 @@
           method="get"
           th:action="@{/}">
       <div>
-        <label class="form-label" for="time">Thống kê theo</label>
-        <select class="form-select" id="time" name="time">
-          <option value="MONTH" th:selected="${stats.time == 'MONTH'}">
+        <label class="form-label" for="type">Thống kê theo</label>
+        <select class="form-select" id="type" name="type">
+          <option value="MONTH" th:selected="${stats.type == 'MONTH'}">
             Tháng
           </option>
-          <option value="QUARTER" th:selected="${stats.time == 'QUARTER'}">
+          <option value="QUARTER" th:selected="${stats.type == 'QUARTER'}">
             Quý
           </option>
         </select>
       </div>
 
       <div>
-        <label class="form-label" id="periodLabel" for="period" th:text="${stats.time == 'MONTH'} ? 'Tháng' : 'Quý'">
+        <label class="form-label" id="periodLabel" for="period" th:text="${stats.type == 'MONTH'} ? 'Tháng' : 'Quý'">
         </label>
 
         <select class="form-select" id="period" name="period" style="min-width: 120px" required>
-          <option th:each="number : ${#numbers.sequence(1, (stats.time == 'MONTH' ? 12 : 4))}" th:value="${number}"
+          <option th:each="number : ${#numbers.sequence(1, (stats.type == 'MONTH' ? 12 : 4))}" th:value="${number}"
                   th:selected="${number == stats.period}"
-                  th:text="${(stats.time == 'MONTH' ? 'Tháng ' : 'Quý ') + number}">
+                  th:text="${(stats.type == 'MONTH' ? 'Tháng ' : 'Quý ') + number}">
           </option>
         </select>
       </div>
@@ -91,8 +91,6 @@
     <div class="col-12 col-xl-4">
       <section class="panel h-100">
         <h2 class="h5 mb-1">Tỉ trọng doanh thu</h2>
-        <p class="text-muted mb-3" th:text="${stats.label}"></p>
-
         <div th:if="${stats.totalRevenue.signum() > 0}" style="position: relative; height: 350px; min-width: 0">
           <canvas id="sourceChart" role="img" aria-label="Tỷ trọng doanh thu mua sách và gói đọc">
           </canvas>
@@ -108,7 +106,7 @@
     <div class="col-12 col-xl-8">
       <section class="panel h-100">
         <h2 class="h5 mb-1"
-            th:text="${stats.time == 'MONTH'}
+            th:text="${stats.type == 'MONTH'}
                 ? 'Doanh thu trong tháng'
                 : 'Doanh thu trong quý'">
         </h2>
@@ -123,11 +121,7 @@
   </div>
 
   <section class="panel">
-    <h2 class="h5 mb-1">Top 5 sách theo doanh thu nền tảng</h2>
-    <p class="text-muted mb-3"
-       th:text="|Xếp hạng theo doanh thu mua sách trong ${stats.label}.|">
-    </p>
-
+    <h2 th:text="|Top sách theo doanh thu nền tảng trong ${stats.label}.|" class="h5 mb-1"></h2>
     <div th:if="${!#lists.isEmpty(stats.topBooks)}"
          style="position: relative; height: 380px; min-width: 0">
       <canvas id="topChart" role="img"
@@ -152,14 +146,14 @@
               return;
           }
 
-          const timeSelect = document.getElementById("time");
+          const typeSelect = document.getElementById("type");
           const periodSelect = document.getElementById("period");
           const periodLabel = document.getElementById("periodLabel");
 
-          let previousTime = timeSelect.value;
+          let previousTime = typeSelect.value;
 
-          timeSelect.addEventListener("change", () => {
-              const nextTime = timeSelect.value;
+          typeSelect.addEventListener("change", () => {
+              const nextTime = typeSelect.value;
               let selected = Number(periodSelect.value);
 
               if (previousTime === "MONTH" && nextTime === "QUARTER") {
@@ -198,19 +192,19 @@
               grid: "#e5e7eb"
           };
 
-          const moneyFormatter = new Intl.NumberFormat("vi-VN", {
+          const moneyFormatter = new Intl.NumberFormat("en-US", {
               style: "currency",
               currency: "VND",
               minimumFractionDigits: 0,
               maximumFractionDigits: 2
           });
 
-          const compactFormatter = new Intl.NumberFormat("vi-VN", {
+          const compactFormatter = new Intl.NumberFormat("en-US", {
               notation: "compact",
               maximumFractionDigits: 1
           });
 
-          const countFormatter = new Intl.NumberFormat("vi-VN");
+          const countFormatter = new Intl.NumberFormat("en-US");
 
           const money = value => moneyFormatter.format(Number(value));
           const compactMoney = value =>
@@ -304,7 +298,11 @@
                       x: {
                           stacked: true,
                           grid: {display: false},
-                          ticks: {maxRotation: 0}
+                      ticks: {
+                          autoSkip: stats.type !== "MONTH",
+                          minRotation: stats.type === "MONTH" ? 45 : 0,
+                          maxRotation: stats.type === "MONTH" ? 45 : 0
+                      }
                       },
                       y: {
                           stacked: true,
@@ -341,10 +339,10 @@
                   data: {
                       labels: books.map(book => {
                           const title = book.title.length > 38
-                              ? book.title.slice(0, 38) + "…"
+                              ? book.title.slice(0, 38) + "..."
                               : book.title;
 
-                          return `${title} (#${book.bookId})`;
+                          return `${title}`;
                       }),
                       datasets: [{
                           label: "Doanh thu nền tảng",

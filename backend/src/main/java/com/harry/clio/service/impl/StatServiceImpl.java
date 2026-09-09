@@ -1,10 +1,8 @@
 package com.harry.clio.service.impl;
 
-import com.harry.clio.dto.stats.PlatformRevenueResponse;
+import com.harry.clio.dto.stats.*;
 import com.harry.clio.dto.stats.PlatformRevenueResponse.RevenuePoint;
 import com.harry.clio.dto.stats.PlatformRevenueResponse.TopBookRevenue;
-import com.harry.clio.dto.stats.PublisherDashboardResponse;
-import com.harry.clio.dto.stats.TopSellingBookResponse;
 import com.harry.clio.exception.BadRequestException;
 import com.harry.clio.exception.ResourceNotFoundException;
 import com.harry.clio.mapper.PublisherMapper;
@@ -20,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -28,10 +27,7 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -43,6 +39,9 @@ public class StatServiceImpl implements StatService {
 
     @Value("${clio.schedulers.zone-id}")
     private String zoneId;
+
+    private record RevenuePeriod(
+            boolean isMonth, LocalDate startDate, LocalDate endDate, Instant start, Instant end) {}
 
     @Override
     public PublisherDashboardResponse getPublisherDashboard(int publisherId, int year, int month) {
@@ -65,92 +64,117 @@ public class StatServiceImpl implements StatService {
     }
 
     @Override
-    public PlatformRevenueResponse getPlatformRevenue(String time, int period, int year) {
-        if (year < 1) {
-            throw new BadRequestException("Năm không hợp lệ.");
-        }
+    public PlatformRevenueResponse getPlatformRevenue(
+            RevenuePeriodType type, int period, int year, Pageable pageable) {
+        RevenuePeriod revenuePeriod = getRevenuePeriod(type, period, year);
 
-        String normalizedTime = time == null ? "MONTH" : time.strip().toUpperCase();
-        if (!normalizedTime.equals("MONTH") && !normalizedTime.equals("QUARTER")) {
-            throw new BadRequestException("Kiểu thống kê không hợp lệ.");
-        }
+        Map<Integer, RevenuePointRow> rowsByBucket = loadRevenueByBucket(revenuePeriod);
+        List<RevenuePoint> points = buildRevenuePoints(revenuePeriod, rowsByBucket);
 
-        boolean isMonth = normalizedTime.equals("MONTH");
-        int maxPeriod = isMonth ? 12 : 4;
-        if (period < 1 || period > maxPeriod) {
-            throw new BadRequestException(
-                    isMonth
-                            ? "Tháng phải nằm trong khoảng 1-12."
-                            : "Quý phải nằm trong khoảng 1-4.");
-        }
+        BigDecimal bookRevenue = points.stream()
+                .map(RevenuePoint::bookRevenue)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        int firstMonth = isMonth ? period : (period - 1) * 3 + 1;
+        BigDecimal subscriptionRevenue = points.stream()
+                .map(RevenuePoint::subscriptionRevenue)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        LocalDate startDate = LocalDate.of(year, firstMonth, 1);
-        LocalDate endDate = startDate.plusMonths(isMonth ? 1 : 3);
+        List<TopBookRevenue> topBooks = loadTopBooks(revenuePeriod, pageable);
 
-        ZoneId zone = ZoneId.of(zoneId);
-        Instant start = startDate.atStartOfDay(zone).toInstant();
-        Instant end = endDate.atStartOfDay(zone).toInstant();
-
-        String owner = RevenueLogOwner.PLATFORM.name();
-        String status = OrderStatus.PAID.name();
-
-        String unit = isMonth ? "day" : "month";
-
-        Map<Integer, RevenueLogRepository.RevenuePointRow> rowsByBucket = new HashMap<>();
-
-        for (RevenueLogRepository.RevenuePointRow row :
-                revenueLogRepository.findPlatformRevenueDetails(
-                        owner, status, unit, start, end, zoneId)) {
-            rowsByBucket.put(row.getBucket(), row);
-        }
-
-        List<RevenuePoint> points = new ArrayList<>();
-        BigDecimal bookRevenue = BigDecimal.ZERO;
-        BigDecimal subscriptionRevenue = BigDecimal.ZERO;
-
-        DateTimeFormatter dayFormatter = DateTimeFormatter.ofPattern("dd/MM");
-
-        for (LocalDate cursor = startDate;
-                cursor.isBefore(endDate);
-                cursor = isMonth ? cursor.plusDays(1) : cursor.plusMonths(1)) {
-
-            int bucket = isMonth ? cursor.getDayOfMonth() : cursor.getMonthValue();
-
-            RevenueLogRepository.RevenuePointRow row = rowsByBucket.get(bucket);
-
-            BigDecimal bookAmount = row == null ? BigDecimal.ZERO : row.getBookRevenue();
-
-            BigDecimal subscriptionAmount =
-                    row == null ? BigDecimal.ZERO : row.getSubscriptionRevenue();
-
-            String pointLabel =
-                    isMonth ? cursor.format(dayFormatter) : "Tháng " + cursor.getMonthValue();
-
-            points.add(new RevenuePoint(pointLabel, bookAmount, subscriptionAmount));
-
-            bookRevenue = bookRevenue.add(bookAmount);
-            subscriptionRevenue = subscriptionRevenue.add(subscriptionAmount);
-        }
-
-        List<TopBookRevenue> topBooks =
-                revenueLogRepository.findTopPlatformRevenueBooks(owner, status, start, end).stream()
-                        .map(row -> new TopBookRevenue(
-                                row.getBookId(), row.getTitle(), row.getSales(), row.getRevenue()))
-                        .toList();
-
-        String label = (isMonth ? "Tháng " : "Quý ") + period + "/" + year;
+        String label = (revenuePeriod.isMonth() ? "Tháng " : "Quý ") + period + "/" + year;
 
         return new PlatformRevenueResponse(
-                normalizedTime,
+                revenuePeriod.isMonth() ? "MONTH" : "QUARTER",
                 period,
                 year,
                 label,
                 bookRevenue.add(subscriptionRevenue),
                 bookRevenue,
                 subscriptionRevenue,
-                List.copyOf(points),
+                points,
                 topBooks);
+    }
+
+    private RevenuePeriod getRevenuePeriod(RevenuePeriodType type, int period, int year) {
+        if (year < 1) {
+            throw new BadRequestException("Năm không hợp lệ.");
+        }
+        if (period < 1 || period > type.maxPeriod()) {
+            throw new BadRequestException(
+                    type.isMonth()
+                            ? "Tháng phải nằm trong khoảng 1-12."
+                            : "Quý phải nằm trong khoảng 1-4.");
+        }
+
+        int firstMonth = type.firstMonth(period);
+        LocalDate startDate = LocalDate.of(year, firstMonth, 1);
+        LocalDate endDate = startDate.plusMonths(type.monthsPerPeriod());
+        return new RevenuePeriod(
+                type.isMonth(),
+                startDate,
+                endDate,
+                startDate.atStartOfDay(ZoneId.of(zoneId)).toInstant(),
+                endDate.atStartOfDay(ZoneId.of(zoneId)).toInstant());
+    }
+
+    private Map<Integer, RevenuePointRow> loadRevenueByBucket(RevenuePeriod period) {
+        List<RevenuePointRow> rows = revenueLogRepository.findPlatformRevenueDetails(
+                RevenueLogOwner.PLATFORM,
+                OrderStatus.PAID,
+                period.isMonth() ? "day" : "month",
+                period.start(),
+                period.end(),
+                zoneId);
+
+        Map<Integer, RevenuePointRow> rowsByBucket = new HashMap<>();
+        for (RevenuePointRow row : rows) {
+            RevenuePointRow previous = rowsByBucket.putIfAbsent(row.bucket(), row);
+
+            if (previous != null) {
+                throw new IllegalStateException(
+                        "Query thống kê trả về nhiều dòng cho bucket: " + row.bucket());
+            }
+        }
+
+        return rowsByBucket;
+    }
+
+    private List<RevenuePoint> buildRevenuePoints(
+            RevenuePeriod period, Map<Integer, RevenuePointRow> rowsByBucket) {
+        List<RevenuePoint> points = new ArrayList<>();
+        DateTimeFormatter dayFormatter = DateTimeFormatter.ofPattern("dd/MM");
+
+        for (LocalDate cursor = period.startDate();
+                cursor.isBefore(period.endDate());
+                cursor = period.isMonth() ? cursor.plusDays(1) : cursor.plusMonths(1)) {
+
+            int bucket = period.isMonth() ? cursor.getDayOfMonth() : cursor.getMonthValue();
+
+            RevenuePointRow row = rowsByBucket.get(bucket);
+
+            String label = period.isMonth()
+                    ? cursor.format(dayFormatter)
+                    : "Tháng " + cursor.getMonthValue();
+
+            points.add(new RevenuePoint(
+                    label,
+                    row == null ? BigDecimal.ZERO : row.bookRevenue(),
+                    row == null ? BigDecimal.ZERO : row.subscriptionRevenue()));
+        }
+        return List.copyOf(points);
+    }
+
+    private List<TopBookRevenue> loadTopBooks(RevenuePeriod period, Pageable pageable) {
+        return revenueLogRepository
+                .findTopPlatformRevenueBooks(
+                        RevenueLogOwner.PLATFORM,
+                        OrderStatus.PAID,
+                        period.start(),
+                        period.end(),
+                        pageable)
+                .stream()
+                .map(row ->
+                        new TopBookRevenue(row.bookId(), row.title(), row.sales(), row.revenue()))
+                .toList();
     }
 }

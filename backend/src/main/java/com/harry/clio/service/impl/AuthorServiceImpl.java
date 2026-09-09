@@ -42,16 +42,16 @@ public class AuthorServiceImpl implements AuthorService {
     }
 
     @Override
+    @Cacheable(cacheNames = "author", key = "#authorId")
+    public AuthorResponse getAuthorById(int authorId) {
+        return authorMapper.toResponse(getAuthorOrThrow(authorId));
+    }
+
+    @Override
     public Page<AuthorResponse> getAdminAuthors(String keyword, Pageable pageable) {
         return authorRepository
                 .findAll(AuthorSpecification.hasKw(keyword), pageable)
                 .map(authorMapper::toResponse);
-    }
-
-    @Override
-    @Cacheable(cacheNames = "author", key = "#authorId")
-    public AuthorResponse getAuthorById(int authorId) {
-        return authorMapper.toResponse(getAuthorOrThrow(authorId));
     }
 
     @Override
@@ -76,7 +76,7 @@ public class AuthorServiceImpl implements AuthorService {
                 @CacheEvict(cacheNames = "authors", allEntries = true),
                 @CacheEvict(cacheNames = "author", key = "#authorId"),
                 @CacheEvict(cacheNames = "books", allEntries = true),
-                @CacheEvict(cacheNames = "book-detail", allEntries = true)
+                @CacheEvict(cacheNames = "book", allEntries = true)
             })
     public AuthorResponse updateAuthor(int authorId, UpdateAuthorRequest request) {
         Author author = getAuthorOrThrow(authorId);
@@ -93,15 +93,5 @@ public class AuthorServiceImpl implements AuthorService {
             bookRepository.updateAuthorsByAuthorId(authorId);
         }
         return authorMapper.toResponse(author);
-    }
-
-    @Override
-    @Caching(
-            evict = {
-                @CacheEvict(cacheNames = "authors", allEntries = true),
-                @CacheEvict(cacheNames = "author", key = "#authorId")
-            })
-    public void deleteAuthor(int authorId) {
-        authorRepository.delete(getAuthorOrThrow(authorId));
     }
 }
