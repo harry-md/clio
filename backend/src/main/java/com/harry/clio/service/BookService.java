@@ -6,7 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface BookService {
-    BookDetailResponse uploadBook(int publisherId, CreateBookMetadataRequest request);
+    void uploadBook(int publisherId, CreateBookMetadataRequest request);
 
     Page<BookListResponse> getAllBooks(BookFilterRequest request, Pageable pageable);
 
