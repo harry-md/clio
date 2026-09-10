@@ -34,11 +34,11 @@ public class ApiBookController {
 
     @PostMapping
     @PreAuthorize("hasRole('PUBLISHER')")
-    public ResponseEntity<BookDetailResponse> create(
+    public ResponseEntity<Void> create(
             @AuthenticationPrincipal CustomUser principal,
             @Valid @RequestBody CreateBookMetadataRequest request) {
-        BookDetailResponse response = bookService.uploadBook(principal.getId(), request);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+        bookService.uploadBook(principal.getId(), request);
+        return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     @GetMapping

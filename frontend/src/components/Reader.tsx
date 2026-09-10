@@ -213,6 +213,7 @@ const applyReaderSettings = (
 export const Reader = ({ bookId }: ReaderProps) => {
   const { user, offlineAccount, initialized } = useAuth();
   const userId = user?.id ?? offlineAccount?.userId;
+  const username = user?.username ?? offlineAccount?.username;
 
   const readerElementRef = useRef<HTMLDivElement>(null);
   const renditionRef = useRef<Rendition | null>(null);
@@ -627,11 +628,8 @@ export const Reader = ({ bookId }: ReaderProps) => {
           width: "100%",
           height: "100%",
           flow: "paginated",
-
           spread: "always",
-
           minSpreadWidth: 1,
-
           allowScriptedContent: false,
         });
 
@@ -722,7 +720,7 @@ export const Reader = ({ bookId }: ReaderProps) => {
 
       <div
         className={[
-          "relative min-h-0 flex-1 overflow-hidden px-4 py-3 lg:px-8 lg:py-5",
+          "relative flex min-h-0 flex-1 flex-col overflow-hidden px-4 py-3 lg:px-8 lg:py-5",
           settings.colorPreset === "dark" ? "bg-background" : "",
         ].join(" ")}
         style={
@@ -733,7 +731,23 @@ export const Reader = ({ bookId }: ReaderProps) => {
               : undefined
         }
       >
-        <div ref={readerElementRef} className="h-full w-full" />
+        <div className="min-h-0 flex-1">
+          <div ref={readerElementRef} className="h-full w-full" />
+        </div>
+
+        {phase === "ready" && username && (
+          <div
+            aria-hidden="true"
+            className={[
+              "select-none mt-1 shrink-0 truncate text-right",
+              settings.colorPreset === "light"
+                ? "text-black/35"
+                : "text-white/35",
+            ].join(" ")}
+          >
+            Sách của {username}
+          </div>
+        )}
 
         {phase === "loading" && (
           <div className="absolute inset-0 flex items-center justify-center bg-background/95 text-foreground">

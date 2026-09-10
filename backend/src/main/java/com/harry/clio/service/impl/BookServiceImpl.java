@@ -47,11 +47,9 @@ public class BookServiceImpl implements BookService {
     private final PublisherRepository publisherRepository;
     private final BookQueue bookQueue;
 
-    private record BookWithInfo(Book book, BookInfo info) {}
-
     @Override
-    public BookDetailResponse uploadBook(int publisherId, CreateBookMetadataRequest request) {
-        BookWithInfo bookWithInfo = transactionTemplate.execute(status -> {
+    public void uploadBook(int publisherId, CreateBookMetadataRequest request) {
+        int bookId = transactionTemplate.execute(status -> {
             Set<Category> categories =
                     new HashSet<>(categoryRepository.findAllById(request.categoryIds()));
 
@@ -66,18 +64,16 @@ public class BookServiceImpl implements BookService {
 
             bookAuthorRepository.saveAll(buildBookAuthors(book, authorSnapshots));
 
-            BookInfo bookInfo = bookInfoRepository.save(BookInfo.builder()
+            bookInfoRepository.save(BookInfo.builder()
                     .book(book)
                     .isbn(request.isbn())
                     .language(request.language())
                     .description(request.description())
                     .build());
-            return new BookWithInfo(book, bookInfo);
+            return book.getId();
         });
 
-        bookQueue.enqueue(bookWithInfo.book.getId());
-        return bookMapper.toDetailResponse(
-                bookWithInfo.book, bookInfoMapper.toResponse(bookWithInfo.info));
+        bookQueue.enqueue(bookId);
     }
 
     private List<BookAuthorInfo> buildAuthorSnapshot(List<BookAuthorInfo> request) {
@@ -91,6 +87,7 @@ public class BookServiceImpl implements BookService {
                 .map(authorJson -> {
                     Author author = authors.get(authorJson.authorId());
                     if (author == null) throw new BadRequestException("Tác giả không hợp lệ");
+
                     return bookAuthorMapper.toResponse(author, authorJson.role());
                 })
                 .toList();
