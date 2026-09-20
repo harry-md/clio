@@ -138,14 +138,11 @@ The frontend and backend run locally, while file storage, image storage, and pay
 
 ### 1. Requirements
 
-- JDK 25+
-- Node.js 20.9+
-- Bun
-- PostgreSQL 18.2+
-- Valkey (Redis-compatible) 9.1.2
-
-You will also need:
-
+- JDK 25+.
+- Node.js 20.9+.
+- Bun.
+- PostgreSQL 18.2+.
+- Valkey (Redis-compatible) 9.1.2.
 - A private Cloudflare R2 bucket and S3 API credentials.
 - A Cloudinary account.
 - A Stripe Sandbox account.
@@ -164,7 +161,7 @@ Use the first output for `JWT_SECRET` and the second for `CLIO_MASTER_KEY`.
 Generate the RSA key pair used to sign and verify reading licenses in a private directory outside the repository:
 
 ```bash
-openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out license-private.pem
+openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:3072 -out license-private.pem
 openssl pkey -in license-private.pem -pubout -out license-public.pem
 ```
 
