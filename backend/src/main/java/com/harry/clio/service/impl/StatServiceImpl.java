@@ -131,7 +131,7 @@ public class StatServiceImpl implements StatService {
             RevenuePointRow previous = rowsByBucket.putIfAbsent(row.bucket(), row);
 
             if (previous != null) {
-                throw new IllegalStateException(
+                throw new RuntimeException(
                         "Query thống kê trả về nhiều dòng cho bucket: " + row.bucket());
             }
         }

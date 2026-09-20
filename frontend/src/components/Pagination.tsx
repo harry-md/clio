@@ -103,7 +103,7 @@ export const Pagination = ({
               aria-hidden="true"
               className="grid size-10 place-items-center text-subtle-foreground"
             >
-              …
+              ...
             </span>
           );
         }
