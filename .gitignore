@@ -192,8 +192,8 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# local env files
-.env*
+*.env*
+!.env.example
 
 # vercel
 .vercel
@@ -230,3 +230,9 @@ sketch
 # Ignore all local history of files
 .history
 .ionide
+
+# next.js
+*/.next/*
+/out/
+
+*.pdf
