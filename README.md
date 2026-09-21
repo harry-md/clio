@@ -2,21 +2,28 @@
 
 Clio is a web application for reading and distributing ebooks, developed as a university student project.
 
-The project connects readers who want to read ebooks across multiple devices with publishers who want to upload and distribute their books. Readers can discover books, purchase individual titles or access them through reading plans, manage a personal library, and read online or offline. Publishers can upload EPUB files and track sales and revenue, while administrators manage the platform through a separate dashboard.
-
-Clio covers the main ebook lifecycle: uploading, validation, processing, encryption, distribution, reading access, and revenue allocation.
-
-> This is an academic project. Payments are demonstrated using Stripe Sandbox.
+The project connects readers who want to read ebooks across multiple devices with publishers who want to upload and distribute their books. Readers can discover books, purchase books or access them through reading plans, manage a personal library, and read online or offline. Publishers can upload ebooks, track sales and revenue. Admin manage the platform through a separate dashboard.
 
 ## Contents
 
+- [Demo](#demo)
 - [Features](#features)
 - [Tech Stack](#tech-stack)
 - [Architecture](#architecture)
-- [Content Protection and Offline Reading](#content-protection-and-offline-reading)
-- [Installation](#installation)
 - [Screenshots](#screenshots)
 - [System Diagrams](#system-diagrams)
+- [Content Protection and Offline Reading](#content-protection-and-offline-reading)
+- [Installation](#installation)
+
+## Demo
+
+[Frontend Website deployed on Vercel](https://clio-tau.vercel.app/)
+
+> Username: user | password: 1
+
+[Admin Dashboard deployed on Heroku](https://clio-backend-fe5e9b73de99.herokuapp.com/)
+
+> Username: admin | password: 1
 
 ## Features
 
@@ -54,15 +61,16 @@ Clio covers the main ebook lifecycle: uploading, validation, processing, encrypt
 - Allocate subscription revenue through monthly scheduled jobs.
 
 ## Tech Stack
-| Area | Technologies |
-| --- | --- |
-| Backend | Java 25, Spring Boot 4.1 |
-| Frontend | TypeScript 7.0.2, Next.js 16 |
-| Database | PostgreSQL 18.6 |
+
+|                                 | Technologies                    |
+| ------------------------------- | ------------------------------- |
+| Backend                         | Java 25, Spring Boot 4.1        |
+| Frontend                        | TypeScript 7.0.2, Next.js 16    |
+| Database                        | PostgreSQL 18.6                 |
 | Cache and background processing | Valkey (Redis-compatible) 9.1.2 |
-| Ebook storage | Cloudflare R2 |
-| Image storage | Cloudinary |
-| Payments | Stripe |
+| Ebook storage                   | Cloudflare R2                   |
+| Image storage                   | Cloudinary                      |
+| Payments                        | Stripe                          |
 
 ## Architecture
 
@@ -70,23 +78,147 @@ Clio uses a client-server architecture with a layered Spring Boot backend.
 
 ![Clio architecture](images/architecture.png)
 
-The Next.js application provides the reader and publisher interfaces. It communicates with Spring Boot through REST APIs, with frontend `/api` requests forwarded to the backend through a Next.js rewrite.
+## Screenshots
 
-The backend separates request handling, business logic, and data access into **Controller**, **Service**, and **Repository** layers. It also renders the administration interface using Thymeleaf.
+### Home Page
 
-PostgreSQL stores application data, including accounts, books, orders, libraries, subscriptions, and revenue records. Valkey provides Redis-compatible storage for caching, the EPUB processing queue, and reading-progress buffering.
+Book discovery, featured titles, and catalog browsing.
 
-Cloudflare R2 stores original and encrypted EPUB files. The backend issues temporary URLs so the browser can upload and download files directly. Cloudinary stores book covers and user images.
+![Home page](screenshots/homepage.png)
 
-### Main Workflows
+### Reader Interface
 
-**Book publishing:** The publisher uploads an EPUB file to R2 and submits its information. A background worker validates the file, extracts its cover and word count, encrypts the content, and updates the book's processing status.
+The reader interface with adjustable reading settings.
 
-**Book purchasing:** The backend creates an order and a Stripe Checkout session. Stripe webhook events trigger order updates and add purchased books to the reader's library.
+![Reader Interface](screenshots/reader.png)
 
-**Book reading:** The backend checks the reader's access rights and issues a signed reading license. The browser stores the encrypted book locally, verifies its license, decrypts it, and displays it through epub.js.
+<details>
+<summary>Search, book details, and shopping cart</summary>
 
-**Revenue allocation:** Scheduled jobs calculate revenue from book sales and reading plans, then update publisher balances.
+### Search
+
+![Search page](screenshots/search-page.png)
+
+### Book Details
+
+![Book details](screenshots/detail-page.png)
+
+### Shopping Cart
+
+![Shopping cart](screenshots/cart.png)
+
+</details>
+
+<details>
+<summary>Personal library and sign-in page</summary>
+
+### Personal Library
+
+![Personal library](screenshots/library.png)
+
+### Sign In
+
+![Sign-in page](screenshots/login-deploy.png)
+
+</details>
+
+<details>
+<summary>Publisher dashboard and book upload</summary>
+
+### Publisher Dashboard
+
+![Publisher dashboard](screenshots/publisher-page.png)
+
+### Book Upload
+
+![Book upload](screenshots/upload.png)
+
+</details>
+
+<details>
+<summary>Administration dashboard</summary>
+
+### Revenue Statistics
+
+![Administration dashboard](screenshots/admin-deploy.png)
+
+</details>
+
+## System Diagrams
+
+### Use Case Diagram
+
+![Use Case Diagram](images/use_case.png)
+
+### Class Diagram
+
+![Class Diagram](images/class_diagram.png)
+
+### Database Schema
+
+![Database Schema](images/db_diagram.png)
+
+### Sequence Diagrams
+
+#### 1. Upload a Book
+
+This workflow starts when a publisher submits an EPUB file and its information. It has two main stages: accepting the upload request and processing the book in the background.
+
+The web application uploads the file to Cloudflare R2 through a temporary presigned URL, then sends the book information to the backend. The backend saves the information and adds the book to the ready queue. A background worker claims the job from ready queue and move it to process queue, then validates the file, extracts its information, encrypts it, and stores the processed file. Once processing is complete, the book becomes available to readers.
+
+For retryable processing errors, the system makes up to two additional attempts. If processing still fails, the book is marked as failed and scheduled for cleanup. Moving this time-consuming work to a background worker keeps the upload request responsive.
+
+**Upload and save book information**
+![Book upload and submission sequence](images/upload_book_1.png)
+
+**Background processing**
+![Book background processing sequence](images/upload_book_2.png)
+
+#### 2. Purchase Books
+
+This workflow starts when a reader selects books and adds them to the cart. The system checks whether the reader already owns any selected books before continuing. It then creates an order or reuses a pending order and opens a Stripe Checkout session.
+
+When a webhook arrives from Stripe, the backend verifies its signature and processes the order only if it is still pending. For a completed checkout, it updates the order, records revenue for the platform and publishers, and adds the books to the reader's library.
+
+The checkout session expires after 30 minutes. When Stripe reports the expired session, the system cancels the pending order. Checking the order's pending status helps prevent the same revenue from being recorded again when Stripe resends a webhook.
+
+**Checkout creation and payment**
+![Book checkout sequence](images/buy-book-1.png)
+
+**Stripe webhook processing**
+![Book payment webhook sequence](images/buy-book-2.png)
+
+#### 3. Download a Book
+
+This workflow checks the reader's access rights, issues a reading license, and saves the book on the reader’s device.
+
+When a download is requested, the backend checks whether the book was purchased or added through a reading plan. It creates the matching license and a temporary presigned URL for downloading the encrypted file from Cloudflare R2.
+
+The web application verifies the license, downloads the file, and creates a local clock state for subscription books. It then saves the book and related data in IndexedDB for offline reading.
+
+![Book download sequence](images/download_book.png)
+
+#### 4. Read a Book
+
+This workflow loads a previously downloaded book from IndexedDB and checks whether its reading license is valid or needs to be refreshed.
+
+When the reader opens a book, the application verifies the license signature and checks its user ID and book ID. For subscription licenses, it also checks the expiration date, offline-access deadline, and local clock state.
+
+If the license needs to be refreshed and the device is online, the backend checks the reading plan and returns a new license. The browser then uses the account's private key to unwrap the content key, decrypts the EPUB file, and displays the book.
+
+![Book reading sequence](images/read_book.png)
+
+#### 5. Calculate and Record Subscription Revenue
+
+This workflow runs as a monthly scheduled job. The system first checks whether revenue has already been calculated for the month to avoid processing it again.
+
+If the month has not been processed, the system combines the publisher revenue allocated from reading plans for that month with any unallocated amount carried over from the previous month.
+
+It then totals the estimated page counts of books added to readers' libraries through reading plans. One estimated page equals 250 words. This count is recorded when a book is added to the library, rather than when its pages are actually read.
+
+Each publisher receives a share based on its estimated page count divided by the total page count. The system saves the results and updates publisher balances.
+
+![Monthly subscription revenue sequence](images/compute_revenue.png)
 
 ## Content Protection and Offline Reading
 
@@ -138,14 +270,11 @@ The frontend and backend run locally, while file storage, image storage, and pay
 
 ### 1. Requirements
 
-- JDK 25+
-- Node.js 20.9+
-- Bun
-- PostgreSQL 18.2+
-- Valkey (Redis-compatible) 9.1.2
-
-You will also need:
-
+- JDK 25+.
+- Node.js 20.9+.
+- Bun.
+- PostgreSQL 18.2+.
+- Valkey (Redis-compatible) 9.1.2.
 - A private Cloudflare R2 bucket and S3 API credentials.
 - A Cloudinary account.
 - A Stripe Sandbox account.
@@ -164,7 +293,7 @@ Use the first output for `JWT_SECRET` and the second for `CLIO_MASTER_KEY`.
 Generate the RSA key pair used to sign and verify reading licenses in a private directory outside the repository:
 
 ```bash
-openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out license-private.pem
+openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:3072 -out license-private.pem
 openssl pkey -in license-private.pem -pubout -out license-public.pem
 ```
 
@@ -177,10 +306,10 @@ openssl base64 -A -in license-public.pem
 
 Use:
 
-| Value | Configuration |
-| --- | --- |
-| Base64-encoded private PEM | Backend `CLIO_LICENSE_KEY` |
-| Base64-encoded public PEM | Frontend `NEXT_PUBLIC_LICENSE_KEY` |
+| Value                      | Configuration                      |
+| -------------------------- | ---------------------------------- |
+| Base64-encoded private PEM | Backend `CLIO_LICENSE_KEY`         |
+| Base64-encoded public PEM  | Frontend `NEXT_PUBLIC_LICENSE_KEY` |
 
 Keep the private key and master key outside version control. The frontend receives only the public verification key.
 
@@ -227,7 +356,7 @@ Use a Sandbox secret API key from the same Stripe environment.
 
 ### 5. Configure the Backend
 
-See [backend/.env.example](./backend/.env.example) and create an `backend/.env.properties` with real value from your config.
+See [backend/.env.example](backend/.env.example) and create an `backend/.env.properties` with real value from your config.
 
 ### 6. Start application
 
@@ -240,151 +369,3 @@ bun run start
 Sign in, purchase a book or add one through an active reading plan, then download it to the library. Open the library and reader while online before disconnecting.
 
 Offline access uses the same browser profile where the book and keys were stored. Download books separately on each device. Clearing browser storage removes locally saved books and keys.
-
-## Screenshots
-
-### Home Page
-
-Book discovery, featured titles, and catalog browsing.
-
-![Home page](screenshots/homepage.png)
-
-### Ebook Reader
-
-The EPUB reading interface with adjustable reading settings.
-
-![Ebook reader](screenshots/reader.png)
-
-<details>
-<summary>Search, book details, and shopping cart</summary>
-
-### Search
-
-![Search page](screenshots/search-page.png)
-
-### Book Details
-
-![Book details](screenshots/detail-page.png)
-
-### Shopping Cart
-
-![Shopping cart](screenshots/cart.png)
-
-</details>
-
-<details>
-<summary>Personal library and sign-in page</summary>
-
-### Personal Library
-
-![Personal library](screenshots/library.png)
-
-### Sign In
-
-![Sign-in page](screenshots/login-deploy.png)
-
-</details>
-
-<details>
-<summary>Publisher dashboard and book upload</summary>
-
-### Publisher Dashboard
-
-![Publisher dashboard](screenshots/publisher-page.png)
-
-### EPUB Upload
-
-![Book upload](screenshots/upload.png)
-
-</details>
-
-<details>
-<summary>Administration dashboard</summary>
-
-### Revenue Statistics
-
-![Administration dashboard](screenshots/admin-deploy.png)
-
-</details>
-
-## System Diagrams
-
-The following diagrams show the main actors, domain model, database structure, and five representative workflows.
-
-### Use Case Diagram
-
-![Use Case Diagram](./images/use_case.png)
-
-### Class Diagram
-
-![Class Diagram](./images/class_diagram.png)
-
-### Database Schema
-
-![Database Schema](./images/db_diagram.png)
-
-### Sequence Diagrams
-
-#### 1. Upload a Book
-
-This workflow starts when a publisher submits an EPUB file and its information. It has two main stages: accepting the upload request and processing the book in the background.
-
-The web application uploads the file to Cloudflare R2 through a temporary signed URL, then sends the book information to the backend. The backend saves the information and adds the book to the processing queue. A background worker validates the file, extracts its information, encrypts it, and stores the processed file. Once processing is complete, the book becomes available to readers.
-
-For retryable processing errors, the system makes up to two additional attempts. If processing still fails, the book is marked as failed and scheduled for cleanup. Moving this time-consuming work to a background worker keeps the upload request responsive.
-
-**Upload and save book information**
-
-![Book upload and submission sequence](images/upload_book_1.png)
-
-**Background processing**
-
-![Book background processing sequence](images/upload_book_2.png)
-
-#### 2. Purchase Books
-
-This workflow starts when a reader selects books and adds them to the cart. The system checks whether the reader already owns any selected books before continuing. It then creates an order or reuses a pending order and opens a Stripe Checkout session.
-
-When a webhook arrives from Stripe, the backend verifies its signature and processes the order only if it is still pending. For a completed checkout, it updates the order, records revenue for the platform and publishers, and adds the books to the reader's library.
-
-The checkout session expires after 30 minutes. When Stripe reports the expired session, the system cancels the pending order. Checking the order's pending status helps prevent the same revenue from being recorded again when Stripe resends a webhook.
-
-**Checkout creation and payment**
-
-![Book checkout sequence](images/buy-book-1.png)
-
-**Stripe webhook processing**
-
-![Book payment webhook sequence](images/buy-book-2.png)
-
-#### 3. Download a Book
-
-This workflow checks the reader's access rights, issues a reading license, and saves the book on the reader’s device.
-
-When a download is requested, the backend checks whether the book was purchased or added through a reading plan. It creates the matching license and a temporary signed URL for downloading the encrypted file from Cloudflare R2.
-
-The web application verifies the license, downloads the file, and creates a local clock state for subscription books. It then saves the book and related data in IndexedDB for offline reading.
-
-![Book download sequence](images/download_book.png)
-
-#### 4. Read a Book
-
-This workflow loads a previously downloaded book from IndexedDB and checks whether its reading license is valid or needs to be refreshed.
-
-When the reader opens a book, the application verifies the license signature and checks its user ID and book ID. For subscription licenses, it also checks the expiration date, offline-access deadline, and local clock state.
-
-If the license needs to be refreshed and the device is online, the backend checks the reading plan and returns a new license. The browser then uses the account's private key to unwrap the content key, decrypts the EPUB file, and displays the book.
-
-![Book reading sequence](images/read_book.png)
-
-#### 5. Calculate and Record Subscription Revenue
-
-This workflow runs as a monthly scheduled job. The system first checks whether revenue has already been calculated for the month to avoid processing it again.
-
-If the month has not been processed, the system combines the publisher revenue allocated from reading plans for that month with any unallocated amount carried over from the previous month.
-
-It then totals the estimated page counts of books added to readers' libraries through reading plans. One estimated page equals 250 words. This count is recorded when a book is added to the library, rather than when its pages are actually read.
-
-Each publisher receives a share based on its estimated page count divided by the total page count. The system saves the results and updates publisher balances.
-
-![Monthly subscription revenue sequence](images/compute_revenue.png)
