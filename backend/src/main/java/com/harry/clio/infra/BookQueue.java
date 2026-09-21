@@ -12,8 +12,8 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class BookQueue {
-    private static final String READY_QUEUE_KEY = "book-ready-infra";
-    private static final String PROCESS_QUEUE_KEY = "book-process-infra";
+    private static final String READY_QUEUE_KEY = "book-ready-queue";
+    private static final String PROCESS_QUEUE_KEY = "book-process-queue";
 
     private final StringRedisTemplate redisTemplate;
 
