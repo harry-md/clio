@@ -14,7 +14,7 @@ public class RateLimitService {
 
     private Bucket createBucket() {
         return Bucket.builder()
-                .addLimit(limit -> limit.capacity(25).refillGreedy(25, Duration.ofMinutes(1)))
+                .addLimit(limit -> limit.capacity(50).refillGreedy(50, Duration.ofMinutes(1)))
                 .build();
     }
 
