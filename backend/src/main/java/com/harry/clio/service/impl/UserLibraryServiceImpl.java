@@ -15,6 +15,7 @@ import com.harry.clio.service.UserLibraryService;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -143,5 +144,11 @@ public class UserLibraryServiceImpl implements UserLibraryService {
             }
             default -> throw new BadRequestException("Sách không hợp lệ");
         }
+    }
+
+    @Cacheable(cacheNames = "user-libraries", key = "#userId + ':' + #bookId", unless = "!#result")
+    @Override
+    public boolean checkUserHasBook(int userId, int bookId) {
+        return userLibraryRepository.existsByUserIdAndBookId(userId, bookId);
     }
 }
