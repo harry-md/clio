@@ -16,4 +16,6 @@ public interface UserLibraryService {
     DownloadResponse downloadBook(int userId, DownloadRequest request);
 
     LicenseResponse refreshLicense(int userId, int bookId, String publicKeySpki);
+
+    boolean checkUserHasBook(int userId, int bookId);
 }

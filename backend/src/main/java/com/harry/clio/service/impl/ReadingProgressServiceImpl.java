@@ -7,6 +7,7 @@ import com.harry.clio.infra.ReadingProgressHash;
 import com.harry.clio.model.UserLibrary;
 import com.harry.clio.repository.UserLibraryRepository;
 import com.harry.clio.service.ReadingProgressService;
+import com.harry.clio.service.UserLibraryService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,7 @@ import java.util.Optional;
 @Slf4j
 public class ReadingProgressServiceImpl implements ReadingProgressService {
     private final UserLibraryRepository userLibraryRepository;
+    private final UserLibraryService userLibraryService;
     private final ReadingProgressHash progressBuffer;
     private final ReadingProgressWriterServiceImpl batchWriter;
 
@@ -44,7 +46,7 @@ public class ReadingProgressServiceImpl implements ReadingProgressService {
 
     @Override
     public ReadingProgressDto updateProgress(int userId, int bookId, String cfiPosition) {
-        if (!userLibraryRepository.existsByUserIdAndBookId(userId, bookId)) {
+        if (!userLibraryService.checkUserHasBook(userId, bookId)) {
             throw new ResourceNotFoundException("Không tìm thấy sách trong thư viện");
         }
 

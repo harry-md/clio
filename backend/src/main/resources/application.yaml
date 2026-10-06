@@ -12,6 +12,7 @@ spring:
       - category
       - authors
       - author
+      - user-libraries
     caffeine:
       spec: maximumSize=10000,expireAfterWrite=1h
     # redis:
